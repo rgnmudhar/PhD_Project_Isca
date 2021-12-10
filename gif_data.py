@@ -87,7 +87,7 @@ def plots(ds, i):
 
 
 if __name__ == '__main__': 
-    files = sorted(glob.glob('Polvani_Kushner_4.0_6y/run*/atmos_monthly_interp_new_height_temp.nc'))
+    files = sorted(glob.glob('../isca_data/Polvani_Kushner_4.0_6y/run*/atmos_monthly_interp_new_height_temp.nc'))
         
     for i in np.arange(0, len(files)):
         file = files[i]

@@ -46,7 +46,7 @@ calc_jet_lat_quad(u, lat, p, plot=True)
 """
 
 #For a time series
-files=sorted(glob.glob('Polvani_Kushner_4.0_6y/run*/atmos_monthly_interp_new_height_temp.nc'))
+files=sorted(glob.glob('../isca_data/Polvani_Kushner_4.0_6y/run*/atmos_monthly_interp_new_height_temp.nc'))
 iter = np.arange(0,len(files))
 jet_maxima = []
 jet_lats = []

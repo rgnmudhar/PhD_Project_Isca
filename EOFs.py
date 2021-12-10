@@ -2,21 +2,53 @@
     This script attempts to find EOFs from daily data
 """
 
-import glob
+from glob import glob
 import xarray as xr
 import numpy as np
 import matplotlib.pyplot as plt
 from eofs.xarray import Eof
 
-files = sorted(glob.glob('Polvani_Kushner_4.0_eps0_1y/run*/atmos_daily.nc'))
-ds = xr.open_mfdataset(files, decode_times = False)
-print(ds)
+def open(files, dim):
+    paths = sorted(glob(files))
+    datasets = [xr.open_dataset(p, decode_times=False) for p in paths]
+    combined = xr.concat(datasets, dim)
+    return combined
+
+files = '../isca_data/Polvani_Kushner_4.0_eps0_1y/run*/atmos_daily.nc'
+ds = open(files, 'time')
+
+lat = ds.coords['lat'].data
+p = ds.coords['pfull'].data
+upper_p = ds.coords['pfull'].sel(pfull=1, method='nearest') # in order to cap plots at pressure = 1hPa
 
 u = ds.ucomp # zonal wind
-uz = u.mean(dim='lon') # zonal mean zonal wind
-uz_anom = uz - uz.mean(dim='time') # zonal wind anomalies vs. time-mean zonal wind
+u_anom = u - u.mean(dim='time') # zonal wind anomalies vs. time-mean zonal wind
 
-coslat = np.cos(np.deg2rad(uz_anom.coords['lat'].values)).clip(0., 1.) # need to weight due to different box sizes over grid
-wgts = np.sqrt(coslat)#[...,np.newaxis]
+coslat = np.cos(np.deg2rad(u.coords['lat'].values)).clip(0., 1.) # need to weight due to different box sizes over grid
+wgts = np.sqrt(coslat)[...,np.newaxis]
 
-solver = Eof(uz_anom, weights=wgts)
+full_solver = Eof(u, weights=wgts)
+full_eof1 = full_solver.eofsAsCovariance(neofs=1)
+
+anom_solver = Eof(u_anom, weights=wgts)
+anom_eof1 = anom_solver.eofsAsCovariance(neofs=1)
+
+plt.contourf(lat,p,anom_eof1[0,:,:,:].mean(dim='lon'), cmap='RdBu_r', levels=21)
+plt.colorbar()
+plt.xlabel('Latitude')
+plt.ylabel('Pressure (hPa)')
+plt.ylim(max(p), upper_p) #goes to 1hPa
+plt.yscale("log")
+plt.title('Zonal mean EOF1 of Zonal Wind Anomaly')
+plt.show()
+
+plt.pause(1)
+
+plt.contourf(lat,p,full_eof1[0,:,:,:].mean(dim='lon'), cmap='RdBu_r', levels=21)
+plt.colorbar()
+plt.xlabel('Latitude')
+plt.ylabel('Pressure (hPa)')
+plt.ylim(max(p), upper_p) #goes to 1hPa
+plt.yscale("log")
+plt.title('Zonal mean EOF1 of Zonal Wind')
+plt.show()

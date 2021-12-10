@@ -9,14 +9,14 @@ import matplotlib.pyplot as plt
 
 """
 #set-up data
-#files = sorted(glob.glob('Polvani_Kushner_2.0/run*/atmos_monthly.nc')) #non-plevel_interpolated version of dataset
-files = sorted(glob.glob('Polvani_Kushner_2.0_6y/run*/atmos_monthly_interp_new_height_temp.nc')) #plevel_interpolated version of dataset
+#files = sorted(glob.glob('../isca_data/Polvani_Kushner_2.0/run*/atmos_monthly.nc')) #non-plevel_interpolated version of dataset
+files = sorted(glob.glob('../isca_data/Polvani_Kushner_2.0_6y/run*/atmos_monthly_interp_new_height_temp.nc')) #plevel_interpolated version of dataset
 ds = xr.open_mfdataset(files, decode_times = False)
 print(ds)
 """
 
 #version of data set-up using subset of the run i.e. excluding "spin-up"
-files = sorted(glob.glob('Polvani_Kushner_4.0_6y/run*/atmos_monthly_interp_new_height_temp.nc')) 
+files = sorted(glob.glob('../isca_data/Polvani_Kushner_4.0_6y/run*/atmos_monthly_interp_new_height_temp.nc')) 
 max_months = len(files)-1
 years = 5 # user sets no. of years worth of data to use
 months = years*12

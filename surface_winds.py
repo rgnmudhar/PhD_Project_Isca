@@ -11,26 +11,26 @@ import cftime
 
 """
 #set-up data
-ds0 = xr.open_mfdataset(sorted(glob.glob('Polvani_Kushner_novtx_6y/run*/atmos_monthly_interp_new_height_temp.nc')), decode_times = False)
-ds1 = xr.open_mfdataset(sorted(glob.glob('Polvani_Kushner_1.0_6y/run*/atmos_monthly_interp_new_height_temp.nc')), decode_times = False)
-ds2 = xr.open_mfdataset(sorted(glob.glob('Polvani_Kushner_2.0_6y/run*/atmos_monthly_interp_new_height_temp.nc')), decode_times = False)
-ds3 = xr.open_mfdataset(sorted(glob.glob('Polvani_Kushner_3.0_6y/run*/atmos_monthly_interp_new_height_temp.nc')), decode_times = False)
-ds4 = xr.open_mfdataset(sorted(glob.glob('Polvani_Kushner_4.0_6y/run*/atmos_monthly_interp_new_height_temp.nc')), decode_times = False)
+ds0 = xr.open_mfdataset(sorted(glob.glob('../isca_data/Polvani_Kushner_novtx_6y/run*/atmos_monthly_interp_new_height_temp.nc')), decode_times = False)
+ds1 = xr.open_mfdataset(sorted(glob.glob('../isca_data/Polvani_Kushner_1.0_6y/run*/atmos_monthly_interp_new_height_temp.nc')), decode_times = False)
+ds2 = xr.open_mfdataset(sorted(glob.glob('../isca_data/Polvani_Kushner_2.0_6y/run*/atmos_monthly_interp_new_height_temp.nc')), decode_times = False)
+ds3 = xr.open_mfdataset(sorted(glob.glob('../isca_data/Polvani_Kushner_3.0_6y/run*/atmos_monthly_interp_new_height_temp.nc')), decode_times = False)
+ds4 = xr.open_mfdataset(sorted(glob.glob('../isca_data/Polvani_Kushner_4.0_6y/run*/atmos_monthly_interp_new_height_temp.nc')), decode_times = False)
 """
 
 #version of data set-up using subset of the run i.e. excluding "spin-up"
 years = 5 # user sets no. of years worth of data to use
 months = years*12
 
-files0 = sorted(glob.glob('Polvani_Kushner_novtx_6y/run*/atmos_monthly_interp_new_height_temp.nc')) 
+files0 = sorted(glob.glob('../isca_data/Polvani_Kushner_novtx_6y/run*/atmos_monthly_interp_new_height_temp.nc')) 
 max_months = len(files0)-1
 files0 = files0[(max_months-months):max_months]
 ds0 = xr.open_mfdataset(files0, decode_times = False)
-ds1 = xr.open_mfdataset(sorted(glob.glob('Polvani_Kushner_1.0_6y/run*/atmos_monthly_interp_new_height_temp.nc'))[(max_months-months):max_months], decode_times = False)
-ds2 = xr.open_mfdataset(sorted(glob.glob('Polvani_Kushner_2.0_6y/run*/atmos_monthly_interp_new_height_temp.nc'))[(max_months-months):max_months], decode_times = False)
-ds3 = xr.open_mfdataset(sorted(glob.glob('Polvani_Kushner_3.0_6y/run*/atmos_monthly_interp_new_height_temp.nc'))[(max_months-months):max_months], decode_times = False)
-ds4 = xr.open_mfdataset(sorted(glob.glob('Polvani_Kushner_4.0_6y/run*/atmos_monthly_interp_new_height_temp.nc'))[(max_months-months):max_months], decode_times = False)
-ds_hs = xr.open_mfdataset(sorted(glob.glob('held_suarez_default/run*/atmos_monthly.nc'))[13:72], decode_times = False)
+ds1 = xr.open_mfdataset(sorted(glob.glob('../isca_data/Polvani_Kushner_1.0_6y/run*/atmos_monthly_interp_new_height_temp.nc'))[(max_months-months):max_months], decode_times = False)
+ds2 = xr.open_mfdataset(sorted(glob.glob('../isca_data/Polvani_Kushner_2.0_6y/run*/atmos_monthly_interp_new_height_temp.nc'))[(max_months-months):max_months], decode_times = False)
+ds3 = xr.open_mfdataset(sorted(glob.glob('../isca_data/Polvani_Kushner_3.0_6y/run*/atmos_monthly_interp_new_height_temp.nc'))[(max_months-months):max_months], decode_times = False)
+ds4 = xr.open_mfdataset(sorted(glob.glob('../isca_data/Polvani_Kushner_4.0_6y/run*/atmos_monthly_interp_new_height_temp.nc'))[(max_months-months):max_months], decode_times = False)
+ds_hs = xr.open_mfdataset(sorted(glob.glob('../isca_data/held_suarez_default/run*/atmos_monthly.nc'))[13:72], decode_times = False)
 
 #following opens ERA5 re-analysis data
 file_ra = '/disca/share/pm366/ERA-5/era5_var131_masked_zm.nc'

@@ -26,7 +26,7 @@ def closest(mylist, myval):
         print('index=',pos-1)
         return before
 
-ds = xr.open_dataset('Polvani_Kushner_2.0/run0001/atmos_monthly.nc', decode_times=False) 
+ds = xr.open_dataset('../isca_data/Polvani_Kushner_2.0/run0001/atmos_monthly.nc', decode_times=False) 
 p = ds.coords['pfull'].data
 lat = ds.coords['lat'].data
 lon = ds.coords['lon'].data
