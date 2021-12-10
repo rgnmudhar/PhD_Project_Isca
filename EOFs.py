@@ -1,5 +1,7 @@
 """
-    This script attempts to find EOFs from daily data
+    This script attempts to find EOFs from daily data.
+    Re-write this to do separately for each pressure level to get an EOF which is a function of latitude and longitude, so you can plot a map. It should hopefully look annular!
+    Start with 500hPa.
 """
 
 from glob import glob
@@ -22,7 +24,8 @@ p = ds.coords['pfull'].data
 upper_p = ds.coords['pfull'].sel(pfull=1, method='nearest') # in order to cap plots at pressure = 1hPa
 
 u = ds.ucomp # zonal wind
-u_anom = u - u.mean(dim='time') # zonal wind anomalies vs. time-mean zonal wind
+u_anom = u - u.mean(dim='time').mean(dim='lon') # zonal wind anomalies 
+""" u’(lat,lon,time) to calculate the EOF, where u’(lat,lon,time) = u(lat,lon,time) - ubar(lon) so ubar is the zonal and time average"""
 
 coslat = np.cos(np.deg2rad(u.coords['lat'].values)).clip(0., 1.) # need to weight due to different box sizes over grid
 wgts = np.sqrt(coslat)[...,np.newaxis]
