@@ -1,5 +1,5 @@
 """
-    This script plots (zonal) averages of various output variables averaged over a year's-worth of data from Isca
+    This script plots (zonal) averages of various output variables averaged over X years'-worth of data from Isca
 """
 
 import glob
