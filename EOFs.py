@@ -1,13 +1,15 @@
 """
-    This script attempts to find EOFs from daily data.
-    Re-write this to do separately for each pressure level to get an EOF which is a function of latitude and longitude, so you can plot a map. It should hopefully look annular!
-    Start with 500hPa.
+    Computes and plots the leading EOF of zonal wind on the 500 hPa pressure surface during winter time.
+    Written for individual pressure level to get an EOF which is a function of latitude and longitude to plot on a map.
+    u’(lat,lon,time) is used to calculate the EOF, where u’(lat,lon,time) = u(lat,lon,time) - ubar(lon), with ubar = zonal and time average.
+    Based on https://ajdawson.github.io/eofs/latest/examples/nao_xarray.html and discussions with William Seviour.
 """
 
 from glob import glob
 import xarray as xr
 import numpy as np
 import matplotlib.pyplot as plt
+import cartopy.crs as ccrs 
 from eofs.xarray import Eof
 
 def open(files, dim):
@@ -16,42 +18,44 @@ def open(files, dim):
     combined = xr.concat(datasets, dim)
     return combined
 
-files = '../isca_data/Polvani_Kushner_4.0_eps0_1y/run*/atmos_daily.nc'
+
+files = '../isca_data/Polvani_Kushner_4.0_eps0_1y/run*/atmos_daily_interp_new_height_temp.nc'
 ds = open(files, 'time')
 
 lat = ds.coords['lat'].data
+lon = ds.coords['lon'].data
 p = ds.coords['pfull'].data
-upper_p = ds.coords['pfull'].sel(pfull=1, method='nearest') # in order to cap plots at pressure = 1hPa
+p_level = 500 # hPa
 
 u = ds.ucomp # zonal wind
-u_anom = u - u.mean(dim='time').mean(dim='lon') # zonal wind anomalies 
-""" u’(lat,lon,time) to calculate the EOF, where u’(lat,lon,time) = u(lat,lon,time) - ubar(lon) so ubar is the zonal and time average"""
+u_level = u.sel(pfull=p_level, method='nearest')
+u_anom = u_level - u_level.mean(dim='time').mean(dim='lat') # zonal wind anomalies 
 
 coslat = np.cos(np.deg2rad(u.coords['lat'].values)).clip(0., 1.) # need to weight due to different box sizes over grid
 wgts = np.sqrt(coslat)[...,np.newaxis]
 
-full_solver = Eof(u, weights=wgts)
-full_eof1 = full_solver.eofsAsCovariance(neofs=1)
-
+# Create an EOF solver to do the EOF analysis.
 anom_solver = Eof(u_anom, weights=wgts)
+
+# Retrieve the leading EOF, expressed as the covariance between the leading PC time series and the input anomalies at each grid point
 anom_eof1 = anom_solver.eofsAsCovariance(neofs=1)
 
-plt.contourf(lat,p,anom_eof1[0,:,:,:].mean(dim='lon'), cmap='RdBu_r', levels=21)
-plt.colorbar()
-plt.xlabel('Latitude')
-plt.ylabel('Pressure (hPa)')
-plt.ylim(max(p), upper_p) #goes to 1hPa
-plt.yscale("log")
-plt.title('Zonal mean EOF1 of Zonal Wind Anomaly')
+"""
+# Plot the leading EOF expressed as covariance in the European/Atlantic domain
+proj = ccrs.Orthographic(central_longitude=-20, central_latitude=60)
+ax = plt.axes(projection=proj)
+ax.coastlines()
+ax.set_global()
+anom_eof1[0].plot.contourf(ax=ax, cmap='RdBu_r', levels=np.linspace(-7,7,14), transform=ccrs.PlateCarree(), add_colorbar=False)
+ax.set_title('EOF1 of Zonal Wind Anomaly at ~{0:.0f}hPa'.format(p_level))
 plt.show()
+"""
 
-plt.pause(1)
-
-plt.contourf(lat,p,full_eof1[0,:,:,:].mean(dim='lon'), cmap='RdBu_r', levels=21)
-plt.colorbar()
-plt.xlabel('Latitude')
-plt.ylabel('Pressure (hPa)')
-plt.ylim(max(p), upper_p) #goes to 1hPa
-plt.yscale("log")
-plt.title('Zonal mean EOF1 of Zonal Wind')
+# Plot the leading EOF expressed as covariance over the globe
+ax = plt.axes(projection=ccrs.PlateCarree())
+plt.contourf(lon,lat,anom_eof1[0], cmap='RdBu_r', levels=np.linspace(-7,7,14), transform=ccrs.PlateCarree())
+ax.coastlines()
+#plt.xlabel('Longitude')
+#plt.ylabel('Latitude')
+plt.title('EOF1 of Zonal Wind Anomaly at ~{0:.0f}hPa'.format(p_level))
 plt.show()
