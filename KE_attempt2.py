@@ -15,7 +15,7 @@ def calc_TKE(u,v):
     upv = u*u + v*v
     return 0.5 * upv
 
-files=sorted(glob.glob('../isca_data/Polvani_Kushner_4.0_eps0_6y/run*/atmos_monthly_interp_new_height_temp.nc'))
+files=sorted(glob.glob('../isca_data/Polvani_Kushner_1.0_6y/run*/atmos_monthly_interp_new_height_temp.nc'))
 iter = np.arange(0,len(files))
 KE = []
 for i in iter:
