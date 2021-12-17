@@ -9,6 +9,7 @@ import xarray as xr
 import numpy as np
 import matplotlib.pyplot as plt
 from eofs.xarray import Eof
+import statsmodels.api as sm
 
 def open(files, dim):
     paths = sorted(glob(files))
@@ -68,10 +69,11 @@ for i in range(len(coslat)):
 
 # Plot the leading EOF expressed as covariance
 fig1 = plt.figure(figsize=(5,6))
-plt.contourf(lat_subset,p_subset,eof1[0], cmap='RdBu_r', levels=np.linspace(-2,2,21))
+plt.contourf(lat_subset,p_subset,eof1[0], cmap='RdBu_r', levels=np.linspace(-2,2,41))
 plt.xlabel('Latitude')
 plt.ylabel('Pressure (hPa)')
 plt.ylim(max(p),p_min)
+plt.yscale('log')
 cb = plt.colorbar(orientation='horizontal')
 plt.title('EOF1 of Zonal Wind Anomaly')
 plt.show()
@@ -93,3 +95,18 @@ plt.show()
 # The fraction of the total variance explained by each EOF mode, values between 0 and 1 inclusive.
 variance_fractions = solver.varianceFraction()
 print(variance_fractions[0].data * 100) # Is this the % of zonal wind variance associated w/ EOF1?
+
+# Find autocorrelation function in order to determine decorrelation time (i.e. time for correlation reduce to 1/e)
+lags = 100 
+autocorr = sm.tsa.acf(pc1, nlags=lags)
+closest = autocorr[np.abs(autocorr-(1/np.e)).argmin()]
+print(np.where(autocorr==closest)) # Is this the decorrelation timescale of EOF1?
+
+fig3 = plt.figure(figsize=(6,5))
+plt.acorr(pc1[:,0], maxlags=lags, usevlines=False, linestyle="-", marker=None, linewidth=2)
+ax = plt.gca()
+ax.axhline(0, color='k')
+ax.axhline(1/np.e, color='k', linestyle=":")
+ax.set_xlabel('Lag (days)')
+ax.set_title('Autocorrelation Function for EOF1', fontsize='x-large')
+plt.show()
