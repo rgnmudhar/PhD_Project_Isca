@@ -37,6 +37,7 @@ u_anom = u_level - u_level.mean(dim='time').mean(dim='lat') # zonal wind anomali
 coslat = np.cos(np.deg2rad(u.coords['lat'].values)).clip(0., 1.) # need to weight due to different box sizes over grid
 wgts = np.sqrt(coslat)[...,np.newaxis]
 
+
 # Create an EOF solver to do the EOF analysis.
 solver = Eof(u_anom, weights=wgts)
 
