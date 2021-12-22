@@ -1,7 +1,7 @@
 """
     Computes and plots the leading EOF of zonal wind as per Fig. 4 of Sheshadri and Plumb (2017)
     u anomaly is used to calculate the EOF, where u’(lat,p,time) = u(lat,p,time) - ubar(p), with ubar = zonal and time average.
-    Based on Sheshadri and Plumb (2017), https://ajdawson.github.io/eofs/latest/examples/nao_xarray.html and discussions with William Seviour.
+    Based on Sheshadri and Plumb (2017), https://ajdawson.github.io/eofs/latest/examples/nao_xarray.html and code by William Seviour.
 """
 
 from glob import glob
@@ -11,78 +11,102 @@ import matplotlib.pyplot as plt
 from eofs.xarray import Eof
 import statsmodels.api as sm
 
-def open(files, dim):
-    paths = sorted(glob(files))
-    datasets = [xr.open_dataset(p, decode_times=False) for p in paths]
-    combined = xr.concat(datasets, dim)
-    return combined
+def findtau(ac):
+    for i in range(len(ac)):
+        if ac[i] - 1/np.e < 1e-5:
+            tau = i
+            break
+    return tau
 
-files = '../isca_data/Polvani_Kushner_4.0_eps0_1y/run*/atmos_daily.nc'
-ds = open(files, 'time')
+files = sorted(glob('../isca_data/Polvani_Kushner_4.0_eps0_1y/run*/atmos_daily.nc'))
+ds = xr.open_mfdataset(files, decode_times=False)
 
+lat = ds.coords['lat']
+lon = ds.coords['lon']
+
+# For EOFs follow Sheshadri & Plumb 2017, use p>100hPa, lat>20degN, zonal mean u
+# also throw out first 100 days for spin-up
+p_min = 100  # hPa
+lat_min = 20  # degrees
+spin_up = 100  # days
+uz = ds.ucomp\
+       .isel(time=slice(spin_up,-1))\
+       .sel(pfull=slice(p_min,1000))\
+       .sel(lat=slice(lat_min,90))\
+       .mean(dim='lon')
+
+# Calculate anomalies
+uz_anom = uz - uz.mean(dim='time')
+
+# sqrt(cos(lat)) weights due to different box sizes over grid
+sqrtcoslat = np.sqrt(np.cos(np.deg2rad(uz_anom.coords['lat'].values))) 
+
+# sqrt(dp) weights, select correct number of levels
+nplevs = uz_anom.coords['pfull'].shape[0]
+sqrtdp = np.sqrt(np.diff(ds.coords['phalf'].values[-nplevs-2:-1]))
+
+# calculate gridpoint weights
+wgts = np.outer(sqrtdp,sqrtcoslat)
+
+# Create an EOF solver to do the EOF analysis.
+solver = Eof(uz_anom.compute(), weights=wgts)
+
+# Retrieve the leading 2 EOFs and leading PC time series
+# expressed  as the covariance between the leading PC time series and the input anomalies
+# By default PCs used are scaled to unit variance (dvided by square root of the eigenvalue)
+eofs = solver.eofsAsCovariance(neofs=2)
+pcs = solver.pcs(npcs=2, pcscaling=1)
+
+# Fractional EOF mode variances.
+# The fraction of the total variance explained by each EOF mode, values between 0 and 1 inclusive.
+variance_fractions = solver.varianceFraction()
+
+# Find autocorrelation function in order to determine decorrelation time (i.e. time for correlation reduce to 1/e)
+lags = 50 
+ac1 = sm.tsa.acf(pcs.sel(mode=0).values, nlags=lags)
+ac2 = sm.tsa.acf(pcs.sel(mode=1).values, nlags=lags)
+
+tau1 = findtau(ac1)
+tau2 = findtau(ac2)
+
+# Plot equivalent to Fig 4a-c from Sheshadri & Plumb
+fig = plt.figure(figsize=(15,5))
+
+ax1 = fig.add_subplot(1,3,1)
+eofs.sel(mode=0).plot.contourf(ax=ax1, cmap='RdBu_r', yincrease=False, levels=21)
+uz.mean(dim='time').plot.contour(ax=ax1, colors='k', yincrease=False, levels=15)
+ax1.set_title(r'EOF1, {0:.0f}% of variance, $\tau$ = {1:.0f} days'\
+    .format(100*variance_fractions.values[0],\
+    tau1))
+
+ax2 = fig.add_subplot(1,3,2)
+eofs.sel(mode=1).plot.contourf(ax=ax2, cmap='RdBu_r', yincrease=False, levels=21)
+uz.mean(dim='time').plot.contour(ax=ax2, colors='k', yincrease=False, levels=15)
+ax2.set_title(r'EOF2, {0:.0f}% of variance, $\tau$ = {1:.0f} days'\
+    .format(100*variance_fractions.values[1],\
+    tau2))
+
+ax3 = fig.add_subplot(1,3,3)
+ax3.acorr(pcs.sel(mode=0), maxlags=lags, usevlines=False, linestyle="-", marker=None, linewidth=1, label='EOF1')
+ax3.acorr(pcs.sel(mode=1), maxlags=lags, usevlines=False, linestyle="-", marker=None, linewidth=1, label='EOF2')
+ax3.legend()
+ax3.axhline(0, color='k', linewidth=1)
+ax3.axhline(1/np.e, color='k', linestyle=":")
+ax3.set_xlabel('Lag (days)')
+ax3.set_title('PC autocorrelation')
+
+plt.tight_layout()
+plt.show()
+
+"""
+# Plot the PC timeseries
 t = ds.coords['time']
 times=[]
 for i in range(len(t)):
     times.append(t[i]-t[0])
 
-lat = ds.coords['lat']
-lon = ds.coords['lon']
-p = ds.coords['pfull']
-p_half = ds.coords['phalf']
-
-u = ds.ucomp.mean(dim='lon') # zonal-mean zonal wind
-p_min = 100 # hPa
-lat_min = 20 # degrees
-u_subset = u.sel(pfull=slice(p_min,max(p)), lat=slice(lat_min,max(lat))) # restrict analysis to window used in Sheshadri and Plumb (2017)
-u_anom = u_subset - u_subset.mean(dim='time').mean(dim='lat') # zonal-mean zonal wind anomalies 
-
-lat_subset = lat.sel(lat=slice(lat_min,max(lat))) 
-coslat = np.cos(np.deg2rad(u_subset.coords['lat'].values)).clip(0., 1.) # need to weight due to different box sizes over grid
-p_subset = p.sel(pfull=slice(p_min,max(p)))
-index_min = len(p_half) - len(p_subset)
-p_half_subset = p_half[index_min-1:]
-dp = np.empty_like(p_subset)
-
-for i in range(len(dp)):
-    dp[i] = p_half_subset[i+1] - p_half_subset[i] # find pressure thickness of each model level
-
-"""
-for i in range(len(coslat)):
-    for j in range(len(dp)):
-        u_anom[:,j,i] = u_anom[:,j,i]*np.sqrt(dp[j]*coslat[i]) # weight u anomalies using sqrt(dp*cos(lat))
-# print(u_anom)
-"""
-# Need to weight due to different box sizes over grid and pressure level thicknesses
-da = xr.DataArray(data=u_anom, dims=['time', 'dp', 'coslat'], coords=[t, np.sqrt(dp), np.sqrt(coslat)])
-wgts = da[0,:,:].to_numpy()
-
-# Create an EOF solver to do the EOF analysis.
-solver = Eof(u_anom, weights=wgts)
-
-# Retrieve the leading EOF, expressed as the covariance between the leading PC time series and the input anomalies at each grid point
-# By default PCs used are scaled to unit variance (dvided by square root of the eigenvalue)
-eof1 = solver.eofsAsCovariance(neofs=1)
-
-for i in range(len(coslat)):
-    for j in range(len(dp)):
-        eof1[:,j,i] = eof1[:,j,i]/np.sqrt(dp[j]*coslat[i]) # retrieve EOF1 
-
-# Plot the leading EOF expressed as covariance
-fig1 = plt.figure(figsize=(5,6))
-plt.contourf(lat_subset,p_subset,eof1[0], cmap='RdBu_r', levels=np.linspace(-2,2,41))
-plt.xlabel('Latitude')
-plt.ylabel('Pressure (hPa)')
-plt.ylim(max(p),p_min)
-plt.yscale('log')
-cb = plt.colorbar(orientation='horizontal')
-plt.title('EOF1 of Zonal Wind Anomaly')
-plt.show()
-
-# Find the leading PC time series itself
-pc1 = solver.pcs(npcs=1, pcscaling=1) # first PC scaled to unit variance
-
 fig2 = plt.figure(figsize=(6,5))
-plt.plot(times, pc1[:, 0], linewidth=2)
+plt.plot(times, pcs[0, 0], linewidth=2)
 ax = plt.gca()
 ax.axhline(0, color='k')
 ax.set_xlim(0, max(times))
@@ -90,23 +114,4 @@ ax.set_xlabel('Days')
 ax.set_ylabel('Normalized Units')
 ax.set_title('PC1 Time Series', fontsize='x-large')
 plt.show()
-
-# Fractional EOF mode variances.
-# The fraction of the total variance explained by each EOF mode, values between 0 and 1 inclusive.
-variance_fractions = solver.varianceFraction()
-print(variance_fractions[0].data * 100) # Is this the % of zonal wind variance associated w/ EOF1?
-
-# Find autocorrelation function in order to determine decorrelation time (i.e. time for correlation reduce to 1/e)
-lags = 100 
-autocorr = sm.tsa.acf(pc1, nlags=lags)
-closest = autocorr[np.abs(autocorr-(1/np.e)).argmin()]
-print(np.where(autocorr==closest)) # Is this the decorrelation timescale of EOF1?
-
-fig3 = plt.figure(figsize=(6,5))
-plt.acorr(pc1[:,0], maxlags=lags, usevlines=False, linestyle="-", marker=None, linewidth=2)
-ax = plt.gca()
-ax.axhline(0, color='k')
-ax.axhline(1/np.e, color='k', linestyle=":")
-ax.set_xlabel('Lag (days)')
-ax.set_title('Autocorrelation Function for EOF1', fontsize='x-large')
-plt.show()
+"""
