@@ -2,10 +2,19 @@
     This script plots (zonal) averages of various output variables averaged over X years'-worth of data from Isca
 """
 
-import glob
+from glob import glob
 import xarray as xr
 import numpy as np
 import matplotlib.pyplot as plt
+
+def discard_spinup(exp_name, time, file_suffix, years):
+    # Ignore initial spin-up period of 2 years
+    files = sorted(glob('../isca_data/'+exp_name+'/run*'+'/atmos_'+time+file_suffix+'.nc'))
+    max_months = len(files)-1
+    min_months = years*12
+    files = files[min_months:max_months]
+
+    return files
 
 def Tz(temp):
     ''' Take mean of average zonal temperature by taking averages along time and longitude dimensions '''
@@ -142,7 +151,7 @@ def plots(ds):
     plt.ylim(max(p), upper_p) #goes to 1hPa
     plt.yscale("log")
     plt.title('Zonal Average Teq and Temperature')
-   
+   """
 
     #Zonal Average Teq
     lvls4 = np.arange(100, 320, 10)
@@ -156,7 +165,7 @@ def plots(ds):
     plt.ylim(min(z), upper_z) #goes to ~1hPa
     plt.title('Zonal Equilibrium Temperature (K)')
 
-    
+    """
     #Zonal Average T from imposed local heating - sanity check
     heatz = heat.mean(dim='time').mean(dim='lon')
     fig5 = plt.figure()
@@ -250,21 +259,13 @@ def plots(ds):
     return plt.show()
 
 if __name__ == '__main__': 
-    """
-    #set-up data
-    #files = sorted(glob.glob('../isca_data/Polvani_Kushner_2.0/run*/atmos_monthly.nc')) #non-plevel_interpolated version of dataset
-    files = sorted(glob.glob('../isca_data/Polvani_Kushner_2.0_6y/run*/atmos_monthly_interp_new_height_temp.nc')) #plevel_interpolated version of dataset
-    ds = xr.open_mfdataset(files, decode_times = False)
-    print(ds)
-    """
-
-    #version of data set-up using subset of the run i.e. excluding "spin-up"
-    files = sorted(glob.glob('../isca_data/monthly/Polvani_Kushner_4.0_6y/run*/atmos_monthly_interp_new_height_temp.nc')) 
-    max_months = len(files)-1
-    years = 5 # user sets no. of years worth of data to use
-    months = years*12
-    files = files[(max_months-months):max_months]
-    ds = xr.open_mfdataset(files, decode_times = False)
+    
+    #Set-up data
+    exp_name = 'PK_eps0_vtx2_zoz18_1y_heat_test'
+    time = 'daily'
+    years = 2 # user sets no. of years worth of data to ignore due to spin-up
+    files = discard_spinup(exp_name, time, '_interp', years)
+    ds = xr.open_mfdataset(files, decode_times=False)
 
     #necessary constants
     Kappa = 2./7. #taken from constants script
