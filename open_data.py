@@ -92,7 +92,7 @@ def use_altitude(x, coord1, coord2, dim1, dim2, unit):
     return x_xr
 
 
-def plots(ds):
+def plots(ds, exp_name):
     #set-up variables from the dataset
     tm = ds.coords['time'].data
     lat = ds.coords['lat'].data
@@ -136,7 +136,7 @@ def plots(ds):
     plt.xticks([-90, -45, 0, 45, 90], ['90S', '45S', '0', '45N', '90N'])
     plt.ylabel('Pseudo-Altitude (km)')
     plt.ylim(min(z), upper_z) #goes to ~1hPa
-    plt.title('Zonal Wind Speed and Temperature')
+    plt.title(exp_name) #('Zonal Wind Speed and Temperature')
 
     """
     #Zonal Average Teq and Temperature
@@ -151,7 +151,6 @@ def plots(ds):
     plt.ylim(max(p), upper_p) #goes to 1hPa
     plt.yscale("log")
     plt.title('Zonal Average Teq and Temperature')
-   """
 
     #Zonal Average Teq
     lvls4 = np.arange(100, 320, 10)
@@ -165,7 +164,6 @@ def plots(ds):
     plt.ylim(min(z), upper_z) #goes to ~1hPa
     plt.title('Zonal Equilibrium Temperature (K)')
 
-    """
     #Zonal Average T from imposed local heating - sanity check
     heatz = heat.mean(dim='time').mean(dim='lon')
     fig5 = plt.figure()
@@ -261,9 +259,9 @@ def plots(ds):
 if __name__ == '__main__': 
     
     #Set-up data
-    exp_name = 'PK_eps0_vtx2_zoz18_1y_heat_test'
+    exp_name = 'PK_eps0_vtx4_zoz13_7y'
     time = 'daily'
-    years = 2 # user sets no. of years worth of data to ignore due to spin-up
+    years = 0 # user sets no. of years worth of data to ignore due to spin-up
     files = discard_spinup(exp_name, time, '_interp', years)
     ds = xr.open_mfdataset(files, decode_times=False)
 
@@ -274,4 +272,4 @@ if __name__ == '__main__':
     radius = 6371000. #earth radius
     g = 9.807 #earth gravity
 
-    plots(ds)
+    plots(ds, exp_name)

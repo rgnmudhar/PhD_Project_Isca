@@ -112,13 +112,13 @@ def use_altitude(x, coord1, coord2, dim1, dim2, unit):
 
     return x_xr
 
-def plots(ds, p_min, lat_min, alt=True):
+def plots(ds, p_min, lat_min, exp_name, alt=True):
     # Plot equivalent to Fig 4a-c from Sheshadri & Plumb
     # First generate all necessary information for EOF analysis
     uz, solver = calc_U(ds, p_min, lat_min)
     eofs, pcs = leading_eofs(solver)
     variance_fractions = variance(solver)
-    lags = 50 
+    lags = 100 
     tau1, tau2 = AM_times(pcs, lags)
 
     # Set-up coordinates
@@ -139,6 +139,7 @@ def plots(ds, p_min, lat_min, alt=True):
     
     # Now plot on a single figure
     fig = plt.figure(figsize=(15,5))
+    fig.suptitle(exp_name, fontsize='large')
 
     ax1 = fig.add_subplot(1,3,1)
     if alt==True:
@@ -179,9 +180,9 @@ def plots(ds, p_min, lat_min, alt=True):
 
 
 if __name__ == '__main__': 
-    exp_name = 'PK_eps0_vtx2_zoz18_1y_heat_test'
+    exp_name = 'PK_eps0_vtx2_zoz18_7y'
     time = 'daily'
-    years = 2 # user sets no. of years worth of data to ignore due to spin-up
+    years = 0 # user sets no. of years worth of data to ignore due to spin-up
     ds = add_phalf(exp_name, time, years)
 
     H = 8 #scale height km
@@ -191,7 +192,7 @@ if __name__ == '__main__':
     p_min = 100  # hPa
     lat_min = 20  # degrees
 
-    plots(ds, p_min, lat_min, alt=False)
+    plots(ds, p_min, lat_min, exp_name, alt=False)
 
 
 """
