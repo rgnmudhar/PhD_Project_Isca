@@ -49,23 +49,42 @@ def plots(ds, i):
     p = ds.coords['pfull'].data
     upper_p = ds.coords['pfull'].sel(pfull=1, method='nearest') # in order to cap plots at pressure = 1hPa
     u = ds.ucomp
+    T = ds.temp
+    
     
     #Zonal Average Zonal Wind Speed
-    uz = u.mean(dim='time').mean(dim='lon')
-    lvls = np.linspace(-60, 60, 25)
     fig1 = plt.figure()
     ax1 = fig1.add_subplot(111)
-    cs1 = uz.plot.contourf(levels=lvls, cmap='RdBu_r')
+    #uz = u.mean(dim='time').mean(dim='lon')
+    #lvls = np.linspace(-60, 80, 25)
+    #cs1 = uz.plot.contourf(levels=lvls, cmap='RdBu_r')
+    Tz = T.mean(dim='time').mean(dim='lon')
+    lvls = np.linspace(220, 320, 25)
+    cs1 = Tz.plot.contourf(levels=lvls, cmap='RdBu_r')
     ax1.contour(cs1, colors='gainsboro', linewidths=0.5)
     plt.xlabel('Latitude')
     plt.ylabel('Pressure (hPa)')
     plt.ylim(max(p), upper_p) #goes to 1hPa
     plt.yscale("log")
     plt.title('Month %i'%(i+1))
-    plt.savefig("uwind_%i.png"%(i), bbox_inches = 'tight')
+    #plt.savefig("uwind_%i.png"%(i), bbox_inches = 'tight')
+    plt.savefig("temp_%i.png"%(i), bbox_inches = 'tight')
     plt.close()
-
+    
     """
+    #Surface Temperature
+    Ts = T.mean(dim='time')[-1]
+    lvls = np.linspace(220, 320, 25)
+    fig1 = plt.figure()
+    ax1 = fig1.add_subplot(111)
+    cs1 = Ts.plot.contourf(levels=lvls, cmap='RdBu_r')
+    ax1.contour(cs1, colors='gainsboro', linewidths=0.5)
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude')
+    plt.title('Month %i'%(i+1))
+    plt.savefig("temp_%i.png"%(i), bbox_inches = 'tight')
+    plt.close()
+    
     #Zonal Avergae Meridional Stream Function
     msf = v(ds, p, lat)
     msfz_xr = xr.DataArray(msf, coords=[p,lat], dims=['pfull','lat'])
@@ -87,7 +106,7 @@ def plots(ds, i):
 
 
 if __name__ == '__main__': 
-    files = sorted(glob.glob('../isca_data/Polvani_Kushner_4.0_6y/run*/atmos_monthly_interp_new_height_temp.nc'))
+    files = sorted(glob.glob('../isca_data/PK_eps0_vtx3_zoz13_7y/run*/atmos_daily.nc'))
         
     for i in np.arange(0, len(files)):
         file = files[i]
@@ -95,12 +114,14 @@ if __name__ == '__main__':
         plots(ds, i)
     
     #Merge all plots into a GIF for visualisation
-    images = glob.glob('uwind*.png')
+    #images = glob.glob('uwind*.png')
+    images = glob.glob('temp*.png')
     list.sort(images, key = lambda x: int(x.split('_')[1].split('.png')[0]))
     IMAGES = []
     for i in range(0,len(images)):
         IMAGES.append(imageio.imread(images[i]))
-    imageio.mimsave("uwind.gif", IMAGES, 'GIF', duration = 1/3)
+    #imageio.mimsave("uwind.gif", IMAGES, 'GIF', duration = 1/3)
+    imageio.mimsave("temp.gif", IMAGES, 'GIF', duration = 1/3)
         
     #Delete all temporary plots from working directory
     for i in range(0,len(images)):
