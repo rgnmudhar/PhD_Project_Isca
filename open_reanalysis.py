@@ -62,8 +62,9 @@ for i in range(len(times2[0,:])):
 u_DJF = np.array(u_DJF)
 
 plt.contourf(lat, z, np.mean(u_DJF, axis=0), cmap='RdBu_r', levels=25)
-plt.xlabel('Latidude')
-plt.ylabel('Approx. Altitude (km)')
+plt.xlabel('Latitude')
+plt.xticks([-90, -45, 0, 45, 90], ['90S', '45S', '0', '45N', '90N'])
+plt.ylabel('Pseudo-Altitude (km)')
 plt.colorbar()
 plt.title('ERA5 DJF Zonal Mean Zonal Wind (m/s)')
 plt.show()

@@ -59,7 +59,7 @@ def P_surf(ds, lat, lon):
 
 def uz(ds):
     ''' Take mean of zonal wind speed by taking a mean along time and longitude dimensions '''
-    uz = ds.ucomp.mean(dim='time').mean(dim='lon').data 
+    uz = ds.ucomp.mean(dim='time').mean(dim='lon').data
    
     return uz
 
@@ -119,5 +119,4 @@ def use_altitude(x, coord1, coord2, dim1, dim2, unit):
 
     x_xr = xr.DataArray(x, coords=[coord1, coord2], dims=[dim1, dim2])
     x_xr.attrs['units'] = unit
-
     return x_xr

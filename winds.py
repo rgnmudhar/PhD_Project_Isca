@@ -1,7 +1,8 @@
 """
-    This script plots time and zonally averaged zonal surface wind for multiple gamma (averaged over a year's-worth of data from Isca)
+Plots time and zonally averaged zonal wind at X hPa for multiple experiments
 """
 
+from codecs import utf_16_be_decode
 from glob import glob
 import xarray as xr
 import numpy as np
@@ -10,8 +11,15 @@ import netCDF4 as nc
 import cftime
 from shared_functions import *
 
-def plots(ds1, ds2, ds3, ds4, labels):
-    #following opens ERA5 re-analysis data
+def plots(ds1, ds2, ds3, ds4, labels, fig_name):
+    """
+    Sets up all necessary coordinates and variables.
+    Then plots time and zonal average zonal wind at the pressure level closest to XhPa
+    """
+    
+    X = 900
+
+    #Following opens ERA5 re-analysis data
     file_ra = '/disca/share/pm366/ERA-5/era5_var131_masked_zm.nc'
     ds_ra = nc.Dataset(file_ra)
     t_ra = ds_ra.variables['time']
@@ -19,56 +27,42 @@ def plots(ds1, ds2, ds3, ds4, labels):
     p_ra = lev/100 # convert to hPa
     lat_ra = ds_ra.variables['lat'][:].data
     u_ra = ds_ra.variables['ucomp']
+
+    #Following writes date/time of ERA-5 data
     #times = []
     #times.append(cftime.num2pydate(t_ra, t_ra.units, t_ra.calendar)) # convert to actual dates
     #times = np.array(times)
 
-    #set-up variables from the datasets
-    #u0 = ds0.ucomp
-    u1 = ds1.ucomp
-    u2 = ds2.ucomp
-    u3 = ds3.ucomp
-    u4 = ds4.ucomp
-    #u_hs = ds_hs.ucomp
-
+    #Following sets up variables from the Isca datasets
     lat = ds1.coords['lat'].data
     lon = ds1.coords['lon'].data
     p = ds1.coords['pfull'].data
-    
-    #Time and Zonal Average Zonal Wind Speed at the pressure level closest to XhPa
-    X = 900
-    #uz0 = u0.mean(dim='time').mean(dim='lon').sel(pfull=X, method='nearest')
-    uz1 = u1.mean(dim='time').mean(dim='lon').sel(pfull=X, method='nearest')
-    uz2 = u2.mean(dim='time').mean(dim='lon').sel(pfull=X, method='nearest')
-    uz3 = u3.mean(dim='time').mean(dim='lon').sel(pfull=X, method='nearest')
-    uz4 = u4.mean(dim='time').mean(dim='lon').sel(pfull=X, method='nearest')
-    #uz_hs = u_hs.mean(dim='time').mean(dim='lon').sel(pfull=X, method='nearest')
+    uz1 = ds1.ucomp.mean(dim='time').mean(dim='lon').sel(pfull=X, method='nearest')
+    uz2 = ds2.ucomp.mean(dim='time').mean(dim='lon').sel(pfull=X, method='nearest')
+    uz3 = ds3.ucomp.mean(dim='time').mean(dim='lon').sel(pfull=X, method='nearest')
+    uz4 = ds4.ucomp.mean(dim='time').mean(dim='lon').sel(pfull=X, method='nearest')
 
-    label1 = labels[0] #r'$\gamma$ = 1.0'
-    label2 = labels[1] #r'$\gamma$ = 2.0'
-    label3 = labels[2] #r'$\gamma$ = 3.0'
-    label4 = labels[3] #r'$\gamma$ = 4.0'
-
-    fig = plt.subplots(1,1, figsize=(12,10))
-    #plt.plot(lat, uz0, 'k', label='no vortex', linewidth='3.0')
-    plt.plot(lat, uz1, ':k', label=label1)
-    plt.plot(lat, uz2, '-.k', label=label2)
-    plt.plot(lat, uz3, '--k', label=label3)
-    plt.plot(lat, uz4, 'k', label=label4)
-    #plt.plot(lat, uz_hs, 'b', label='Held-Suarez')
-    plt.plot(lat_ra, np.mean(u_ra[491:494,np.where(p_ra == X)[0],:], axis=0)[0], 'r', label='ERA5 (DJF)') # plot re-analysis uwind against latitude average over Nov-19 to Feb-20 (NH winter)
-    plt.xlabel('Latitude')
+    fig = plt.subplots(1,1, figsize=(10,8))
+    plt.plot(lat, uz1, ':k', label=labels[0])
+    plt.plot(lat, uz2, '-.k', label=labels[1])
+    plt.plot(lat, uz3, '--k', label=labels[2])
+    plt.plot(lat, uz4, 'k', label=labels[3])
+    plt.plot(lat_ra, np.mean(u_ra[491:494,np.where(p_ra == X)[0],:], axis=0)[0], color='#27AE60', label='ERA5 (DJF)') # plot re-analysis uwind against latitude average over Nov-19 to Feb-20 (NH winter)
+    plt.xlabel('Latitude', fontsize='large')
     plt.xlim(-90,90)
-    plt.ylabel('Wind Speed (m/s)')
-    plt.legend()
-    plt.title('Time and Zonally Averaged Zonal Wind at ~{:.0f}hPa'.format(X))
+    plt.xticks([-90, -45, 0, 45, 90], ['90S', '45S', '0', '45N', '90N'])
+    plt.ylabel(r'Wind Speed (ms$^{-1}$)', fontsize='large')
+    plt.tick_params(axis='both', labelsize = 'large', which='both', direction='in')
+    plt.legend(loc='upper center' , bbox_to_anchor=(0.5, -0.07),fancybox=False, shadow=True, ncol=5, fontsize='large')
+    plt.title('Time and Zonally Averaged Zonal Wind at ~{:.0f}hPa'.format(X), fontsize='x-large')
+    plt.savefig(fig_name+'_winds.png', bbox_inches = 'tight')
+    plt.close()
 
     return plt.show()
 
 if __name__ == '__main__': 
-    
     #Set-up data
-    exp = ['PK_eps0_vtx3_zoz13_7y', 'PK_eps0_vtx4_zoz13_7y', 'PK_eps10_vtx3_zoz13_7y', 'PK_eps0_vtx3_zoz13_heat']
+    exp = ['PK_eps0_vtx1_zoz13_7y', 'PK_eps0_vtx2_zoz13_7y', 'PK_eps0_vtx3_zoz13_7y', 'PK_eps0_vtx4_zoz13_7y']
     time = 'daily'
     years = 0 # user sets no. of years worth of data to ignore due to spin-up
     file_suffix = '_interp'
@@ -76,7 +70,8 @@ if __name__ == '__main__':
     ds1 = discard_spinup1(exp[0], time, file_suffix, years)
     ds2 = discard_spinup1(exp[1], time, file_suffix, years)
     ds3 = discard_spinup1(exp[2], time, file_suffix, years)
-    ds4 = discard_spinup1(exp[3], time, '', years)
-    #ds_hs = xr.open_mfdataset(sorted(glob('../isca_data/held_suarez_default/run*/atmos_monthly.nc'))[13:72], decode_times = False)
+    ds4 = discard_spinup1(exp[3], time, file_suffix, years)
 
-    plots(ds1, ds2, ds3, ds4, exp)
+    labels = [r'$\gamma$ = 1',r'$\gamma$ = 2',r'$\gamma$ = 3',r'$\gamma$ = 4']
+
+    plots(ds1, ds2, ds3, ds4, labels, 'PK_eps0_zoz13')
