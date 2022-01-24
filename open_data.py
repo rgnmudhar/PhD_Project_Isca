@@ -1,5 +1,5 @@
 """
-    This script plots (zonal) averages of various output variables averaged over X years'-worth of data from Isca
+    This script plots (time and zonal) averages of various output variables averaged over X years'-worth of data from Isca
 """
 
 from glob import glob
@@ -9,26 +9,29 @@ import matplotlib.pyplot as plt
 from shared_functions import *
 
 def plots(ds, exp_name):
-    #set-up variables from the dataset
+    # Set-up variables from the dataset
     tm = ds.coords['time'].data
     lat = ds.coords['lat'].data
     lon = ds.coords['lon'].data
     p = ds.coords['pfull'].data
     upper_p = ds.coords['pfull'].sel(pfull=1, method='nearest') # in order to cap plots at pressure = 1hPa
     z = altitude(p)
+    H = 8 #scale height km
+    p0 = 1000 #surface pressure hPa    
     upper_z = -H*np.log(upper_p/p0)
+
     u = uz(ds)
     T = Tz(ds.temp)
     Teq = Tz(ds.teq)
     #Vor = ds.vor
     #heat = ds.local_heating
 
-    #use altitude rather than pressure for vertical
-    u = use_altitude(u, z, lat, 'pfull', 'lat', 'm/s')
+    # Use altitude rather than pressure for vertical
+    u = use_altitude(u, z, lat, 'pfull', 'lat', r'ms$^{-1}$')
     T = use_altitude(T, z, lat, 'pfull', 'lat', 'K')
     Teq = use_altitude(Teq, z, lat, 'pfull', 'lat', 'K')
 
-    #Plots of means from across the time period
+    # Plots of means from across the time period
     """
     #Average Surface Pressure 
     P_surf = ds.ps.mean(dim='time')
@@ -41,21 +44,27 @@ def plots(ds, exp_name):
     plt.title('Average Surface Pressure (Pa)')
     """
 
-    #Zonal Average Zonal Wind Speed and Temperature
-    lvls2 = np.arange(160, 330, 10)
-    fig2, ax = plt.subplots()
-    cs2a = T.plot.contourf(levels=lvls2, cmap='RdBu_r')
+    # Zonal Average Zonal Wind Speed and Temperature
+    lvls2a = np.linspace(160, 330, 21)
+    lvls2b = np.arange(-200, 200, 5)
+    fig2, ax = plt.subplots(figsize=(10,8))
+    cs2a = T.plot.contourf(levels=lvls2a, cmap='RdBu_r', add_colorbar=False)
     ax.contourf(cs2a, colors='none')
-    cs2b = ax.contour(lat, z, u, colors='k', levels=15, linewidths=1.25)
+    cs2b = ax.contour(lat, z, u, colors='k', levels=lvls2b, linewidths=1.25)
     #ax.clabel(cs2b, inline=1, fontsize='x-small')
-    plt.xlabel('Latitude')
+    plt.colorbar(cs2a, label='Temperature (K)')
+    plt.xlabel('Latitude', fontsize='large')
+    plt.xlim(-90,90)
     plt.xticks([-90, -45, 0, 45, 90], ['90S', '45S', '0', '45N', '90N'])
-    plt.ylabel('Pseudo-Altitude (km)')
+    plt.ylabel('Pseudo-Altitude (km)', fontsize='large')
     plt.ylim(min(z), upper_z) #goes to ~1hPa
-    plt.title(exp_name) #('Zonal Wind Speed and Temperature')
+    plt.tick_params(axis='both', labelsize = 'large', which='both', direction='in')
+    plt.title('Mean Zonal Wind and Temperature', fontsize='x-large')
+    plt.savefig(exp_name+'_zonal.png', bbox_inches = 'tight')
+    plt.close()
 
     """
-    #Zonal Average Teq and Temperature
+    # Zonal Average Teq and Temperature
     fig3, ax = plt.subplots()
     cs3a = Tz.plot.contourf(levels=25, cmap='RdBu_r')
     ax.contourf(cs3a, colors='none')
@@ -67,7 +76,8 @@ def plots(ds, exp_name):
     plt.ylim(max(p), upper_p) #goes to 1hPa
     plt.yscale("log")
     plt.title('Zonal Average Teq and Temperature')
-    #Zonal Average Teq
+
+    # Zonal Average Teq
     lvls4 = np.arange(100, 320, 10)
     fig4 = plt.figure()
     ax4 = fig4.add_subplot(111)
@@ -78,7 +88,8 @@ def plots(ds, exp_name):
     plt.ylabel('Pseudo-Altitude (km)')
     plt.ylim(min(z), upper_z) #goes to ~1hPa
     plt.title('Zonal Equilibrium Temperature (K)')
-    #Zonal Average T from imposed local heating - sanity check
+
+    # Zonal Average T from imposed local heating - sanity check
     heatz = heat.mean(dim='time').mean(dim='lon')
     fig5 = plt.figure()
     ax5 = fig5.add_subplot(111)
@@ -89,7 +100,8 @@ def plots(ds, exp_name):
     plt.ylim(max(p),upper_p) #goes to 1hPa
     plt.yscale("log")
     plt.title('Average Zonal Local Heating (K)')
-    #Average Surface T from imposed local heating - sanity check
+
+    # Average Surface T from imposed local heating - sanity check
     heat_map = heat.mean(dim='time').sel(pfull=850, method='nearest')
     fig6 = plt.figure()
     ax6 = fig6.add_subplot(111)
@@ -98,7 +110,8 @@ def plots(ds, exp_name):
     plt.xlabel('Longitude')
     plt.ylabel('Latitude')
     plt.title('Average Local Heating at 850hPa Level')
-    #Zonal Average Teq at certain latitudes
+
+    # Zonal Average Teq at certain latitudes
     fig7 = plt.figure()
     ax7 = fig7.add_subplot(111)
     cs7a = plt.plot(Teqz[:,53],p, 'k', label='60N') #plots Teq at ~60N, index based on locator script
@@ -111,7 +124,8 @@ def plots(ds, exp_name):
     plt.yscale("log")
     plt.legend()
     plt.title('T_eq Profile (K)')
-    #Zonal Average Temperature
+
+    # Zonal Average Temperature
     Tz = T.mean(dim='time').mean(dim='lon')
     fig8 = plt.figure()
     ax8 = fig8.add_subplot(111)
@@ -122,7 +136,8 @@ def plots(ds, exp_name):
     plt.ylim(max(p), upper_p) #goes to 1hPa
     plt.yscale("log")
     plt.title('Average Zonal Temperature (K)')
-    #Zonal Average Potential Temperature
+
+    # Zonal Average Potential Temperature
     T_anm = T.mean(dim='time').mean(dim='lon')
     P_surf_anm = P_surf.mean(dim='time').mean(dim='lon')
     theta = T_potential(p,P_surf_anm,T_anm,lat)
@@ -137,18 +152,18 @@ def plots(ds, exp_name):
     plt.ylim(max(p), upper_p) #goes to 1hPa
     plt.yscale("log")
     plt.title('Average Zonal Potential Temperature (K)')
-    #Zonal Average Zonal Wind Speed
-    uz = u.mean(dim='time').mean(dim='lon')
+
+    # Zonal Average Zonal Wind Speed
     fig10 = plt.figure()
     ax10 = fig10.add_subplot(111)
-    cs10 = uz.plot.contourf(levels=25, cmap='RdBu_r')
+    cs10 = plt.contourf(lat, p, u, levels=25, cmap='RdBu_r')
     ax10.contour(cs10, colors='gainsboro', linewidths=0.5)
     plt.xlabel('Latitude')
     plt.ylabel('Pressure (hPa)')
     plt.ylim(max(p), upper_p) #goes to 1hPa
-    plt.yscale("log")
     plt.title('Average Zonal Wind')
-    #Zonal Average Meridional Stream Function
+
+    # Zonal Average Meridional Stream Function
     MSF = v(ds, p, lat)
     MSF_xr = xr.DataArray(MSF, coords=[p,lat], dims=['pfull','lat'])  # Make into an xarray DataArray
     MSF_xr.attrs['units']='kg/s'
@@ -165,8 +180,8 @@ def plots(ds, exp_name):
     return plt.show()
 
 if __name__ == '__main__': 
-    #Set-up data
-    exp_name = 'PK_eps10_vtx3_zoz13_7y'
+    #Set-up data to be read in
+    exp_name = 'PK_eps0_vtx3_zoz13_7y'
     time = 'daily'
     years = 0 # user sets no. of years worth of data to ignore due to spin-up
     ds = discard_spinup1(exp_name, time, '_interp', years)

@@ -1,3 +1,7 @@
+"""
+A selection of functions used in the analysis of output Isca data.
+"""
+
 import os
 from glob import glob
 import xarray as xr
@@ -5,7 +9,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def discard_spinup1(exp_name, time, file_suffix, years):
-    # Ignore initial spin-up period of X years
+    """
+    Ignore initial spin-up period of X years.
+    Output dataset.
+    """
     files = sorted(glob('../isca_data/'+exp_name+'/run*'+'/atmos_'+time+file_suffix+'.nc'))
     max_months = len(files)-1
     min_months = years*12
@@ -15,7 +22,10 @@ def discard_spinup1(exp_name, time, file_suffix, years):
     return ds
 
 def discard_spinup2(exp_name, time, file_suffix, years):
-    # Ignore initial spin-up period of 2 years
+    """
+    Ignore initial spin-up period of X years.
+    Output list of files.
+    """
     files = sorted(glob('../isca_data/'+exp_name+'/run*'+'/atmos_'+time+file_suffix+'.nc'))
     max_months = len(files)-1
     min_months = years*12
@@ -24,7 +34,9 @@ def discard_spinup2(exp_name, time, file_suffix, years):
     return files
 
 def add_phalf(exp_name, time, file_suffix, years):
-    
+    """
+    Assign phalf levels from uninterpolated to interpolated datset.
+    """    
     files = discard_spinup2(exp_name, time, file_suffix, years)
     files_original = discard_spinup2(exp_name, time, '', years)
 
@@ -35,13 +47,18 @@ def add_phalf(exp_name, time, file_suffix, years):
     return ds
 
 def Tz(temp):
-    ''' Take mean of average zonal temperature by taking averages along time and longitude dimensions '''
+    """
+    Take mean of average zonal temperature by taking averages along time and longitude dimensions.
+    """
     Tz = temp.mean(dim='time').mean(dim='lon').data 
     
     return Tz
 
 def T_potential(p, P_surf, T, lat):
-    #function to calculate potential temperature
+    """
+    Function to calculate potential temperature from temperature variable.
+    """
+
     Kappa = 2./7. #taken from constants script
     theta = np.empty_like(T)
     
@@ -52,26 +69,25 @@ def T_potential(p, P_surf, T, lat):
     return theta
 
 def P_surf(ds, lat, lon):
-    ''' Take mean of surface temperature by taking a mean along time dimension '''
+    """
+    Take mean of surface temperature by taking a mean along time dimension.
+    """
     p = ds.ps.mean(dim='time').data 
     
     return p
 
 def uz(ds):
-    ''' Take mean of zonal wind speed by taking a mean along time and longitude dimensions '''
+    """
+    Take mean of zonal wind speed by taking a mean along time and longitude dimensions.
+    """
     uz = ds.ucomp.mean(dim='time').mean(dim='lon').data
    
     return uz
 
 def calc_streamfn(v, p, lat):
-    '''Calculates the meridional streamfunction from v wind.
-    Parameters
-    ----------
-        vz_xr: an xarray DataArray of form [pressure levs, latitudes]
-    Returns
-    -------
-        psi_xr: xarray DataArray of meridional mass streamfunction, units of kg/s
-    '''
+    """
+    Calculates the meridional mass streamfunction from v wind in kg/s.
+    """
     radius = 6371000
     g = 9.807
     coeff = (2*np.pi*radius)/g
@@ -88,16 +104,19 @@ def calc_streamfn(v, p, lat):
     return psi
 
 def v(ds, p, lat):
-    ''' Take annual mean of meridional wind speed by taking a mean along time and longitude dimensions 
-        Use this to calculate the streamfunction the dedicated function
-    '''
+    """
+    Take annual mean of meridional wind speed by taking a mean along time and longitude dimensions.
+    Use this to calculate the streamfunction using the dedicated function.
+    """
     v_anm = ds.vcomp.mean(dim='time').mean(dim='lon').data
     psi = calc_streamfn(v_anm, p, lat)
     
     return psi
 
 def altitude(p):
-    #Finds altitude from pressure using z = -H*log10(p/p0) 
+    """
+    Finds altitude from pressure using z = -H*log10(p/p0).
+    """
     H = 8 #scale height km
     p0 = 1000 #surface pressure hPa    
       
@@ -116,7 +135,9 @@ def altitude(p):
     return z_xr
 
 def use_altitude(x, coord1, coord2, dim1, dim2, unit):
-
+    """
+    Creates new DataArray that uses z in place of pfull.
+    """
     x_xr = xr.DataArray(x, coords=[coord1, coord2], dims=[dim1, dim2])
     x_xr.attrs['units'] = unit
     return x_xr
