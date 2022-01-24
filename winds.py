@@ -79,12 +79,4 @@ if __name__ == '__main__':
     ds4 = discard_spinup1(exp[3], time, '', years)
     #ds_hs = xr.open_mfdataset(sorted(glob('../isca_data/held_suarez_default/run*/atmos_monthly.nc'))[13:72], decode_times = False)
 
-
-    #necessary constants
-    Kappa = 2./7. #taken from constants script
-    H = 8 #scale height km
-    p0 = 1000 #surface pressure in hPa
-    radius = 6371000. #earth radius
-    g = 9.807 #earth gravity
-
     plots(ds1, ds2, ds3, ds4, exp)
