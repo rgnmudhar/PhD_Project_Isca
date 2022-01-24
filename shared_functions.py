@@ -34,32 +34,35 @@ def add_phalf(exp_name, time, file_suffix, years):
 
     return ds
 
-def altitude(p):
-    #Finds altitude from pressure using z = -H*log10(p/p0) 
-    H = 8 #scale height km
-    p0 = 1000 #surface pressure hPa    
-      
-    z = np.empty_like(p)
+def Tz(temp):
+    ''' Take mean of average zonal temperature by taking averages along time and longitude dimensions '''
+    Tz = temp.mean(dim='time').mean(dim='lon').data 
     
-    for i in range(p.shape[0]):
-        z[i] = -H*np.log((p[i])/p0)
-        
-    # Make into an xarray DataArray
-    z_xr = xr.DataArray(z, coords=[z], dims=['pfull'])
-    z_xr.attrs['units'] = 'km'
-    
-    #below is the inverse of the calculation
-    #p[i] = p0*np.exp((-1)*z[i]*(10**3)/((R*T/g)))
-    
-    return z_xr
+    return Tz
 
-def use_altitude(x, coord1, coord2, dim1, dim2, unit):
-
-    x_xr = xr.DataArray(x, coords=[coord1, coord2], dims=[dim1, dim2])
-    x_xr.attrs['units'] = unit
-
-    return x_xr
+def T_potential(p, P_surf, T, lat):
+    #function to calculate potential temperature
+    Kappa = 2./7. #taken from constants script
+    theta = np.empty_like(T)
     
+    for i in range(len(p)):
+        for j in range(len(lat)):
+            theta[i,j] = T[i,j] * ((P_surf[j]/100)/p[i])**Kappa #potential temperature calculation with P_surf converted to hPa
+    
+    return theta
+
+def P_surf(ds, lat, lon):
+    ''' Take mean of surface temperature by taking a mean along time dimension '''
+    p = ds.ps.mean(dim='time').data 
+    
+    return p
+
+def uz(ds):
+    ''' Take mean of zonal wind speed by taking a mean along time and longitude dimensions '''
+    uz = ds.ucomp.mean(dim='time').mean(dim='lon').data 
+   
+    return uz
+
 def calc_streamfn(v, p, lat):
     '''Calculates the meridional streamfunction from v wind.
     Parameters
@@ -92,3 +95,29 @@ def v(ds, p, lat):
     psi = calc_streamfn(v_anm, p, lat)
     
     return psi
+
+def altitude(p):
+    #Finds altitude from pressure using z = -H*log10(p/p0) 
+    H = 8 #scale height km
+    p0 = 1000 #surface pressure hPa    
+      
+    z = np.empty_like(p)
+    
+    for i in range(p.shape[0]):
+        z[i] = -H*np.log((p[i])/p0)
+        
+    # Make into an xarray DataArray
+    z_xr = xr.DataArray(z, coords=[z], dims=['pfull'])
+    z_xr.attrs['units'] = 'km'
+    
+    #below is the inverse of the calculation
+    #p[i] = p0*np.exp((-1)*z[i]*(10**3)/((R*T/g)))
+    
+    return z_xr
+
+def use_altitude(x, coord1, coord2, dim1, dim2, unit):
+
+    x_xr = xr.DataArray(x, coords=[coord1, coord2], dims=[dim1, dim2])
+    x_xr.attrs['units'] = unit
+
+    return x_xr
