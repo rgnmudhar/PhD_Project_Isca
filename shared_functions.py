@@ -46,11 +46,11 @@ def add_phalf(exp_name, time, file_suffix, years):
 
     return ds
 
-def Tz(temp):
+def Tz(ds):
     """
     Take mean of average zonal temperature by taking averages along time and longitude dimensions.
     """
-    Tz = temp.mean(dim='time').mean(dim='lon').data 
+    Tz = ds.temp.mean(dim='time').mean(dim='lon').data 
     
     return Tz
 
@@ -141,3 +141,25 @@ def use_altitude(x, coord1, coord2, dim1, dim2, unit):
     x_xr = xr.DataArray(x, coords=[coord1, coord2], dims=[dim1, dim2])
     x_xr.attrs['units'] = unit
     return x_xr
+
+def difference(a1, a2, coord1, coord2, dim1, dim2, unit):
+    """
+    Take the difference between 2 datasets and create an xarray DataArray.
+    """
+    
+    diff = a1 - a2
+    
+    diff_xr = xr.DataArray(diff, coords=[coord1, coord2], dims=[dim1, dim2])
+    diff_xr.attrs['units'] = unit
+    
+    return diff_xr
+
+def diff_variables(ds1, ds2, lat, lon, z, p):
+    """
+    Find difference between datasets.
+    Start with zonal wind.
+    """
+    uz1 = uz(ds1)
+    uz2 = uz(ds2)
+    uz_diff = difference(uz1, uz2, z, lat, 'lat', 'pfull', r'ms$^{-1}$')
+    return uz_diff
