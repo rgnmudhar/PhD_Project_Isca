@@ -11,33 +11,18 @@ import numpy as np
 import matplotlib.pyplot as plt
 from eofs.xarray import Eof
 import statsmodels.api as sm
+from shared_functions import *
 
-def add_phalf(exp_name, time, years):
-    
-    files = discard_spinup(exp_name, time, '_interp', years)
-    files_original = discard_spinup(exp_name, time, '', years)
-
-    ds = xr.open_mfdataset(files, decode_times=False)
-    ds_original = xr.open_mfdataset(files_original, decode_times=False)
-    ds = ds.assign_coords({"phalf":ds_original.phalf})
-
-    return ds
-
-def discard_spinup(exp_name, time, file_suffix, years):
-    # Ignore initial spin-up period of 2 years
-    files = sorted(glob('../isca_data/'+exp_name+'/run*'+'/atmos_'+time+file_suffix+'.nc'))
-    max_months = len(files)-1
-    min_months = years*12
-    files = files[2:12] #files[min_months:max_months]
-
-    return files
-
-def calc_U(ds, p_min, lat_min):
+def eof_u(ds, p_min, lat_min):
     # For EOFs follow Sheshadri & Plumb 2017, use p>100hPa, lat>20degN and zonal mean u
     uz = ds.ucomp\
         .sel(pfull=slice(p_min,1000))\
         .sel(lat=slice(lat_min,90))\
         .mean(dim='lon')
+    return uz
+
+def eof_solver(ds, p_min, lat_min):
+    uz = eof_u(ds, p_min, lat_min)
 
     # Calculate anomalies
     uz_anom = uz - uz.mean(dim='time')
@@ -55,7 +40,7 @@ def calc_U(ds, p_min, lat_min):
     # Create an EOF solver to do the EOF analysis.
     solver = Eof(uz_anom.compute(), weights=wgts)
 
-    return uz, solver
+    return solver
 
 def leading_eofs(solver):
     # Retrieve the leading 2 EOFs and leading PC time series
@@ -64,7 +49,15 @@ def leading_eofs(solver):
     eofs = solver.eofsAsCovariance(neofs=2)
     pcs = solver.pcs(npcs=2, pcscaling=1)
 
-    return eofs, pcs
+    return eofs
+
+def leading_pcs(solver):
+    # Retrieve the leading 2 EOFs and leading PC time series
+    # expressed  as the covariance between the leading PC time series and the input anomalies
+    # By default PCs used are scaled to unit variance (dvided by square root of the eigenvalue)
+    pcs = solver.pcs(npcs=2, pcscaling=1)
+
+    return pcs
 
 def variance(solver):
     # Fractional EOF mode variances.
@@ -88,35 +81,13 @@ def AM_times(pcs, lags):
 
     return tau1, tau2
 
-def altitude(p):
-    #Finds altitude from pressure using z = -H*log10(p/p0) 
-        
-    z = np.empty_like(p)
-    
-    for i in range(p.shape[0]):
-        z[i] = -H*np.log((p[i])/p0)
-        
-    # Make into an xarray DataArray
-    z_xr = xr.DataArray(z, coords=[z], dims=['pfull'])
-    z_xr.attrs['units'] = 'km'
-    
-    #below is the inverse of the calculation
-    #p[i] = p0*np.exp((-1)*z[i]*(10**3)/((R*T/g)))
-    
-    return z_xr
-
-def use_altitude(x, coord1, coord2, dim1, dim2, unit):
-
-    x_xr = xr.DataArray(x, coords=[coord1, coord2], dims=[dim1, dim2])
-    x_xr.attrs['units'] = unit
-
-    return x_xr
-
-def plots(ds, p_min, lat_min, exp_name, alt=True):
+def plot_single(ds, p_min, lat_min, exp_name, alt=True):
     # Plot equivalent to Fig 4a-c from Sheshadri & Plumb
     # First generate all necessary information for EOF analysis
-    uz, solver = calc_U(ds, p_min, lat_min)
-    eofs, pcs = leading_eofs(solver)
+    uz = eof_u(ds, p_min, lat_min)
+    solver = eof_solver(ds, p_min, lat_min)
+    eofs = leading_eofs(solver)
+    pcs = leading_pcs(solver)
     variance_fractions = variance(solver)
     lags = 100 
     tau1, tau2 = AM_times(pcs, lags)
@@ -178,21 +149,56 @@ def plots(ds, p_min, lat_min, exp_name, alt=True):
     plt.tight_layout()
     return plt.show()
 
+def plot_multi(ds1, ds2, ds3, ds4, p_min, lat_min):
+    # Plot equivalent to Fig 4a-c from Sheshadri & Plumb
+    # First generate all necessary information for EOF analysis
+    pc1 = leading_pcs(eof_solver(ds1, p_min, lat_min))
+    pc2 = leading_pcs(eof_solver(ds2, p_min, lat_min))
+    pc3 = leading_pcs(eof_solver(ds3, p_min, lat_min))
+    pc4 = leading_pcs(eof_solver(ds4, p_min, lat_min))
+    lags = 50 
+    
+    # Now plot on a single figure
+    fig = plt.figure(figsize=(10,8))
+    plt.acorr(pc1.sel(mode=0), maxlags=lags, usevlines=False, linestyle="-", marker=None, linewidth=1, label=r'$\gamma$ = 1.0')
+    plt.acorr(pc2.sel(mode=0), maxlags=lags, usevlines=False, linestyle="-", marker=None, linewidth=1, label=r'$\gamma$ = 2.0')
+    plt.acorr(pc3.sel(mode=0), maxlags=lags, usevlines=False, linestyle="-", marker=None, linewidth=1, label=r'$\gamma$ = 3.0')
+    plt.acorr(pc4.sel(mode=0), maxlags=lags, usevlines=False, linestyle="-", marker=None, linewidth=1, label=r'$\gamma$ = 4.0')
+    plt.legend()
+    plt.axhline(0, color='k', linewidth=1)
+    plt.axhline(1/np.e, color='k', linestyle=":")
+    plt.xlim(-1*lags, lags)
+    plt.xlabel('Lag (days)')
+    plt.title('PC autocorrelation')
+
+    plt.tight_layout()
+    return plt.show()
 
 if __name__ == '__main__': 
-    exp_name = 'PK_eps0_vtx2_zoz18_7y'
+    plot_type = input("a) single or b) multi?")
+
     time = 'daily'
     years = 0 # user sets no. of years worth of data to ignore due to spin-up
-    ds = add_phalf(exp_name, time, years)
-
-    H = 8 #scale height km
-    p0 = 1000 #surface pressure hPa
+    file_suffix = '_interp'    
 
     # For EOFs follow Sheshadri & Plumb 2017, use p>100hPa, lat>20degN, zonal mean u
     p_min = 100  # hPa
     lat_min = 20  # degrees
 
-    plots(ds, p_min, lat_min, exp_name, alt=False)
+    if plot_type=='a':
+        exp_name = 'PK_eps0_vtx2_zoz18_7y'
+        ds = add_phalf(exp_name, time, years
+        plot_single(ds, p_min, lat_min, exp_name, alt=False)
+    
+    elif plot_type=='b':
+        exp = ['PK_eps0_vtx1_zoz18_7y', 'PK_eps0_vtx2_zoz18_7y', 'PK_eps0_vtx3_zoz18_7y', 'PK_eps0_vtx4_zoz18_7y']
+    
+        ds1 = add_phalf(exp[0], time, file_suffix, years)
+        ds2 = add_phalf(exp[1], time, file_suffix, years)
+        ds3 = add_phalf(exp[2], time, file_suffix, years)
+        ds4 = add_phalf(exp[3], time, file_suffix, years)
+
+        plot_multi(ds1, ds2, ds3, ds4, p_min, lat_min)        
 
 
 """
@@ -201,7 +207,6 @@ t = ds.coords['time']
 times=[]
 for i in range(len(t)):
     times.append(t[i]-t[0])
-
 fig2 = plt.figure(figsize=(6,5))
 plt.plot(times, pcs[0, 0], linewidth=2)
 ax = plt.gca()
