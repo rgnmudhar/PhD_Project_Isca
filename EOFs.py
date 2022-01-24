@@ -184,7 +184,9 @@ def plot_single(ds, p_min, lat_min, exp_name, alt=True):
     return plt.show()
 
 def plot_multi(ds1, ds2, ds3, ds4, p_min, lat_min, labels, fig_name):
-    # Plot equivalent to Fig 4a-c from Sheshadri & Plumb
+    """
+    Plots equivalent to Fig 4c from Sheshadri & Plumb to compare experiments.
+    """
     # First generate all necessary information for EOF analysis
     pc1 = leading_pcs(eof_solver(ds1, p_min, lat_min))
     pc2 = leading_pcs(eof_solver(ds2, p_min, lat_min))
@@ -219,7 +221,7 @@ if __name__ == '__main__':
     years = 0 # user sets no. of years worth of data to ignore due to spin-up
     file_suffix = '_interp'    
 
-    # For EOFs follow Sheshadri & Plumb 2017, use p>100hPa, lat>20degN, zonal mean u
+    # For EOFs follow Sheshadri & Plumb 2017, use p>100hPa, lat>20degN
     p_min = 100  # hPa
     lat_min = 20  # degrees
 
