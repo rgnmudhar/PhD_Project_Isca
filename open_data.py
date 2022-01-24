@@ -21,7 +21,7 @@ def plots(ds, exp_name):
     upper_z = -H*np.log(upper_p/p0)
 
     u = uz(ds)
-    T = Tz(ds.temp)
+    T = Tz(ds)
     Teq = Tz(ds.teq)
     #Vor = ds.vor
     #heat = ds.local_heating
