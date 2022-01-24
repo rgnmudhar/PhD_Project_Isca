@@ -8,18 +8,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import netCDF4 as nc
 import cftime
+from shared_functions import *
 
-def discard_spinup(exp_name, time, file_suffix, years):
-    # Ignore initial spin-up period of X years
-    files = sorted(glob('../isca_data/'+exp_name+'/run*'+'/atmos_'+time+file_suffix+'.nc'))
-    max_months = len(files)-1
-    min_months = years*12
-    files = files[min_months:max_months]
-    ds = xr.open_mfdataset(files, decode_times=False)
-
-    return ds
-
-def plots(ds1, ds2, ds3, ds4):
+def plots(ds1, ds2, ds3, ds4, labels):
     #following opens ERA5 re-analysis data
     file_ra = '/disca/share/pm366/ERA-5/era5_var131_masked_zm.nc'
     ds_ra = nc.Dataset(file_ra)
@@ -53,12 +44,17 @@ def plots(ds1, ds2, ds3, ds4):
     uz4 = u4.mean(dim='time').mean(dim='lon').sel(pfull=X, method='nearest')
     #uz_hs = u_hs.mean(dim='time').mean(dim='lon').sel(pfull=X, method='nearest')
 
+    label1 = labels[0] #r'$\gamma$ = 1.0'
+    label2 = labels[1] #r'$\gamma$ = 2.0'
+    label3 = labels[2] #r'$\gamma$ = 3.0'
+    label4 = labels[3] #r'$\gamma$ = 4.0'
+
     fig = plt.subplots(1,1, figsize=(12,10))
     #plt.plot(lat, uz0, 'k', label='no vortex', linewidth='3.0')
-    plt.plot(lat, uz1, ':k', label=r'$\gamma$ = 1.0')
-    plt.plot(lat, uz2, '-.k', label=r'$\gamma$  = 2.0')
-    plt.plot(lat, uz3, '--k', label=r'$\gamma$  = 3.0')
-    plt.plot(lat, uz4, 'k', label=r'$\gamma$  = 4.0')
+    plt.plot(lat, uz1, ':k', label=label1)
+    plt.plot(lat, uz2, '-.k', label=label2)
+    plt.plot(lat, uz3, '--k', label=label3)
+    plt.plot(lat, uz4, 'k', label=label4)
     #plt.plot(lat, uz_hs, 'b', label='Held-Suarez')
     plt.plot(lat_ra, np.mean(u_ra[491:494,np.where(p_ra == X)[0],:], axis=0)[0], 'r', label='ERA5 (DJF)') # plot re-analysis uwind against latitude average over Nov-19 to Feb-20 (NH winter)
     plt.xlabel('Latitude')
@@ -72,15 +68,15 @@ def plots(ds1, ds2, ds3, ds4):
 if __name__ == '__main__': 
     
     #Set-up data
-    exp = ['PK_eps10_vtx1_zoz13_7y', 'PK_eps10_vtx2_zoz13_7y', 'PK_eps10_vtx3_zoz13_7y', 'PK_eps10_vtx4_zoz13_7y']
+    exp = ['PK_eps0_vtx3_zoz13_7y', 'PK_eps0_vtx4_zoz13_7y', 'PK_eps10_vtx3_zoz13_7y', 'PK_eps0_vtx3_zoz13_heat']
     time = 'daily'
     years = 0 # user sets no. of years worth of data to ignore due to spin-up
     file_suffix = '_interp'
     
-    ds1 = discard_spinup(exp[0], time, file_suffix, years)
-    ds2 = discard_spinup(exp[1], time, file_suffix, years)
-    ds3 = discard_spinup(exp[2], time, file_suffix, years)
-    ds4 = discard_spinup(exp[3], time, file_suffix, years)
+    ds1 = discard_spinup1(exp[0], time, file_suffix, years)
+    ds2 = discard_spinup1(exp[1], time, file_suffix, years)
+    ds3 = discard_spinup1(exp[2], time, file_suffix, years)
+    ds4 = discard_spinup1(exp[3], time, '', years)
     #ds_hs = xr.open_mfdataset(sorted(glob('../isca_data/held_suarez_default/run*/atmos_monthly.nc'))[13:72], decode_times = False)
 
 
@@ -91,4 +87,4 @@ if __name__ == '__main__':
     radius = 6371000. #earth radius
     g = 9.807 #earth gravity
 
-    plots(ds1, ds2, ds3, ds4)
+    plots(ds1, ds2, ds3, ds4, exp)
