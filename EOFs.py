@@ -186,7 +186,7 @@ def plot_single(ds, p_min, lat_min, exp_name, alt=True):
 
     return plt.show()
 
-def plot_multi(ds1, ds2, ds3, ds4, p_min, lat_min, labels, fig_name):
+def plot_multi(ds1, ds2, ds3, ds4, p_min, lat_min, labels, colors, style, cols, fig_name):
     """
     Plots equivalent to Fig 4c from Sheshadri & Plumb to compare experiments.
     """
@@ -199,11 +199,11 @@ def plot_multi(ds1, ds2, ds3, ds4, p_min, lat_min, labels, fig_name):
     
     # Now plot on a single figure
     fig = plt.figure(figsize=(10,8))
-    plt.acorr(pc1.sel(mode=0), maxlags=lags, usevlines=False, color='#2980B9', linestyle="--", marker=None, linewidth=1, label=labels[0])
-    plt.acorr(pc2.sel(mode=0), maxlags=lags, usevlines=False, color='#2980B9', linestyle="-", marker=None, linewidth=1, label=labels[1])
-    plt.acorr(pc3.sel(mode=0), maxlags=lags, usevlines=False, color='k', linestyle="--", marker=None, linewidth=1, label=labels[2])
-    plt.acorr(pc4.sel(mode=0), maxlags=lags, usevlines=False, color='k', linestyle="-", marker=None, linewidth=1, label=labels[3])
-    plt.legend(loc='upper center' , bbox_to_anchor=(0.5, -0.07), fancybox=False, shadow=True, ncol=2, fontsize='large')
+    plt.acorr(pc1.sel(mode=0), maxlags=lags, usevlines=False, color=colors[0], linestyle=style[0], marker=None, linewidth=1, label=labels[0])
+    plt.acorr(pc2.sel(mode=0), maxlags=lags, usevlines=False, color=colors[1], linestyle=style[1], marker=None, linewidth=1, label=labels[1])
+    plt.acorr(pc3.sel(mode=0), maxlags=lags, usevlines=False, color=colors[2], linestyle=style[2], marker=None, linewidth=1, label=labels[2])
+    plt.acorr(pc4.sel(mode=0), maxlags=lags, usevlines=False, color=colors[3], linestyle=style[3], marker=None, linewidth=1, label=labels[3])
+    plt.legend(loc='upper center' , bbox_to_anchor=(0.5, -0.07), fancybox=False, shadow=True, ncol=cols, fontsize='large')
     plt.axhline(0, color='k', linewidth=0.5)
     plt.axvline(0, color='k', linewidth=0.5)
     plt.axhline(1/np.e, color='#D2D0D3', linestyle=":")
@@ -242,9 +242,15 @@ if __name__ == '__main__':
         ds4 = add_phalf(exp[3], time, file_suffix, years)
 
         #labels = [r'$\gamma$ = 1',r'$\gamma$ = 2',r'$\gamma$ = 3',r'$\gamma$ = 4']
+        #colors = ['k', '#C0392B', '#27AE60', '#9B59B6']
+        #style = ['-', '-', '-', '-']
+        #cols = 4
         labels = [r'$\epsilon = 0, p_{trop} \sim 100$ hPa', r'$\epsilon = 10, p_{trop} \sim 100$ hPa', r'$\epsilon = 0, p_{trop} \sim 200$ hPa', r'$\epsilon = 10, p_{trop} \sim 200$ hPa']
+        colors = ['#2980B9', '#2980B9', 'k', 'k']
+        style = ['--', '-', '--', '-']
+        cols = 2
 
-        plot_multi(ds1, ds2, ds3, ds4, p_min, lat_min, labels, 'PK_eps0+10_zoz13+10_vtx4')        
+        plot_multi(ds1, ds2, ds3, ds4, p_min, lat_min, labels, colors, style, cols, 'PK_eps0+10_zoz13+10_vtx4')        
 
 
 """
