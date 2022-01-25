@@ -1,10 +1,10 @@
 """
 Function for finding location and strength of maximum given zonal wind u(lat) field - based on WSeviour code.
 Amended to only look at NH tropospheric jet.
+Also includes timeseries plots of vortex strength at 60N and 10 hPa.
 """
 
 from glob import glob
-from telnetlib import X3PAD
 import xarray as xr
 import numpy as np
 import matplotlib.pyplot as plt
@@ -37,7 +37,7 @@ def calc_jet_lat_quad(u, lats, p, plot=False):
  
     return jet_lat, jet_max
 
-def timeseries(files, iter, p):
+def jet_timeseries(files, iter, p):
     """
     Steps through each dataset to find jet latitude/maximum over time.
     """
@@ -60,14 +60,56 @@ def timeseries(files, iter, p):
 
     return jet_lats, jet_maxima
 
-def plot_time(files1, files2, files3, files4, p, labels, colors, style, cols, fig_name):
+def vtx_timeseries(files, iter):
+    """
+    Steps through each dataset to find vortex strength over time.
+    Uses 60N and 10hPa as per SSW definiton.
+    """
+    p = 10 # hPa
+    l = 60 # degrees north
+
+    vtx_strength = []
+
+    for i in iter:
+        file = files[i]
+        ds = xr.open_dataset(file, decode_times=False)
+        for j in range(len(ds.time)):
+            vtx_strength.append(ds.ucomp[j].mean(dim='lon').sel(pfull=p, method='nearest').sel(lat=l, method='nearest'))
+
+    return vtx_strength
+
+def plot_vtx(files1, files2, files3, files4, labels, colors, style, cols, fig_name):
+    
+    iter = np.arange(0,len(files1))
+
+    vtx1 = vtx_timeseries(files1, iter)
+    vtx2 = vtx_timeseries(files2, iter)
+    vtx3 = vtx_timeseries(files3, iter)
+    vtx4 = vtx_timeseries(files4, iter)
+
+    fig, ax = plt.subplots(figsize=(12,8))
+    ax.plot(vtx1, color=colors[0], linewidth=1, linestyle=style[0], label=labels[0])
+    ax.plot(vtx2, color=colors[1], linewidth=1, linestyle=style[1], label=labels[1])
+    ax.plot(vtx3, color=colors[2], linewidth=1, linestyle=style[2], label=labels[2])
+    ax.plot(vtx4, color=colors[3], linewidth=1, linestyle=style[3], label=labels[3])
+    ax.set_xlim(1,len(vtx1)+1)
+    ax.set_xlabel('Day', fontsize='large')       
+    ax.set_ylabel(r'Zonal Wind Speed (ms$^{-1}$)', color='k', fontsize='large')
+    ax.tick_params(axis='both', labelsize = 'large', which='both', direction='in')
+    plt.legend(loc='upper center' , bbox_to_anchor=(0.5, -0.07), fancybox=False, shadow=True, ncol=cols, fontsize='large')
+    plt.title(r'Vortex Strength at $p \sim 10$ hPa, $\theta \sim 60 \degree$N', fontsize='x-large')
+    plt.savefig(fig_name+'_vtx.png', bbox_inches = 'tight')
+    
+    return plt.close()
+
+def plot_jet(files1, files2, files3, files4, p, labels, colors, style, cols, fig_name):
 
     iter = np.arange(0,len(files1))
 
-    lat1, max1 = timeseries(files1, iter, p)
-    lat2, max2 = timeseries(files2, iter, p)
-    lat3, max3 = timeseries(files3, iter, p)
-    lat4, max4 = timeseries(files4, iter, p)
+    lat1, max1 = jet_timeseries(files1, iter, p)
+    lat2, max2 = jet_timeseries(files2, iter, p)
+    lat3, max3 = jet_timeseries(files3, iter, p)
+    lat4, max4 = jet_timeseries(files4, iter, p)
 
     fig, ax = plt.subplots(figsize=(12,8))
     ax.plot(iter+1, lat1, color=colors[0], linewidth=1, linestyle=style[0], label=labels[0])
@@ -121,7 +163,9 @@ if __name__ == '__main__':
     style = ['--', '-', '--', '-']
     cols = 2
 
-    plot_time(files1, files2, files3, files4, p, labels, colors, style, cols, 'PK_eps0+10_zoz13+18_vtx4')
+    #plot_jet(files1, files2, files3, files4, p, labels, colors, style, cols, 'PK_eps0+10_zoz13+18_vtx4')
+
+    plot_vtx(files1, files2, files3, files4, labels, colors, style, cols, 'PK_eps0+10_zoz13+18_vtx4')
 
 """
 fig, ax = plt.subplots(figsize=(12,8))
