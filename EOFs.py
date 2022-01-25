@@ -126,17 +126,19 @@ def plot_single(ds, p_min, lat_min, exp_name, alt=True):
         eof2 = eofs.sel(mode=1)
     
     # Now plot on a single figure
-    fig = plt.figure(figsize=(18,6))
+    fig = plt.figure(figsize=(19,6))
+    ulvls = np.arange(-200, 200, 5)
     #fig.suptitle(exp_name, fontsize='large')
 
     ax1 = fig.add_subplot(1,3,1)
     if alt==True:
-        eof = eof1.plot.contourf(ax=ax1, cmap='RdBu_r', levels=21, add_colorbar=False)
-        uz.plot.contour(ax=ax1, colors='k', levels=15)
+        eof_1 = eof1.plot.contourf(ax=ax1, cmap='RdBu_r', levels=21, add_colorbar=False)
+        uz.plot.contour(ax=ax1, colors='k', levels=ulvls)
         ax1.set_ylabel('Pseudo-Altitude (km)', fontsize='large')
     else:
-        eof = eof1.plot.contourf(ax=ax1, cmap='RdBu_r', yincrease=False, levels=21, add_colorbar=False)
-        uz.plot.contour(ax=ax1, colors='k', yincrease=False, levels=15)
+        eof_1 = eof1.plot.contourf(ax=ax1, cmap='RdBu_r', yincrease=False, levels=21, add_colorbar=False)
+        plt.colorbar(eof_1)
+        uz.plot.contour(ax=ax1, colors='k', yincrease=False, levels=ulvls)
         ax1.set_ylabel('Pressure (hPa)', fontsize='large')
         ax1.set_ylim(925,100)
 
@@ -149,12 +151,13 @@ def plot_single(ds, p_min, lat_min, exp_name, alt=True):
 
     ax2 = fig.add_subplot(1,3,2)
     if alt==True:
-        eof2.plot.contourf(ax=ax2, cmap='RdBu_r', levels=21, add_colorbar=False)
-        uz.plot.contour(ax=ax2, colors='k', levels=15)
+        eof_2 = eof2.plot.contourf(ax=ax2, cmap='RdBu_r', levels=21, add_colorbar=False)
+        uz.plot.contour(ax=ax2, colors='k', levels=ulvls)
         ax2.set_ylabel('Pseudo-Altitude (km)', fontsize='large')
     else:
-        eof2.plot.contourf(ax=ax2, cmap='RdBu_r', yincrease=False, levels=21, add_colorbar=False)
-        uz.plot.contour(ax=ax2, colors='k', yincrease=False, levels=15)
+        eof_2 = eof2.plot.contourf(ax=ax2, cmap='RdBu_r', yincrease=False, levels=21, add_colorbar=False)
+        plt.colorbar(eof_2)
+        uz.plot.contour(ax=ax2, colors='k', yincrease=False, levels=ulvls)
         ax2.set_ylabel('Pressure (hPa)', fontsize='large')
         ax2.set_ylim(925,100)
     
@@ -166,7 +169,7 @@ def plot_single(ds, p_min, lat_min, exp_name, alt=True):
 
     ax3 = fig.add_subplot(1,3,3)
     ax3.acorr(pcs.sel(mode=0), maxlags=lags, usevlines=False, color='#C0392B', linestyle="-", marker=None, linewidth=1, label='EOF1')
-    ax3.acorr(pcs.sel(mode=1), maxlags=lags, usevlines=False, color='#27AE60', linestyle="-", marker=None, linewidth=1, label='EOF2')
+    ax3.acorr(pcs.sel(mode=1), maxlags=lags, usevlines=False, color='#2980B9', linestyle="-", marker=None, linewidth=1, label='EOF2')
     ax3.legend(fancybox=False, shadow=True, ncol=1, fontsize='large')
     ax3.axhline(0, color='k', linewidth=0.5)
     ax3.axvline(0, color='k', linewidth=0.5)
@@ -226,7 +229,7 @@ if __name__ == '__main__':
     lat_min = 20  # degrees
 
     if plot_type=='a':
-        exp_name = 'PK_eps10_vtx4_zoz18_7y'
+        exp_name = 'PK_eps10_vtx4_zoz13_7y'
         ds = add_phalf(exp_name, time, file_suffix, years)
         plot_single(ds, p_min, lat_min, exp_name, alt=False)
     
