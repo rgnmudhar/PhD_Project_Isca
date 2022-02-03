@@ -6,7 +6,7 @@
     Based on script by Penelope Maher and discussions with William Seviour.
 """
 
-import glob
+from glob import glob
 import xarray as xr
 import numpy as np
 import matplotlib.pyplot as plt
@@ -15,7 +15,8 @@ def calc_TKE(u,v):
     upv = u*u + v*v
     return 0.5 * upv
 
-files=sorted(glob.glob('../isca_data/Polvani_Kushner_1.0_6y/run*/atmos_monthly_interp_new_height_temp.nc'))
+exp_name = 'PK_eps0_vtx3_zoz13_w15a8p800f800g50'
+files=sorted(glob('../isca_data/'+exp_name+'/run*/atmos_daily_interp.nc'))
 iter = np.arange(0,len(files))
 KE = []
 for i in iter:
@@ -25,8 +26,8 @@ for i in iter:
     lat = ds.coords['lat'].data
     lon = ds.coords['lon'].data
     p = ds.coords['pfull'].data
-    u = ds.ucomp.mean(dim='lon')[0]
-    v = ds.vcomp.mean(dim='lon')[0]
+    u = ds.ucomp.mean(dim='lon').mean(dim='time')
+    v = ds.vcomp.mean(dim='lon').mean(dim='time')
     coslat = np.cos(np.deg2rad(u.coords['lat'].values)).clip(0., 1.) # need to weight due to different box sizes over grid
     lat_wgts = np.sqrt(coslat)
     TKE_box = np.empty_like(u)
@@ -43,5 +44,5 @@ ax.plot(iter+1, KE, color='k')
 ax.set_xlim(1,len(files))
 ax.set_xlabel("Run no.")       
 ax.set_ylabel('TKE', color='k')
-plt.title("Total Kinetic Energy for ~{0:.0f}y worth".format(len(files)/12))
+plt.title("Total Kinetic Energy for "+exp_name) #~{0:.0f}y worth".format(len(files)/12))
 plt.show()

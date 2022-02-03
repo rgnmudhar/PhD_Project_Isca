@@ -143,7 +143,7 @@ def plot_jet(files1, files2, files3, files4, p, labels, colors, style, cols, fig
 
 if __name__ == '__main__': 
     #Set-up data to be read in
-    exp_name = ['PK_eps0_vtx4_zoz18_7y','PK_eps10_vtx4_zoz18_7y','PK_eps0_vtx4_zoz13_7y','PK_eps10_vtx4_zoz13_7y']
+    exp_name = ['PK_eps0_vtx1_zoz18_7y','PK_eps10_vtx1_zoz18_7y','PK_eps0_vtx1_zoz13_7y','PK_eps10_vtx1_zoz13_7y']
     time = 'daily'
     years = 0 # user sets no. of years worth of data to ignore due to spin-up
     file_suffix = '_interp'
@@ -160,12 +160,12 @@ if __name__ == '__main__':
     #cols = 4
     labels = [r'$\epsilon = 0, p_{trop} \sim 100$ hPa', r'$\epsilon = 10, p_{trop} \sim 100$ hPa', r'$\epsilon = 0, p_{trop} \sim 200$ hPa', r'$\epsilon = 10, p_{trop} \sim 200$ hPa']
     colors = ['#2980B9', '#2980B9', 'k', 'k']
-    style = ['--', '-', '--', '-']
+    style = [':', '-', ':', '-']
     cols = 2
 
     #plot_jet(files1, files2, files3, files4, p, labels, colors, style, cols, 'PK_eps0+10_zoz13+18_vtx4')
 
-    plot_vtx(files1, files2, files3, files4, labels, colors, style, cols, 'PK_eps0+10_zoz13+18_vtx4')
+    plot_vtx(files1, files2, files3, files4, labels, colors, style, cols, 'PK_eps0+10_zoz13+18_vtx1')
 
 """
 fig, ax = plt.subplots(figsize=(12,8))
