@@ -143,9 +143,9 @@ def plot_jet(files1, files2, files3, files4, p, labels, colors, style, cols, fig
 
 if __name__ == '__main__': 
     #Set-up data to be read in
-    exp_name = ['PK_eps0_vtx1_zoz18_7y','PK_eps10_vtx1_zoz18_7y','PK_eps0_vtx1_zoz13_7y','PK_eps10_vtx1_zoz13_7y']
+    exp_name = ['PK_eps0_vtx3_zoz13_w15a2p800f800g50', 'PK_eps0_vtx3_zoz13_w15a4p800f800g50', 'PK_eps0_vtx3_zoz13_w15a6p800f800g50', 'PK_eps0_vtx3_zoz13_w15a8p800f800g50']
     time = 'daily'
-    years = 0 # user sets no. of years worth of data to ignore due to spin-up
+    years = 2 # user sets no. of years worth of data to ignore due to spin-up
     file_suffix = '_interp'
     p = 850 # pressure level at which we want to find the jet (hPa)
 
@@ -155,17 +155,17 @@ if __name__ == '__main__':
     files4 = discard_spinup2(exp_name[3], time, file_suffix, years)
 
     #labels = [r'$\gamma$ = 1',r'$\gamma$ = 2',r'$\gamma$ = 3',r'$\gamma$ = 4']
-    #colors = ['k', '#C0392B', '#27AE60', '#9B59B6']
-    #style = ['-', '-', '-', '-']
-    #cols = 4
-    labels = [r'$\epsilon = 0, p_{trop} \sim 100$ hPa', r'$\epsilon = 10, p_{trop} \sim 100$ hPa', r'$\epsilon = 0, p_{trop} \sim 200$ hPa', r'$\epsilon = 10, p_{trop} \sim 200$ hPa']
-    colors = ['#2980B9', '#2980B9', 'k', 'k']
-    style = [':', '-', ':', '-']
-    cols = 2
+    colors = ['k', '#C0392B', '#27AE60', '#9B59B6']
+    style = ['-', '-', '-', '-']
+    cols = 4
+    #labels = [r'$\epsilon = 0, p_{trop} \sim 100$ hPa', r'$\epsilon = 10, p_{trop} \sim 100$ hPa', r'$\epsilon = 0, p_{trop} \sim 200$ hPa', r'$\epsilon = 10, p_{trop} \sim 200$ hPa']
+    #colors = ['#2980B9', '#2980B9', 'k', 'k']
+    #style = [':', '-', ':', '-']
+    #cols = 2
+    labels = [r'A = 2 K day$^{-1}$', r'A = 4 K day$^{-1}$', r'A = 6 K day$^{-1}$', r'A = 8 K day$^{-1}$']
 
-    #plot_jet(files1, files2, files3, files4, p, labels, colors, style, cols, 'PK_eps0+10_zoz13+18_vtx4')
-
-    plot_vtx(files1, files2, files3, files4, labels, colors, style, cols, 'PK_eps0+10_zoz13+18_vtx1')
+    plot_jet(files1, files2, files3, files4, p, labels, colors, style, cols, 'PK_eps0_vtx3_zoz13_heating3')
+    plot_vtx(files1, files2, files3, files4, labels, colors, style, cols, 'PK_eps0_vtx3_zoz13_heating3')
 
 """
 fig, ax = plt.subplots(figsize=(12,8))
