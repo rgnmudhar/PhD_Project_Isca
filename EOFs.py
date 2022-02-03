@@ -195,7 +195,7 @@ def plot_multi(ds1, ds2, ds3, ds4, p_min, lat_min, labels, colors, style, cols, 
     pc2 = leading_pcs(eof_solver(ds2, p_min, lat_min))
     pc3 = leading_pcs(eof_solver(ds3, p_min, lat_min))
     pc4 = leading_pcs(eof_solver(ds4, p_min, lat_min))
-    lags = 190 
+    lags = 50 
     
     # Now plot on a single figure
     fig = plt.figure(figsize=(10,8))
@@ -209,7 +209,7 @@ def plot_multi(ds1, ds2, ds3, ds4, p_min, lat_min, labels, colors, style, cols, 
     plt.axhline(1/np.e, color='#D2D0D3', linestyle=":")
     plt.xlim(-1*lags, lags)
     plt.xlabel('Lag (days)', fontsize='large')
-    plt.ylim(-0.4,1)
+    plt.ylim(-0.2,1)
     plt.tick_params(axis='both', labelsize = 'large', which='both', direction='in')
     plt.title('EOF1 PC autocorrelation', fontsize='x-large')
     plt.savefig(fig_name+'_pcs.png', bbox_inches = 'tight')
@@ -221,7 +221,7 @@ if __name__ == '__main__':
     plot_type = input("a) single or b) multi?")
 
     time = 'daily'
-    years = 0 # user sets no. of years worth of data to ignore due to spin-up
+    years = 2 # user sets no. of years worth of data to ignore due to spin-up
     file_suffix = '_interp'    
 
     # For EOFs follow Sheshadri & Plumb 2017, use p>100hPa, lat>20degN
@@ -229,28 +229,29 @@ if __name__ == '__main__':
     lat_min = 20  # degrees
 
     if plot_type=='a':
-        exp_name = 'PK_eps10_vtx4_zoz13_7y'
+        exp_name = 'PK_eps0_vtx3_zoz13_w15a8p800f800g50'
         ds = add_phalf(exp_name, time, file_suffix, years)
         plot_single(ds, p_min, lat_min, exp_name, alt=False)
     
     elif plot_type=='b':
-        exp = ['PK_eps0_vtx4_zoz18_7y', 'PK_eps10_vtx4_zoz18_7y', 'PK_eps0_vtx4_zoz13_7y', 'PK_eps10_vtx4_zoz13_7y']
-    
-        ds1 = add_phalf(exp[0], time, file_suffix, years)
+        exp = ['PK_eps0_vtx3_zoz13_7y', 'PK_eps0_vtx3_zoz13_w15a0.5p800f800g50', 'PK_eps0_vtx3_zoz13_w15a2p800f800g50', 'PK_eps0_vtx3_zoz13_w15a4p800f800g50']
+
+        ds1 = add_phalf(exp[0], time, file_suffix, 0)
         ds2 = add_phalf(exp[1], time, file_suffix, years)
         ds3 = add_phalf(exp[2], time, file_suffix, years)
         ds4 = add_phalf(exp[3], time, file_suffix, years)
 
         #labels = [r'$\gamma$ = 1',r'$\gamma$ = 2',r'$\gamma$ = 3',r'$\gamma$ = 4']
-        #colors = ['k', '#C0392B', '#27AE60', '#9B59B6']
-        #style = ['-', '-', '-', '-']
-        #cols = 4
-        labels = [r'$\epsilon = 0, p_{trop} \sim 100$ hPa', r'$\epsilon = 10, p_{trop} \sim 100$ hPa', r'$\epsilon = 0, p_{trop} \sim 200$ hPa', r'$\epsilon = 10, p_{trop} \sim 200$ hPa']
-        colors = ['#2980B9', '#2980B9', 'k', 'k']
-        style = ['--', '-', '--', '-']
-        cols = 2
+        colors = ['k', '#C0392B', '#27AE60', '#9B59B6']
+        style = ['-', '-', '-', '-']
+        cols = 4
+        #labels = [r'$\epsilon = 0, p_{trop} \sim 100$ hPa', r'$\epsilon = 10, p_{trop} \sim 100$ hPa', r'$\epsilon = 0, p_{trop} \sim 200$ hPa', r'$\epsilon = 10, p_{trop} \sim 200$ hPa']
+        #colors = ['#2980B9', '#2980B9', 'k', 'k']
+        #style = ['--', '-', '--', '-']
+        #cols = 2
+        labels = ['no heat', r'A = 0.5 K day$^{-1}$', r'A = 2 K day$^{-1}$', r'A = 4 K day$^{-1}$']
 
-        plot_multi(ds1, ds2, ds3, ds4, p_min, lat_min, labels, colors, style, cols, 'PK_eps0+10_zoz13+10_vtx4')        
+        plot_multi(ds1, ds2, ds3, ds4, p_min, lat_min, labels, colors, style, cols, 'PK_eps0_vtx3_zoz13_heating1')        
 
 
 """
