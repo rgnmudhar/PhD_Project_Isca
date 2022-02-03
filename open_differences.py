@@ -20,13 +20,16 @@ def plots(ds1, ds2, exp_name):
     p0 = 1000 #surface pressure hPa    
     upper_z = -H*np.log(upper_p/p0)
 
-    uz = diff_variables(ds1, ds2, lat, lon, z, p)
+    u_diff = diff_variables(ds1, ds2, lat, lon, z, p)
+    u = use_altitude(uz(ds1), z, lat, 'pfull', 'lat', r'ms$^{-1}$')
 
-    fig1 = plt.figure(figsize=(10,8))
-    lvls1 = np.arange(-50,55,5)
-    ax1 = fig1.add_subplot(111)
-    cs1 = uz.plot.contourf(levels=lvls1, cmap='RdBu_r', add_colorbar=False)
-    ax1.contour(cs1, colors='gainsboro', linewidths=0.5)
+    fig, ax = plt.subplots(figsize=(10,8))
+    lvls1 = np.arange(-30, 32.5, 2.5)
+    lvls2 = np.arange(-200, 200, 10)
+    cs1 = u_diff.plot.contourf(levels=lvls1, cmap='RdBu_r', add_colorbar=False)
+    ax.contour(cs1, colors='gainsboro', linewidths=0.5)
+    cs2 = ax.contour(lat, z, u, colors='k', levels=lvls2, linewidths=0.5, alpha=0.4)
+    cs2.collections[int(len(lvls2)/2)].set_linewidth(0.75)
     plt.colorbar(cs1, label=r'Difference (ms$^{-1}$)')
     plt.xlabel('Latitude', fontsize='large')
     plt.xlim(-90,90)
@@ -40,11 +43,12 @@ def plots(ds1, ds2, exp_name):
 
 if __name__ == '__main__': 
     #Set-up data to be read in
-    exp = ['PK_eps0_vtx2_zoz13_7y','PK_eps0_vtx4_zoz13_7y']
+    exp_name = 'PK_eps0_vtx3_zoz13_w15a2p800f800g50'
+    exp = ['PK_eps0_vtx3_zoz13_w15a0.5p800f800g50', exp_name]
     time = 'daily'
-    years = 0 # user sets no. of years worth of data to ignore due to spin-up
+    years = 2 # user sets no. of years worth of data to ignore due to spin-up
     ds1 = discard_spinup1(exp[0], time, '_interp', years)
     ds2 = discard_spinup1(exp[1], time, '_interp', years)
-    exp_name = 'PK_eps0_vtx2-4_zoz13'
+    
 
     plots(ds1, ds2, exp_name)
