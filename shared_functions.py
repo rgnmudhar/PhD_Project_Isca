@@ -54,6 +54,14 @@ def Tz(ds):
     
     return Tz
 
+def Teqz(ds):
+    """
+    Take mean of average zonal temperature by taking averages along time and longitude dimensions.
+    """
+    Tz = ds.teq.mean(dim='time').mean(dim='lon').data 
+    
+    return Tz
+
 def T_potential(p, P_surf, T, lat):
     """
     Function to calculate potential temperature from temperature variable.
