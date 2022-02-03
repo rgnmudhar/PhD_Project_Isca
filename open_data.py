@@ -51,7 +51,8 @@ def plots(ds, exp_name):
     cs2a = T.plot.contourf(levels=lvls2a, cmap='RdBu_r', add_colorbar=False)
     ax.contourf(cs2a, colors='none')
     cs2b = ax.contour(lat, z, u, colors='k', levels=lvls2b, linewidths=1.25)
-    #ax.clabel(cs2b, inline=1, fontsize='x-small')
+    cs2b.collections[int(len(lvls2b)/2)].set_linewidth(1.75)
+    #plt.clabel(cs2b, levels = lvls2b[::4], inline=1, fontsize='x-small')
     plt.colorbar(cs2a, label='Temperature (K)')
     plt.xlabel('Latitude', fontsize='large')
     plt.xlim(-90,90)
@@ -181,7 +182,7 @@ def plots(ds, exp_name):
 
 if __name__ == '__main__': 
     #Set-up data to be read in
-    exp_name = 'PK_eps0_vtx3_zoz13_w15a0.5p800f800g50'
+    exp_name = 'PK_eps0_vtx3_zoz13_w15a2p800f800g50'
     time = 'daily'
     years = 2 # user sets no. of years worth of data to ignore due to spin-up
     ds = discard_spinup1(exp_name, time, '_interp', years)
