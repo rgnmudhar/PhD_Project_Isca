@@ -38,7 +38,7 @@ def add_phalf(exp_name, time, file_suffix, years):
     Assign phalf levels from uninterpolated to interpolated datset.
     """    
     files = discard_spinup2(exp_name, time, file_suffix, years)
-    files_original = discard_spinup2(exp_name, time, '', years)
+    files_original = discard_spinup2(exp_name, time, '', years) #discard_spinup2('PK_eps0_vtx3_zoz13_7y', time, '', years)
 
     ds = xr.open_mfdataset(files, decode_times=False)
     ds_original = xr.open_mfdataset(files_original, decode_times=False)
@@ -165,9 +165,14 @@ def difference(a1, a2, coord1, coord2, dim1, dim2, unit):
 def diff_variables(ds1, ds2, lat, lon, z, p):
     """
     Find difference between datasets.
-    Start with zonal wind.
+    Start with zonal wind and temperature.
     """
     uz1 = uz(ds1)
     uz2 = uz(ds2)
     uz_diff = difference(uz1, uz2, z, lat, 'lat', 'pfull', r'ms$^{-1}$')
-    return uz_diff
+
+    Tz1 = Tz(ds1)
+    Tz2 = Tz(ds2)
+    Tz_diff = difference(Tz1, Tz2, z, lat, 'lat', 'pfull', 'K')
+
+    return uz_diff, Tz_diff

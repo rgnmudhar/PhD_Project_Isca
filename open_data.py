@@ -45,13 +45,13 @@ def plots(ds, exp_name):
     """
 
     # Zonal Average Zonal Wind Speed and Temperature
-    lvls2a = np.linspace(160, 330, 21)
+    lvls2a = np.arange(160, 330, 5)
     lvls2b = np.arange(-200, 200, 5)
     fig2, ax = plt.subplots(figsize=(10,8))
     cs2a = T.plot.contourf(levels=lvls2a, cmap='RdBu_r', add_colorbar=False)
     ax.contourf(cs2a, colors='none')
-    cs2b = ax.contour(lat, z, u, colors='k', levels=lvls2b, linewidths=1.25)
-    cs2b.collections[int(len(lvls2b)/2)].set_linewidth(1.75)
+    cs2b = ax.contour(lat, z, u, colors='k', levels=lvls2b, linewidths=1)
+    cs2b.collections[int(len(lvls2b)/2)].set_linewidth(1.25)
     #plt.clabel(cs2b, levels = lvls2b[::4], inline=1, fontsize='x-small')
     plt.colorbar(cs2a, label='Temperature (K)')
     plt.xlabel('Latitude', fontsize='large')
@@ -182,9 +182,9 @@ def plots(ds, exp_name):
 
 if __name__ == '__main__': 
     #Set-up data to be read in
-    exp_name = 'PK_eps0_vtx3_zoz13_w15a2p800f800g50'
+    exp_name = 'PK_eps0_vtx3_zoz13_7y'
     time = 'daily'
-    years = 2 # user sets no. of years worth of data to ignore due to spin-up
+    years = 0 # user sets no. of years worth of data to ignore due to spin-up
     ds = discard_spinup1(exp_name, time, '_interp', years)
 
     plots(ds, exp_name)
