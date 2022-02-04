@@ -1,5 +1,6 @@
 """
-???
+Uses jet_locator functions to find location and strength of maximum stratopsheric vortex (10 hPa).
+Then plots this against heating experiment.
 """
 
 from glob import glob
