@@ -182,7 +182,7 @@ def plots(ds, exp_name):
 
 if __name__ == '__main__': 
     #Set-up data to be read in
-    exp_name = 'PK_eps0_vtx3_zoz13_7y'
+    exp_name = 'PK_eps0_vtx3_zoz13_w15a4p500f800g50'
     time = 'daily'
     years = 0 # user sets no. of years worth of data to ignore due to spin-up
     ds = discard_spinup1(exp_name, time, '_interp', years)

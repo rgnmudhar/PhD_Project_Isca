@@ -10,7 +10,7 @@ import imageio
 import os
 from shared_functions import *  
 
-def plots(ds, i), var:
+def plots(ds, i, var):
     ''' Plots '''    
     lon = ds.coords['lon'].data
     lat = ds.coords['lat'].data
@@ -24,17 +24,17 @@ def plots(ds, i), var:
     if var=='a':
         u = ds.ucomp
         uz = u.mean(dim='time').mean(dim='lon')
-        lvls = np.linspace(-50, 100, 25)
+        lvls = np.arange(-150, 150, 5)
         cs1 = uz.plot.contourf(levels=lvls, cmap='RdBu_r')
     elif var=='b':
         T = ds.temp
         Tz = T.mean(dim='time').mean(dim='lon')
-        lvls = np.linspace(160, 320, 25)
+        lvls = np.arange(160, 330, 5)
         cs1 = Tz.plot.contourf(levels=lvls, cmap='RdBu_r')
     elif var=='c':
         heat = ds.local_heating
         heatz = heat.mean(dim='time').mean(dim='lon')
-        lvls = np.linspace(0, 4.5, 25)
+        lvls = np.arange(0, 5, 0.5)
         cs1 = heatz.plot.contourf(levels=lvls, cmap='RdBu_r')
     
     ax1.contour(cs1, colors='gainsboro', linewidths=0.5)
@@ -55,7 +55,7 @@ def plots(ds, i), var:
 
 
 if __name__ == '__main__': 
-    files = sorted(glob('../isca_data/PK_eps0_vtx3_zoz13_7y/run*/atmos_daily.nc'))
+    files = sorted(glob('../isca_data/PK_eps0_vtx4_zoz13_7y/run*/atmos_daily.nc'))
     var = input('a) uz, b) Tz or c) local heating?')
 
     for i in np.arange(0, len(files)):
@@ -76,7 +76,7 @@ if __name__ == '__main__':
     for i in range(0,len(images)):
         IMAGES.append(imageio.imread(images[i]))
 
-    if var='a':
+    if var=='a':
         imageio.mimsave("uwind.gif", IMAGES, 'GIF', duration = 1/3)
     elif var=='b':
         imageio.mimsave("temp.gif", IMAGES, 'GIF', duration = 1/3)

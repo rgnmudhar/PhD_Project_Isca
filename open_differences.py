@@ -61,7 +61,7 @@ def plots(ds1, ds2, exp_name):
 
 if __name__ == '__main__': 
     #Set-up data to be read in
-    exp_name = 'PK_eps0_vtx3_zoz13_w15a0.5p800f800g50'
+    exp_name = 'PK_eps0_vtx3_zoz13_w15a4p500f800g50'
     exp = [exp_name, 'PK_eps0_vtx3_zoz13_7y']
     time = 'daily'
     years = 2 # user sets no. of years worth of data to ignore due to spin-up

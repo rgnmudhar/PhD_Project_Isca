@@ -25,7 +25,8 @@ def vtx_vs_heat(files, heat, p, fig_name):
     fig, ax = plt.subplots(figsize=(12,8))
     ax.errorbar(heat, maxwinds, yerr=maxwinds_sd, fmt='o', linewidth=1.25, capsize=5, color='#C0392B', linestyle=':')
     ax.set_xticks(heat)
-    ax.set_xlabel(r'Strength of Heating (K day$^{-1}$)', fontsize='large')
+    #ax.set_xlabel(r'Strength of Heating (K day$^{-1}$)', fontsize='large')
+    ax.set_xlabel(r'p$_{top}$ (hPa)', fontsize='large')
     ax.set_ylabel(r'Max. SPV Speed (ms$^{-1}$)', color='#C0392B', fontsize='large')
     ax.tick_params(axis='both', labelsize = 'large', which='both', direction='in')
     ax2 = ax.twinx()
@@ -41,12 +42,13 @@ if __name__ == '__main__':
     #Set-up data to be read in
     basis = 'PK_eps0_vtx3_zoz13'
     experiments = [basis+'_7y',\
-        basis+'_w15a0.5p800f800g50',\
-        basis+'_w15a2p800f800g50',\
+        basis+'_w15a4p900f800g50',\
         basis+'_w15a4p800f800g50',\
-        basis+'_w15a6p800f800g50',\
-        basis+'_w15a8p800f800g50']
-    heat = [0, 0.5, 2, 4, 6, 8]
+        basis+'_w15a4p700f800g50',\
+        basis+'_w15a4p600f800g50',\
+        basis+'_w15a4p500f800g50']
+    #heat = [0, 0.5, 2, 4, 6, 8]
+    heat = ['no heat', '900', '800', '700', '600', '500']
     time = 'daily'
     years = 2 # user sets no. of years worth of data to ignore due to spin-up
     file_suffix = '_interp'

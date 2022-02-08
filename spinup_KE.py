@@ -15,7 +15,7 @@ def calc_TKE(u,v):
     upv = u*u + v*v
     return 0.5 * upv
 
-exp_name = 'PK_eps0_vtx3_zoz13_w15a8p800f800g50'
+exp_name = 'PK_eps0_vtx3_zoz13_w15a4p900f800g50'
 files=sorted(glob('../isca_data/'+exp_name+'/run*/atmos_daily_interp.nc'))
 iter = np.arange(0,len(files))
 KE = []
@@ -45,4 +45,5 @@ ax.set_xlim(1,len(files))
 ax.set_xlabel("Run no.")       
 ax.set_ylabel('TKE', color='k')
 plt.title("Total Kinetic Energy for "+exp_name) #~{0:.0f}y worth".format(len(files)/12))
-plt.show()
+plt.savefig(exp_name+'_spinup', bbox_inches = 'tight')
+plt.close()

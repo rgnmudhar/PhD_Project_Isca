@@ -229,12 +229,12 @@ if __name__ == '__main__':
     lat_min = 20  # degrees
 
     if plot_type=='a':
-        exp_name = 'PK_eps0_vtx3_zoz13_w15a8p800f800g50'
+        exp_name = 'PK_eps0_vtx3_zoz13_w15a4p900f800g50'
         ds = add_phalf(exp_name, time, file_suffix, years)
         plot_single(ds, p_min, lat_min, exp_name, alt=False)
     
     elif plot_type=='b':
-        exp = ['PK_eps0_vtx3_zoz13_7y', 'PK_eps0_vtx3_zoz13_w15a0.5p800f800g50', 'PK_eps0_vtx3_zoz13_w15a2p800f800g50', 'PK_eps0_vtx3_zoz13_w15a4p800f800g50']
+        exp = ['PK_eps0_vtx3_zoz13_7y', 'PK_eps0_vtx3_zoz13_w15a4p500f800g50', 'PK_eps0_vtx3_zoz13_w15a4p700f800g50', 'PK_eps0_vtx3_zoz13_w15a4p900f800g50']
 
         ds1 = add_phalf(exp[0], time, file_suffix, 0)
         ds2 = add_phalf(exp[1], time, file_suffix, years)
@@ -249,9 +249,10 @@ if __name__ == '__main__':
         #colors = ['#2980B9', '#2980B9', 'k', 'k']
         #style = ['--', '-', '--', '-']
         #cols = 2
-        labels = ['no heat', r'A = 0.5 K day$^{-1}$', r'A = 2 K day$^{-1}$', r'A = 4 K day$^{-1}$']
+        #labels = ['no heat', r'A = 0.5 K day$^{-1}$', r'A = 2 K day$^{-1}$', r'A = 4 K day$^{-1}$']
+        labels = ['no heat', r'p$_{top}$ = 500 hPa', r'p$_{top}$ = 700 hPa', r'p$_{top}$ = 900 hPa']
 
-        plot_multi(ds1, ds2, ds3, ds4, p_min, lat_min, labels, colors, style, cols, 'PK_eps0_vtx3_zoz13_heating1')        
+        plot_multi(ds1, ds2, ds3, ds4, p_min, lat_min, labels, colors, style, cols, 'PK_eps0_vtx3_zoz13_heating2')        
 
 
 """
