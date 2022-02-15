@@ -16,7 +16,7 @@ def calc_TKE(u,v):
     return 0.5 * upv
 
 path = '/disco/share/rm811/isca_data/' #'../isca_data/'
-exp_name = 'PK_eps0_vtx1_zoz13_7y' #w15a8p800f800g50'
+exp_name = 'PK_eps0_vtx1_zoz13_w15a8p800f800g50'
 files=sorted(glob(path+exp_name+'/run*/atmos_daily.nc'))
 iter = np.arange(0,len(files))
 KE = []

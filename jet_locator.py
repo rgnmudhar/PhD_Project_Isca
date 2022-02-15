@@ -79,7 +79,9 @@ def vtx_timeseries(files, iter):
     return vtx_strength
 
 def plot_vtx(files1, files2, files3, files4, labels, colors, style, cols, fig_name):
-    
+    """
+    Plots strength of winds at 60N, 10 hPa only
+    """
     iter = np.arange(0,len(files1))
 
     vtx1 = vtx_timeseries(files1, iter)
@@ -102,8 +104,10 @@ def plot_vtx(files1, files2, files3, files4, labels, colors, style, cols, fig_na
     
     return plt.close()
 
-def plot_jet(files1, files2, files3, files4, p, labels, colors, style, cols, fig_name):
-
+def plot_jet(files1, files2, files3, files4, p, labels, colors, style, cols, wind, fig_name):
+    """
+    Plots latitude and corresponding strength of maximum winds at some input
+    """
     iter = np.arange(0,len(files1))
 
     lat1, max1 = jet_timeseries(files1, iter, p)
@@ -118,11 +122,11 @@ def plot_jet(files1, files2, files3, files4, p, labels, colors, style, cols, fig
     ax.plot(iter+1, lat4, color=colors[3], linewidth=1, linestyle=style[3], label=labels[3])
     ax.set_xlim(1,len(files1))
     ax.set_xlabel('Month', fontsize='large')       
-    ax.set_ylabel(r'Jet Latitude ($\degree$N)', fontsize='large')
+    ax.set_ylabel(wind+r'(Latitude ($\degree$N)', fontsize='large')
     ax.tick_params(axis='both', labelsize = 'large', which='both', direction='in')
     plt.legend(loc='upper center' , bbox_to_anchor=(0.5, -0.07), fancybox=False, shadow=True, ncol=cols, fontsize='large')
-    plt.title('NH Jet Latitude at p ~{0:.0f} hPa'.format(p), fontsize='x-large')
-    plt.savefig(fig_name+'_jetlat.png', bbox_inches = 'tight')
+    plt.title('NH '+wind+'Latitude at p ~{0:.0f} hPa'.format(p), fontsize='x-large')
+    plt.savefig(fig_name+'_maxlat.png', bbox_inches = 'tight')
     plt.close()
 
 
@@ -133,21 +137,31 @@ def plot_jet(files1, files2, files3, files4, p, labels, colors, style, cols, fig
     ax2.plot(iter+1, max4, color=colors[3], linewidth=1, linestyle=style[3], label=labels[3])
     ax2.set_xlim(1,len(files1))
     ax2.set_xlabel('Month', fontsize='large')       
-    ax2.set_ylabel(r'Jet Max (ms$^{-1}$)', color='k', fontsize='large')
+    ax2.set_ylabel(wind+r'Max (ms$^{-1}$)', color='k', fontsize='large')
     ax2.tick_params(axis='both', labelsize = 'large', which='both', direction='in')
     plt.legend(loc='upper center' , bbox_to_anchor=(0.5, -0.07), fancybox=False, shadow=True, ncol=cols, fontsize='large')
-    plt.title('NH Jet Strength at p ~{0:.0f} hPa'.format(p), fontsize='x-large')
-    plt.savefig(fig_name+'_jetmax.png', bbox_inches = 'tight')
+    plt.title('NH '+wind+'Strength at p ~{0:.0f} hPa'.format(p), fontsize='x-large')
+    plt.savefig(fig_name+'_maxwind.png', bbox_inches = 'tight')
     
     return plt.close()
 
 if __name__ == '__main__': 
     #Set-up data to be read in
-    exp_name = ['PK_eps0_vtx3_zoz13_w15a2p800f800g50', 'PK_eps0_vtx3_zoz13_w15a4p800f800g50', 'PK_eps0_vtx3_zoz13_w15a6p800f800g50', 'PK_eps0_vtx3_zoz13_w15a8p800f800g50']
-    time = 'daily'
+    basis = 'PK_eps0_vtx1_zoz13'
+    exp_name = [basis+'_7y',\
+        basis+'_w15a0.5p800f800g50',\
+        basis+'_w15a2p800f800g50',\
+        basis+'_w15a4p800f800g50']
+        time = 'daily'
     years = 2 # user sets no. of years worth of data to ignore due to spin-up
     file_suffix = '_interp'
-    p = 850 # pressure level at which we want to find the jet (hPa)
+    choice = input('a) tropospheric jet or b) stratospheric vortex?')
+    if choice == 'a':
+        p = 850 # pressure level at which we want to find the jet (hPa)
+        wind = 'Jet '
+    elif choice == 'b':
+        p = 10 # pressure level at which we want to find the SPV (hPa)
+        wind = 'SPV '
 
     files1 = discard_spinup2(exp_name[0], time, file_suffix, years)
     files2 = discard_spinup2(exp_name[1], time, file_suffix, years)
@@ -162,10 +176,10 @@ if __name__ == '__main__':
     #colors = ['#2980B9', '#2980B9', 'k', 'k']
     #style = [':', '-', ':', '-']
     #cols = 2
-    labels = [r'A = 2 K day$^{-1}$', r'A = 4 K day$^{-1}$', r'A = 6 K day$^{-1}$', r'A = 8 K day$^{-1}$']
+    labels = ['no heat', r'A = 0.5 K day$^{-1}$', r'A = 2 K day$^{-1}$', r'A = 4 K day$^{-1}$']
 
-    plot_jet(files1, files2, files3, files4, p, labels, colors, style, cols, 'PK_eps0_vtx3_zoz13_heating3')
-    plot_vtx(files1, files2, files3, files4, labels, colors, style, cols, 'PK_eps0_vtx3_zoz13_heating3')
+    #plot_jet(files1, files2, files3, files4, p, labels, colors, style, cols, wind, 'PK_eps0_vtx1_zoz13_heating')
+    plot_vtx(files1, files2, files3, files4, labels, colors, style, cols, 'PK_eps0_vtx1_zoz13_heating1')
 
 """
 fig, ax = plt.subplots(figsize=(12,8))
