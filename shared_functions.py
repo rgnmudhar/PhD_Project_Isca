@@ -13,11 +13,11 @@ def discard_spinup1(exp_name, time, file_suffix, years):
     Ignore initial spin-up period of X years.
     Output dataset.
     """
-    path = '/disco/share/rm811/isca_data/' #'../isca_data/'
+    path = '/disco/share/rm811/isca_data/' #'../isca_data/' 
     files = sorted(glob(path+exp_name+'/run*'+'/atmos_'+time+file_suffix+'.nc'))
-    max_months = len(files)-1
+    max_months = len(files)
     min_months = years*12
-    files = files[min_months:max_months]
+    files = files[min_months:max_months+1]
     ds = xr.open_mfdataset(files, decode_times=False)
 
     return ds
@@ -29,9 +29,9 @@ def discard_spinup2(exp_name, time, file_suffix, years):
     """
     path = '/disco/share/rm811/isca_data/' #'../isca_data/'
     files = sorted(glob(path+exp_name+'/run*'+'/atmos_'+time+file_suffix+'.nc'))
-    max_months = len(files)-1
+    max_months = len(files)
     min_months = years*12
-    files = files[min_months:max_months]
+    files = files[min_months:max_months+1]
 
     return files
 
