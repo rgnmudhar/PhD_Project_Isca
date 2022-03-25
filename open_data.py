@@ -32,16 +32,41 @@ def plots(ds, exp_name):
     Teq = use_altitude(Teq, z, lat, 'pfull', 'lat', 'K')
 
     # Plots of means from across the time period
+    
     """
-    #Average Surface Pressure 
-    P_surf = ds.ps.mean(dim='time')
+    #Average Surface Topography 
+    z_surf = ds.zsurf.mean(dim='time')
     fig1 = plt.figure()
     ax1 = fig1.add_subplot(111)
-    cs1 = P_surf_mean.plot.contourf(levels=25, cmap='RdBu_r')
-    ax1.contour(cs1, colors='gainsboro', linewidths=0.5)
-    plt.xlabel('Longitude')
-    plt.ylabel('Latitude')
-    plt.title('Average Surface Pressure (Pa)')
+    cs1 = z_surf.plot.contourf(levels=25, cmap='RdBu_r', add_colorbar=False)
+    plt.colorbar(cs1, label='Height (m)')
+    plt.xlabel('Longitude', fontsize='large')
+    plt.xlim(0, 360)
+    plt.xticks([0, 90, 180, 270, 360], ['180W', '90W', '0', '90E', '180E'])
+    plt.ylabel('Latitude', fontsize='large')
+    plt.ylim(-90,90)
+    plt.yticks([-90, -45, 0, 45, 90], ['90S', '45S', '0', '45N', '90N'])
+    plt.tick_params(axis='both', labelsize = 'large', which='both', direction='in')
+    plt.title('Model Surface Topography (m)')
+    plt.savefig(exp_name+'_zsurf.png', bbox_inches = 'tight')
+    plt.close()
+    
+    # Zonal Average Zonal Wind Speed and Temperature
+    lvls2a = np.arange(185, 315, 5)
+    lvls2b = np.arange(-200, 200, 5)
+    fig2, ax = plt.subplots(figsize=(8,6))
+    cs2a = ax.contourf(lat, p, T, levels=lvls2a, cmap='RdBu_r', add_colorbar=False)
+    ax.contourf(cs2a, colors='none')
+    cs2b = ax.contour(lat, p, u, colors='k', levels=lvls2b, linewidths=1)
+    cs2b.collections[int(len(lvls2b)/2)].set_linewidth(1.25)
+    plt.colorbar(cs2a, label='Temperature (K)')
+    plt.xlabel('Latitude', fontsize='large')
+    plt.ylabel('Pressure (hPa)', fontsize='large')
+    plt.ylim(max(p), upper_p) #goes to ~1hPa
+    plt.yscale('log')
+    plt.tick_params(axis='both', labelsize = 'large', which='both', direction='in')
+    plt.show()
+
     """
 
     # Zonal Average Zonal Wind Speed and Temperature
@@ -79,17 +104,19 @@ def plots(ds, exp_name):
     plt.title('Zonal Average Teq and Temperature')
 
     # Zonal Average Teq
-    lvls4 = np.arange(100, 320, 10)
-    fig4 = plt.figure()
-    ax4 = fig4.add_subplot(111)
-    cs4 = Teq.plot.contourf(levels=lvls4, cmap='RdBu_r')
-    ax4.contour(cs4, colors='gainsboro', linewidths=0.5)
-    plt.xlabel('Latitude')
+    lvls4 = np.arange(100, 315, 5)
+    fig4, ax4 = plt.subplots(figsize=(10,8))
+    cs4 = Teq.plot.contourf(levels=lvls4, cmap='RdBu_r', add_colorbar=False)
+    ax4.contour(cs4, colors='none')
+    plt.colorbar(cs4, label='Temperature (K)')
+    plt.xlim(-90,90)
+    plt.xlabel('Latitude', fontsize='large')
     plt.xticks([-90, -45, 0, 45, 90], ['90S', '45S', '0', '45N', '90N'])
-    plt.ylabel('Pseudo-Altitude (km)')
+    plt.ylabel('Pseudo-Altitude (km)', fontsize='large')
     plt.ylim(min(z), upper_z) #goes to ~1hPa
-    plt.title('Zonal Equilibrium Temperature (K)')
-
+    plt.tick_params(axis='both', labelsize = 'large', which='both', direction='in')
+    plt.title('Zonal Equilibrium Temperature (K)', fontsize='x-large')
+    
     # Zonal Average T from imposed local heating - sanity check
     heatz = heat.mean(dim='time').mean(dim='lon')
     fig5 = plt.figure()
@@ -152,18 +179,22 @@ def plots(ds, exp_name):
     plt.ylabel('Pressure (hPa)')
     plt.ylim(max(p), upper_p) #goes to 1hPa
     plt.yscale("log")
-    plt.title('Average Zonal Potential Temperature (K)')
+    plt.title('Average Zonal Potential Temperature (K)')    
 
     # Zonal Average Zonal Wind Speed
-    fig10 = plt.figure()
-    ax10 = fig10.add_subplot(111)
-    cs10 = plt.contourf(lat, p, u, levels=25, cmap='RdBu_r')
-    ax10.contour(cs10, colors='gainsboro', linewidths=0.5)
-    plt.xlabel('Latitude')
-    plt.ylabel('Pressure (hPa)')
-    plt.ylim(max(p), upper_p) #goes to 1hPa
-    plt.title('Average Zonal Wind')
-
+    lvls10 = np.arange(-10, 47.5, 2.5)
+    fig10, ax10 = plt.subplots(figsize=(10,8))
+    cs10 = u.plot.contourf(levels=lvls10, cmap='RdBu_r', add_colorbar=False)
+    ax10.contourf(cs10, colors='none')
+    plt.colorbar(cs10, label=r'Zonal Wind (m s$^{-1}$)')
+    plt.xlabel('Latitude', fontsize='x-large')
+    plt.xlim(-90,90)
+    plt.xticks([-90, -45, 0, 45, 90], ['90S', '45S', '0', '45N', '90N'])
+    plt.ylabel('Pseudo-Altitude (km)', fontsize='x-large')
+    plt.ylim(min(z), 18) #goes to ~1hPa
+    plt.tick_params(axis='both', labelsize = 'large', which='both', direction='in')
+    plt.title('Zonal Mean Zonal Wind', fontsize='xx-large')
+    
     # Zonal Average Meridional Stream Function
     MSF = v(ds, p, lat)
     MSF_xr = xr.DataArray(MSF, coords=[p,lat], dims=['pfull','lat'])  # Make into an xarray DataArray
@@ -182,7 +213,7 @@ def plots(ds, exp_name):
 
 if __name__ == '__main__': 
     #Set-up data to be read in
-    exp_name = 'PK_eps0_vtx1_zoz13_w15a8p800f800g50'
+    exp_name = 'PK_eps0_vtx3_zoz13_h4000m2l25u65'
     time = 'daily'
     years = 2 # user sets no. of years worth of data to ignore due to spin-up
     ds = discard_spinup1(exp_name, time, '_interp', years)

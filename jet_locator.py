@@ -47,6 +47,7 @@ def jet_timeseries(files, iter, p):
     for i in iter:
         #print(i)
         file  = files[i]
+        print(file)
         ds = xr.open_dataset(file, decode_times=False)
         lat = ds.coords['lat'].data
         u = ds.ucomp
@@ -78,7 +79,7 @@ def vtx_timeseries(files, iter):
 
     return vtx_strength
 
-def plot_vtx(files1, files2, files3, files4, labels, colors, style, cols, fig_name):
+def plot_vtx(files1, files2, labels, colors, style, cols, fig_name):
     """
     Plots strength of winds at 60N, 10 hPa only
     """
@@ -86,14 +87,15 @@ def plot_vtx(files1, files2, files3, files4, labels, colors, style, cols, fig_na
 
     vtx1 = vtx_timeseries(files1, iter)
     vtx2 = vtx_timeseries(files2, iter)
-    vtx3 = vtx_timeseries(files3, iter)
-    vtx4 = vtx_timeseries(files4, iter)
+    #vtx3 = vtx_timeseries(files3, iter)
+    #vtx4 = vtx_timeseries(files4, iter)
 
     fig, ax = plt.subplots(figsize=(12,8))
     ax.plot(vtx1, color=colors[0], linewidth=1, linestyle=style[0], label=labels[0])
     ax.plot(vtx2, color=colors[1], linewidth=1, linestyle=style[1], label=labels[1])
-    ax.plot(vtx3, color=colors[2], linewidth=1, linestyle=style[2], label=labels[2])
-    ax.plot(vtx4, color=colors[3], linewidth=1, linestyle=style[3], label=labels[3])
+    #ax.plot(vtx3, color=colors[2], linewidth=1, linestyle=style[2], label=labels[2])
+    #ax.plot(vtx4, color=colors[3], linewidth=1, linestyle=style[3], label=labels[3])
+    ax.axhline(0, color='k', linewidth=0.5)
     ax.set_xlim(1,len(vtx1)+1)
     ax.set_xlabel('Day', fontsize='large')       
     ax.set_ylabel(r'Zonal Wind Speed (ms$^{-1}$)', color='k', fontsize='large')
@@ -149,10 +151,10 @@ if __name__ == '__main__':
     #Set-up data to be read in
     basis = 'PK_eps0_vtx1_zoz13'
     exp_name = [basis+'_7y',\
-        basis+'_w15a0.5p800f800g50',\
-        basis+'_w15a2p800f800g50',\
-        basis+'_w15a4p800f800g50']
-        time = 'daily'
+        basis+'_h4000m2l25u65'] #,\
+        #basis+'_w15a2p800f800g50',\
+        #basis+'_w15a4p800f800g50']
+    time = 'daily'
     years = 2 # user sets no. of years worth of data to ignore due to spin-up
     file_suffix = '_interp'
     choice = input('a) tropospheric jet or b) stratospheric vortex?')
@@ -165,33 +167,21 @@ if __name__ == '__main__':
 
     files1 = discard_spinup2(exp_name[0], time, file_suffix, years)
     files2 = discard_spinup2(exp_name[1], time, file_suffix, years)
-    files3 = discard_spinup2(exp_name[2], time, file_suffix, years)
-    files4 = discard_spinup2(exp_name[3], time, file_suffix, years)
+    #files3 = discard_spinup2(exp_name[2], time, file_suffix, years)
+    #files4 = discard_spinup2(exp_name[3], time, file_suffix, years)
 
     #labels = [r'$\gamma$ = 1',r'$\gamma$ = 2',r'$\gamma$ = 3',r'$\gamma$ = 4']
-    colors = ['k', '#C0392B', '#27AE60', '#9B59B6']
-    style = ['-', '-', '-', '-']
-    cols = 4
+    #colors = ['k', '#C0392B', '#27AE60', '#9B59B6']
+    #style = ['-', '-', '-', '-']
+    #cols = 4
+    #labels = ['no heat', r'A = 0.5 K day$^{-1}$', r'A = 2 K day$^{-1}$', r'A = 4 K day$^{-1}$']
     #labels = [r'$\epsilon = 0, p_{trop} \sim 100$ hPa', r'$\epsilon = 10, p_{trop} \sim 100$ hPa', r'$\epsilon = 0, p_{trop} \sim 200$ hPa', r'$\epsilon = 10, p_{trop} \sim 200$ hPa']
     #colors = ['#2980B9', '#2980B9', 'k', 'k']
     #style = [':', '-', ':', '-']
-    #cols = 2
-    labels = ['no heat', r'A = 0.5 K day$^{-1}$', r'A = 2 K day$^{-1}$', r'A = 4 K day$^{-1}$']
+    cols = 2
+    labels = ['original', 'with heating perturbation']
+    colors = ['#2980B9', '#C0392B']
+    style = ['-', '-']
 
     #plot_jet(files1, files2, files3, files4, p, labels, colors, style, cols, wind, 'PK_eps0_vtx1_zoz13_heating')
-    plot_vtx(files1, files2, files3, files4, labels, colors, style, cols, 'PK_eps0_vtx1_zoz13_heating1')
-
-"""
-fig, ax = plt.subplots(figsize=(12,8))
-ax.plot(iter+1, jet_maxima, color='k', linewidth=1)
-ax.set_xlim(1,len(files))
-ax.set_xlabel('Month', fontsize='large')       
-ax.set_ylabel(r'Jet Max (ms$^{-1}$)', color='k', fontsize='large')
-ax.tick_params(axis='both', labelsize = 'large', which='both', direction='in')
-ax2 = ax.twinx()
-ax2.plot(iter+1, jet_lats, color='#2980B9', linewidth=1.5, linestyle='--')
-ax2.set_ylabel(r'Jet Latitude ($\degree$N)', color='#2980B9', fontsize='large')
-ax2.tick_params(axis='y', colors='#2980B9')
-ax2.tick_params(axis='both', labelsize = 'large', which='both', direction='in')
-plt.title('NH Jet at p ~{0:.0f} hPa'.format(p), fontsize='x-large')
-"""
+    plot_vtx(files1, files2, labels, colors, style, cols, basis+'_ideal_topo')

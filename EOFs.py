@@ -106,7 +106,7 @@ def plot_single(ds, p_min, lat_min, exp_name, alt=True):
     eofs = leading_eofs(solver)
     pcs = leading_pcs(solver)
     variance_fractions = variance(solver)
-    lags = 190 
+    lags = 50 
     tau1, tau2 = AM_times(pcs, lags)
 
     # Set-up coordinates
@@ -229,12 +229,16 @@ if __name__ == '__main__':
     lat_min = 20  # degrees
 
     if plot_type=='a':
-        exp_name = 'PK_eps0_vtx1_zoz13_w15a8p800f800g50'
+        exp_name = 'PK_eps0_vtx3_zoz13_h4000m2l25u65'
         ds = add_phalf(exp_name, time, file_suffix, years)
         plot_single(ds, p_min, lat_min, exp_name, alt=False)
     
     elif plot_type=='b':
-        exp = ['PK_eps0_vtx1_zoz13_7y', 'PK_eps0_vtx1_zoz13_w15a2p800f800g50', 'PK_eps0_vtx1_zoz13_w15a4p800f800g50', 'PK_eps0_vtx1_zoz13_w15a8p800f800g50']
+        basis = 'PK_eps0_vtx1_zoz13'
+        exp = [basis+'_7y',\
+            basis+'_w15a4p800f800g50',\
+            basis+'_w15a4p600f800g50',\
+            basis+'_w15a4p400f800g50']
 
         ds1 = add_phalf(exp[0], time, file_suffix, years)
         ds2 = add_phalf(exp[1], time, file_suffix, years)
@@ -249,10 +253,10 @@ if __name__ == '__main__':
         #colors = ['#2980B9', '#2980B9', 'k', 'k']
         #style = ['--', '-', '--', '-']
         #cols = 2
-        labels = ['no heat', r'A = 2 K day$^{-1}$', r'A = 4 K day$^{-1}$', r'A = 8 K day$^{-1}$']
-        #labels = ['no heat', r'p$_{top}$ = 500 hPa', r'p$_{top}$ = 700 hPa', r'p$_{top}$ = 900 hPa']
+        #labels = ['no heat', r'A = 2 K day$^{-1}$', r'A = 4 K day$^{-1}$', r'A = 8 K day$^{-1}$']
+        labels = ['no heat', r'p$_{top}$ = 800 hPa', r'p$_{top}$ = 600 hPa', r'p$_{top}$ = 400 hPa']
 
-        plot_multi(ds1, ds2, ds3, ds4, p_min, lat_min, labels, colors, style, cols, 'PK_eps0_vtx1_zoz13_heating2')        
+        plot_multi(ds1, ds2, ds3, ds4, p_min, lat_min, labels, colors, style, cols, 'PK_eps0_vtx1_zoz13_heating3')        
 
 
 """
