@@ -1,5 +1,5 @@
 """
-Uses jet_locator functions to find location and strength of maximum stratopsheric vortex (10 hPa).
+Uses jet_locator functions to find location and strength of the tropospheric jet (850 hPa).
 Then plots this against heating experiment.
 """
 
@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from shared_functions import *
 from jet_locator import *
 
-def vtx_vs_heat(files, heat, p, xlabel, fig_name):    
+def jet_vs_heat(files, heat, p, xlabel, fig_name):    
     lats = []
     lats_sd = []
     maxwinds = []
@@ -51,12 +51,6 @@ if __name__ == '__main__':
         basis2+'_7y',\
         basis2+'_w15a2p400f800g50',\
         basis2+'_w15a4p400f800g50']
-    #heat = [0, 0.5, 2, 4, 6, 8]
-    #xlabel = r'Strength of Heating (K day$^{-1}$)'
-    #heat = ['no heat', '900', '800', '700', '600', '500', '400', '300']
-    #xlabel = r'p$_{top}$ (hPa)'
-    #heat = ['no heat', '10', '15', '20', '25', '30', '35', '40']
-    #xlabel = r'$\theta_{w}$  ($\degree$N)'
     heat = [0, 2, 4]
     xlabel = r'Strength of Heating (K day$^{-1}$)'
     time = 'daily'
@@ -74,4 +68,4 @@ if __name__ == '__main__':
             files.append(discard_spinup2(experiments[i], time, file_suffix, years))
         """
 
-    vtx_vs_heat(files, heat, p, xlabel, "ruth_experiments") #basis)  
+    jet_vs_heat(files, heat, p, xlabel, "ruth_experiments") #basis)  
