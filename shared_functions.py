@@ -13,7 +13,7 @@ def discard_spinup1(exp_name, time, file_suffix, years):
     Ignore initial spin-up period of X years.
     Output dataset.
     """
-    path = '/disco/share/rm811/isca_data/' #'../isca_data/' 
+    path = '/disco/share/rm811/isca_data/'
     files = sorted(glob(path+exp_name+'/run*'+'/atmos_'+time+file_suffix+'.nc'))
     max_months = len(files)
     min_months = years*12
@@ -25,14 +25,46 @@ def discard_spinup1(exp_name, time, file_suffix, years):
 def discard_spinup2(exp_name, time, file_suffix, years):
     """
     Ignore initial spin-up period of X years.
-    Output list of files.
+    Output list of file names.
     """
-    path = '/disco/share/rm811/isca_data/' #'../isca_data/'
+    path = '/disco/share/rm811/isca_data/'
     files = sorted(glob(path+exp_name+'/run*'+'/atmos_'+time+file_suffix+'.nc'))
     max_months = len(files)
     min_months = years*12
     files = files[min_months:max_months+1]
 
+    return files
+
+def select_ds(exp, time, file_suffix, years, diff_basis):
+    """
+    To get around issue of some experiments already having X years of spin-up discarded.
+    Output list of datasets.
+    """
+    ds = []
+    for i in range(len(exp)):
+        if diff_basis == True:
+            if i == 0:
+                ds.append(discard_spinup1(exp[i], time, file_suffix, 0))                
+            else:
+                ds.append(discard_spinup1(exp[i], time, file_suffix, years))
+        else:
+            ds.append(discard_spinup1(exp[i], time, file_suffix, years))
+    return ds
+
+def select_files(exp, time, file_suffix, years, diff_basis):
+    """
+    To get around issue of some experiments already having X years of spin-up discarded.
+    Output list of files.
+    """
+    files = []
+    for i in range(len(exp)):
+        if diff_basis == True:
+            if i == 0:
+                files.append(discard_spinup2(exp[i], time, file_suffix, 0))                
+            else:
+                files.append(discard_spinup2(exp[i], time, file_suffix, years))
+        else:
+            files.append(discard_spinup2(exp[i], time, file_suffix, years))
     return files
 
 def add_phalf(exp_name, time, file_suffix, years):
