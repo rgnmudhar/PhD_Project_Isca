@@ -371,4 +371,8 @@ if __name__ == '__main__':
                 print('{0:.0f} SSWs in {1:.0f} days ({2:.3f} ± {3:.3f}% of the time)'.format(SSWs, days, freq*100, err*100))
         elif plot_type == 'b':
             vtxvexp(select_files(exp, time, file_suffix, years, diff_basis),\
+<<<<<<< HEAD
                 [0, 0.5, 2, 4, 6, 8], p, r'Strength of Heating (K day$^{-1}$)', basis)
+=======
+                [0, 0.5, 2, 4, 6, 8], p, r'Strength of Heating (K day$^{-1}$)', basis)
+>>>>>>> cd38243de01a71ea7a6ccee77e4063aab82738ab
