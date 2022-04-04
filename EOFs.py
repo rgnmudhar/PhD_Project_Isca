@@ -229,7 +229,7 @@ if __name__ == '__main__':
     lat_min = 20  # degrees
 
     if plot_type=='a':
-        exp_name = 'PK_eps0_vtx3_zoz13_h4000m2l25u65'
+        exp_name = 'PK_e0v3z13_q6m2y45l800u200'
         ds = add_phalf(exp_name, time, file_suffix, years)
         plot_single(ds, p_min, lat_min, exp_name, alt=False)
     

@@ -10,20 +10,11 @@ import netCDF4 as nc
 import cftime
 from shared_functions import *
 
-def calc_error(nevents, ndays):
-    """
-    For the SSW frequency finder from Will Seviour
-    Returns the 95% error interval assuming a binomial distribution:
-    e.g. http://www.sigmazone.com/binomial_confidence_interval.htm
-    """
-    p = nevents / float(ndays)
-    e = 1.96 * np.sqrt(p * (1 - p) / ndays)
-    return e
-
 def winds_errs(files, p):
     """
     Uses jet_locator functions to find location and strength of the tropospheric jet (850 hPa).
     """
+    print("calculating standard deviation errors")
     lats = []
     lats_sd = []
     maxs = []
@@ -41,6 +32,7 @@ def calc_jet_lat_quad(u, lats, p, plot=False):
     Function for finding location and strength of maximum given zonal wind u(lat) field.
     Based on Will Seviour code.
     """
+    print("finding location and strength of maximum of zonal wind ")
     # Restrict to 3 points around maximum
     u_new = u.mean(dim='time').mean(dim='lon').sel(pfull=p, method='nearest')
     u_max = np.where(u_new == np.ma.max(u_new))[0][0]
@@ -67,11 +59,33 @@ def calc_jet_lat_quad(u, lats, p, plot=False):
  
     return jet_lat, jet_max
 
+def open_ra():
+    """
+    Opens ERA5 re-analysis data if required.
+    """
+    print("opening re-analysis data")
+    #Following opens ERA5 re-analysis data
+    file_ra = '/disca/share/pm366/ERA-5/era5_var131_masked_zm.nc'
+    ds_ra = nc.Dataset(file_ra)
+    t_ra = ds_ra.variables['time']
+    lev = ds_ra.variables['lev'][:].data
+    p_ra = lev/100 # convert to hPa
+    lat_ra = ds_ra.variables['lat'][:].data
+    u_ra = ds_ra.variables['ucomp']
+
+    #Following writes date/time of ERA-5 data
+    #times = []
+    #times.append(cftime.num2pydate(t_ra, t_ra.units, t_ra.calendar)) # convert to actual dates
+    #times = np.array(times)
+
+    return lat_ra, u_ra, p_ra
+
 def jet_timeseries(files, iter, p):
     """
     Steps through each dataset to find jet latitude/maximum over time.
     Amended to only look at NH tropospheric jet.
     """
+    print("finding jet maxima over time")
     jet_maxima = []
     jet_lats = []
     for i in iter:
@@ -89,48 +103,12 @@ def jet_timeseries(files, iter, p):
 
     return jet_lats, jet_maxima
 
-def vtx_timeseries(files, iter):
-    """
-    Steps through each dataset to find vortex strength over time.
-    Uses 60N and 10hPa as per SSW definiton.
-    """
-    p = 10 # hPa
-    l = 60 # degrees north
-    vtx_strength = []
-    for i in iter:
-        file = files[i]
-        ds = xr.open_dataset(file, decode_times=False)
-        for j in range(len(ds.time)):
-            vtx_strength.append(ds.ucomp[j].mean(dim='lon').sel(pfull=p, method='nearest').sel(lat=l, method='nearest'))
-
-    return vtx_strength
-
-def open_ra():
-    """
-    Opens ERA5 re-analysis data if required.
-    """
-    #Following opens ERA5 re-analysis data
-    file_ra = '/disca/share/pm366/ERA-5/era5_var131_masked_zm.nc'
-    ds_ra = nc.Dataset(file_ra)
-    t_ra = ds_ra.variables['time']
-    lev = ds_ra.variables['lev'][:].data
-    p_ra = lev/100 # convert to hPa
-    lat_ra = ds_ra.variables['lat'][:].data
-    u_ra = ds_ra.variables['ucomp']
-
-    #Following writes date/time of ERA-5 data
-    #times = []
-    #times.append(cftime.num2pydate(t_ra, t_ra.units, t_ra.calendar)) # convert to actual dates
-    #times = np.array(times)
-
-    return lat_ra, u_ra, p_ra
-
 def plot_winds(ds, labels, colors, style, cols, fig_name, X, ra):
     """
     Sets up all necessary coordinates and variables for re-analysis and simulation data.
     Then plots time and zonal average zonal wind at the pressure level closest to XhPa
     """
-
+    
     #Following sets up variables from the Isca datasets
     lat = ds[0].coords['lat'].data
     lon = ds[0].coords['lon'].data
@@ -139,6 +117,7 @@ def plot_winds(ds, labels, colors, style, cols, fig_name, X, ra):
     for i in range(len(ds)):
         uz.append(ds[i].ucomp.mean(dim='time').mean(dim='lon').sel(pfull=X, method='nearest'))
 
+    print("plotting near-surface winds")
     #Following plots the data and saves as a figure
     fig = plt.subplots(1,1, figsize=(10,8))
     plt.axhline(0, color='#D2D0D3', linewidth=0.5)
@@ -162,6 +141,7 @@ def plot_jet(files, p, labels, colors, style, cols, wind, fig_name):
     """
     Plots latitude and corresponding strength of maximum winds at some input
     """
+    
     iter = np.arange(0,len(files[0]))
     lats = []
     maxs = []
@@ -171,6 +151,7 @@ def plot_jet(files, p, labels, colors, style, cols, wind, fig_name):
             lats.append(lat)
             maxs.append(max)
 
+    print("plotting tropospheric jet")
     fig, ax = plt.subplots(figsize=(12,8))
     for i in range(len(files)):
         ax.plot(iter+1, lats[i], color=colors[i], linewidth=1, linestyle=style[i], label=labels[i])
@@ -221,27 +202,76 @@ def jetvexp(files, exp, p, xlabel, fig_name):
 
     return plt.close()
 
+def calc_error(nevents, ndays):
+    """
+    For the SSW frequency finder from Will Seviour
+    Returns the 95% error interval assuming a binomial distribution:
+    e.g. http://www.sigmazone.com/binomial_confidence_interval.htm
+    """
+    p = nevents / float(ndays)
+    e = 1.96 * np.sqrt(p * (1 - p) / ndays)
+    return e
+
+def find_SPV(files):
+    """
+    Steps through each dataset to find vortex strength over time.
+    Uses 60N and 10hPa as per SSW definiton.
+    Also finds SSW statistics.
+    """
+    print("finding wind speeds at 60N, 10 hPa")
+    SPV = []
+    SPV_flag = []
+    for i in range(len(files)):
+        file = files[i]
+        ds = xr.open_dataset(file, decode_times = False)
+        u = ds.ucomp.mean(dim='lon').sel(pfull=10, method='nearest').sel(lat=60, method='nearest')
+        for j in range(len(u)):
+            SPV.append(u[j].data)
+            if u[j] < 0:
+                SPV_flag.append(True)
+            elif u[j] >= 0:
+                SPV_flag.append(False)
+    
+    print("finding SSWs")
+    # Now find SSWs
+    days = len(SPV)
+    count = 0
+    for k in range(days):
+        if SPV[k] < 0:
+            if SPV[k-1] > 0:
+                subset = SPV_flag[k-20:k]
+                if True not in subset:
+                    count += 1
+
+    err = calc_error(count, days)
+    comment = '{0:.0f} SSWs in {1:.0f} days ({2:.3f} ± {3:.3f}% of the time)'.format(count, days, (count / days)*100, err*100)
+
+    return SPV, comment
+
 def plot_vtx(files, labels, colors, style, cols, fig_name):
     """
-    Plots strength of winds at 60N, 10 hPa only
+    Plots strength of winds at 60N, 10 hPa only.
+    Best for 2 datsets, the second of which has its SSW statistics as a plot subtitle
     """
-    iter = np.arange(0,len(files[0]))
     vtxs = []
+    SSW_stats = []
     for i in range(len(files)):
-        for j in range(len(files[i])):
-            vtx = vtx_timeseries(files[i], iter)
-            vtxs.append(vtx)
+        vtx, SSWs = find_SPV(files[i])
+        vtxs.append(vtx)
+        SSW_stats.append(SSWs)
 
-    fig, ax = plt.subplots(figsize=(12,8))
+    print("plotting SPV")
+    fig, ax = plt.subplots(figsize=(8,6))
     for i in range(len(files)):
         ax.plot(vtxs[i], color=colors[i], linewidth=1, linestyle=style[i], label=labels[i])
     ax.axhline(0, color='k', linewidth=0.5)
-    ax.set_xlim(1,len(vtx[1])+1)
+    ax.set_xlim(1,len(vtxs[1])+1)
     ax.set_xlabel('Day', fontsize='large')       
     ax.set_ylabel(r'Zonal Wind Speed (ms$^{-1}$)', color='k', fontsize='large')
     ax.tick_params(axis='both', labelsize = 'large', which='both', direction='in')
     plt.legend(loc='upper center' , bbox_to_anchor=(0.5, -0.07), fancybox=False, shadow=True, ncol=cols, fontsize='large')
-    plt.title(r'Vortex Strength at $p \sim 10$ hPa, $\theta \sim 60 \degree$N', fontsize='x-large')
+    plt.suptitle(r'Vortex Strength at $p \sim 10$ hPa, $\theta \sim 60 \degree$N', fontsize='x-large')
+    plt.title(SSW_stats[1], fontsize='large')
     plt.savefig(fig_name+'_vtx.png', bbox_inches = 'tight')
     
     return plt.close()
@@ -253,6 +283,7 @@ def vtxvexp(files, exp, p, xlabel, fig_name):
     """
     lats, lats_sd, maxwinds, maxwinds_sd = winds_errs(files, p)
 
+    print("plotting SPV maxima over time")
     fig, ax = plt.subplots(figsize=(12,8))
     ax.errorbar(exp, maxwinds, yerr=maxwinds_sd, fmt='o', linewidth=1.25, capsize=5, color='#C0392B', linestyle=':')
     ax.set_xticks(exp)
@@ -268,46 +299,15 @@ def vtxvexp(files, exp, p, xlabel, fig_name):
 
     return plt.close()
 
-def find_SPV(files):
-    SPV = []
-    SPV_flag = []
-    for i in range(len(files)):
-        file = files[i]
-        ds = xr.open_dataset(file, decode_times = False)
-        u = ds.ucomp.mean(dim='lon').sel(pfull=10, method='nearest').sel(lat=60, method='nearest')
-        for j in range(len(u)):
-            SPV.append(u[j].data)
-            if u[j] < 0:
-                SPV_flag.append(True)
-            elif u[j] >= 0:
-                SPV_flag.append(False)
-    return SPV, SPV_flag
-
-def find_SSW(files):
-    winds, flag = find_SPV(files)
-
-    count = 0
-
-    for k in range(len(winds)):
-        if winds[k] < 0:
-            if winds[k-1] > 0:
-                subset = flag[k-20:k]
-                if True not in subset:
-                    count += 1
-
-    SSW_freq = count / len(winds)
-
-    return len(winds), count, SSW_freq
-
 if __name__ == '__main__': 
     #User set
     time = 'daily'
     years = 2 # user sets no. of years worth of data to ignore due to spin-up
-    diff_basis = True # some of the runs already had initial spin-up years deleted
+    diff_basis = False # some of the runs already had initial spin-up years deleted
     file_suffix = '_interp'
 
     #Set-up data to be read in
-    basis = 'PK_e0v4z13'
+    basis = 'PK_e0v3z13'
     exp = [basis,\
         basis+'_q6m2y45l800u200']
         #basis+'_w15a2p800f800g50',\
@@ -364,15 +364,6 @@ if __name__ == '__main__':
         if plot_type == 'a':
             plot_vtx(select_files(exp, time, file_suffix, years, diff_basis),\
             labels, colors, style, cols, basis)
-            if input("Calculate SSW frequency? y/n ") == 'y':
-                files = discard_spinup2(exp[1], time, file_suffix, years)
-                days, SSWs, freq = find_SSW(files)
-                err = calc_error(SSWs, days)
-                print('{0:.0f} SSWs in {1:.0f} days ({2:.3f} ± {3:.3f}% of the time)'.format(SSWs, days, freq*100, err*100))
         elif plot_type == 'b':
             vtxvexp(select_files(exp, time, file_suffix, years, diff_basis),\
-<<<<<<< HEAD
                 [0, 0.5, 2, 4, 6, 8], p, r'Strength of Heating (K day$^{-1}$)', basis)
-=======
-                [0, 0.5, 2, 4, 6, 8], p, r'Strength of Heating (K day$^{-1}$)', basis)
->>>>>>> cd38243de01a71ea7a6ccee77e4063aab82738ab
