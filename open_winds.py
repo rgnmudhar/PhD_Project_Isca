@@ -202,14 +202,14 @@ def jetvexp(files, exp, p, xlabel, fig_name):
 
     return plt.close()
 
-def calc_error(nevents, ndays):
+def calc_error(nevents, nyears):
     """
     For the SSW frequency finder from Will Seviour
     Returns the 95% error interval assuming a binomial distribution:
     e.g. http://www.sigmazone.com/binomial_confidence_interval.htm
     """
-    p = nevents / float(ndays)
-    e = 1.96 * np.sqrt(p * (1 - p) / ndays)
+    p = nevents / float(nyears)
+    e = 1.96 * np.sqrt(p * (1 - p) / nyears)
     return e
 
 def find_SPV(files):
@@ -218,7 +218,7 @@ def find_SPV(files):
     Uses 60N and 10hPa as per SSW definiton.
     Also finds SSW statistics.
     """
-    print("finding wind speeds at 60N, 10 hPa")
+    print("finding wind speeds at 60N, 10hPa")
     SPV = []
     SPV_flag = []
     for i in range(len(files)):
@@ -243,8 +243,9 @@ def find_SPV(files):
                 if True not in subset:
                     count += 1
 
-    err = calc_error(count, days)
-    comment = '{0:.0f} SSWs in {1:.0f} days ({2:.3f} ± {3:.3f}% of the time)'.format(count, days, (count / days)*100, err*100)
+    winters = (12/4) * (days/360)
+    #comment = '{0:.2f} SSWs per winter (± {1:.2f})'.format((count/winters),calc_error(count, winters))
+    comment = '{0:.2f} SSWs per 100 days (± {1:.2f})'.format((count/days)*100,calc_error(count, days)*100)
 
     return SPV, comment
 
