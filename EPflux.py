@@ -3,7 +3,7 @@
     Based on Martin Jucker's code at https://github.com/mjucker/aostools/blob/d857987222f45a131963a9d101da0e96474dca63/climate.py
 """
 
-from glob import glob
+import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
 from shared_functions import *
@@ -24,20 +24,35 @@ def calc_ep(ds):
 
     return uz, div, ep1, ep2
 
+def scale_div(p, lat, div):
+    """
+    Divergence scaled to be proportional to zonal acceleration for plotting,
+    """
+    H = 6800 # Density scale (m)
+    z = np.log(p)
+    r = np.exp(-z/H)
+    a = 6376.0e3 # Earth radius (m)
+    coslat = np.cos(np.deg2rad(lat))
+    scaled_div = div / (a * np.outer(r, coslat))
+    return scaled_div
+
 #Set-up data to be read in
-exp = 'PK_e0v3z13_w15a4p800f800g50'
+exp = 'PK_e0v3z13_q6m2y45l800u200' #_w15a4p800f800g50'
 time = 'daily'
-years = 2 # user sets no. of years worth of data to ignore due to spin-up
+years = 0 # user sets no. of years worth of data to ignore due to spin-up
 file_suffix = '_interp'
 files = discard_spinup2(exp, time, file_suffix, years)
 ds = xr.open_mfdataset(files, decode_times=False)
+p = ds.coords['pfull'].data
+lat = ds.coords['lat'].data
 uz, div, ep1, ep2 = calc_ep(ds)
+div = scale_div(p, lat, div)
 
 #Filled contour plot of time-mean EP flux divergence plus EP flux arrows and zonal wind contours
-divlvls = np.arange(-20,22,2)
+divlvls = np.arange(-10,12,1)
 ulvls = np.arange(-200, 200, 10)
 fig, ax = plt.subplots(figsize=(8,6))
-uz.plot.contour(colors='gainsboro', linewidth=0.025, alpha=0.75, yincrease=False, levels=ulvls)
+uz.plot.contour(colors='k', linewidths=0.5, alpha=0.4, yincrease=False, levels=ulvls)
 cs = div.plot.contourf(levels=divlvls, cmap='RdBu_r', add_colorbar=False)
 cb = plt.colorbar(cs)
 cb.set_label(label=r'Divergence (m s$^{-1}$ day$^{-1}$)', size='large')
@@ -49,7 +64,7 @@ plt.xlim(-90,90)
 plt.xticks([-90, -45, 0, 45, 90], ['90S', '45S', '0', '45N', '90N'])
 plt.ylabel('Pressure (hPa)', fontsize='x-large')
 plt.yscale('log')
-plt.ylim(max(p), 1) #to 1 hPa
+plt.ylim(max(ds.coords['pfull']), 1) #to 1 hPa
 plt.tick_params(axis='both', labelsize = 'large', which='both', direction='in')
 plt.title('Time and Zonal Mean EP Flux', fontsize='x-large')
 plt.savefig(exp+'_EPflux.png', bbox_inches = 'tight')
