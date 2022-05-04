@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import netCDF4 as nc
 import cftime
+from datetime import datetime
 from shared_functions import *
 
 def winds_errs(files, p):
@@ -212,28 +213,26 @@ def calc_error(nevents, nyears):
     e = 1.96 * np.sqrt(p * (1 - p) / nyears)
     return e
 
-def find_SPV(files):
+def find_SPV(exp):
     """
     Steps through each dataset to find vortex strength over time.
     Uses 60N and 10hPa as per SSW definiton.
     Also finds SSW statistics.
     """
     print("finding wind speeds at 60N, 10hPa")
-    SPV = []
-    SPV_flag = []
-    for i in range(len(files)):
-        file = files[i]
-        ds = xr.open_dataset(file, decode_times = False)
-        u = ds.ucomp.mean(dim='lon').sel(pfull=10, method='nearest').sel(lat=60, method='nearest')
-        for j in range(len(u)):
-            SPV.append(u[j].data)
-            if u[j] < 0:
-                SPV_flag.append(True)
-            elif u[j] >= 0:
-                SPV_flag.append(False)
-    
-    print("finding SSWs")
-    # Now find SSWs
+    for i in range(len(exp)):
+        files = discard_spinup2(exp[i], time, file_suffix, years)
+        ds = xr.open_mfdataset(files, decode_times=False)
+        SPV = ds.ucomp.mean(dim='lon').sel(pfull=10, method='nearest').sel(lat=60, method='nearest')
+        textfile = open(exp[i]+'_SPV.txt', 'w')
+        SPV_list = SPV.to_numpy().tolist()
+        for j in SPV_list:
+            textfile.write(str(j) + '\n')
+        textfile.close()
+
+def find_SSWs(SPV):
+    #finding SSWs
+    SPV_flag = np.select([SPV<0, SPV>0], [True, False], True)
     days = len(SPV)
     count = 0
     for k in range(days):
@@ -242,38 +241,37 @@ def find_SPV(files):
                 subset = SPV_flag[k-20:k]
                 if True not in subset:
                     count += 1
-
     winters = (12/4) * (days/360)
-    #comment = '{0:.2f} SSWs per winter (± {1:.2f})'.format((count/winters),calc_error(count, winters))
-    comment = '{0:.2f} SSWs per 100 days (± {1:.2f})'.format((count/days)*100,calc_error(count, days)*100)
+    SSWs_w = '{0:.2f} SSWs per winter (± {1:.2f})'.format((count/winters),calc_error(count, winters))
+    SSWs_h = '{0:.2f} SSWs per 100 days (± {1:.2f})'.format((count/days)*100,calc_error(count, days)*100)
+    print(SSWs_w, ', ', SSWs_h)
 
-    return SPV, comment
-
-def plot_vtx(files, labels, colors, style, cols, fig_name):
+def plot_vtx(exp, SSWs, labels, colors, style, cols, fig_name):
     """
     Plots strength of winds at 60N, 10 hPa only.
     Best for 2 datsets, the second of which has its SSW statistics as a plot subtitle
     """
-    vtxs = []
-    SSW_stats = []
-    for i in range(len(files)):
-        vtx, SSWs = find_SPV(files[i])
-        vtxs.append(vtx)
-        SSW_stats.append(SSWs)
-
-    print("plotting SPV")
-    fig, ax = plt.subplots(figsize=(8,6))
-    for i in range(len(files)):
-        ax.plot(vtxs[i], color=colors[i], linewidth=1, linestyle=style[i], label=labels[i])
+    
+    print(datetime.now(), " - plotting SPV")
+    fig, ax = plt.subplots(figsize=(10,6))
+    for i in range(len(exp)):
+        textfile = open(exp[i]+'_SPV.txt', 'r')
+        SPV = textfile.read().replace('\n', ' ').split(' ')
+        SPV = SPV[:len(SPV)-1]
+        textfile.close()
+        SPV = np.asarray([float(j) for j in SPV])
+        if SSWs == True:
+            find_SSWs(SPV)
+        ax.plot(SPV, color=colors[i], linewidth=1, linestyle=style[i], label=labels[i])
     ax.axhline(0, color='k', linewidth=0.5)
-    ax.set_xlim(1,len(vtxs[1])+1)
-    ax.set_xlabel('Day', fontsize='large')       
-    ax.set_ylabel(r'Zonal Wind Speed (ms$^{-1}$)', color='k', fontsize='large')
-    ax.tick_params(axis='both', labelsize = 'large', which='both', direction='in')
-    plt.legend(loc='upper center' , bbox_to_anchor=(0.5, -0.07), fancybox=False, shadow=True, ncol=cols, fontsize='large')
-    plt.suptitle(r'Vortex Strength at $p \sim 10$ hPa, $\theta \sim 60 \degree$N', fontsize='x-large')
-    plt.title(SSW_stats[1], fontsize='large')
-    plt.savefig(fig_name+'_vtx.png', bbox_inches = 'tight')
+    ax.set_xlim(1,len(SPV))
+    ax.set_xlabel('Day', fontsize='x-large')       
+    ax.set_ylabel(r'Zonal Wind Speed (ms$^{-1}$)', color='k', fontsize='x-large')
+    ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
+    plt.legend(loc='upper center' , bbox_to_anchor=(0.5, -0.1), fancybox=False, shadow=True, ncol=cols, fontsize='large')
+    #plt.suptitle(r'Vortex Strength at $p \sim 10$ hPa, $\theta \sim 60 \degree$N', fontsize='xx-large')
+    plt.title('With Polar Heating', fontsize='x-large')
+    plt.savefig(fig_name+'_vtx3.png', bbox_inches = 'tight')
     
     return plt.close()
 
@@ -303,17 +301,13 @@ def vtxvexp(files, exp, p, xlabel, fig_name):
 if __name__ == '__main__': 
     #User set
     time = 'daily'
-    years = 2 # user sets no. of years worth of data to ignore due to spin-up
-    diff_basis = False # some of the runs already had initial spin-up years deleted
+    years = 40 # user sets no. of years worth of data to ignore due to spin-up
     file_suffix = '_interp'
 
     #Set-up data to be read in
-    basis = 'PK_e0v3z13'
+    basis = 'PK_e0v4z13'
     exp = [basis,\
-        basis+'_q6m2y45l800u200']
-        #basis+'_w15a2p800f800g50',\
-        #basis+'_w15a4p800f800g50',\
-        #basis+'_w15a8p800f800g50']
+        basis+'_q6m2y45l800u200']        
     
     #User choices for plotting - aesthetics
     label_type = input(r'Plot a) different $\gamma$, b) different $\epsilon, z_{oz}$, c) heat or d) diff. vs. original?')
@@ -336,7 +330,7 @@ if __name__ == '__main__':
         cols = 4
         ra = False
     elif label_type == 'd':
-        labels = ['original', 'with zonal asymmetry']
+        labels = ['original', 'heating perturbation']
         colors = ['#2980B9', '#C0392B']
         style = ['-', '-']
         cols = 2
@@ -346,25 +340,25 @@ if __name__ == '__main__':
     level = input('Plot a) near-surface winds, b) tropospheric jet, c) stratospheric polar vortex?')
     if level == 'a':
         p = 900 #hPa
-        plot_winds(select_ds(exp, time, file_suffix, years, diff_basis),\
+        plot_winds(discard_spinup1(exp, time, file_suffix, years),\
             labels, colors, style, cols, basis, p, ra)
     elif level == 'b':
         p = 850 # pressure level at which we want to find the jet (hPa)
         wind = 'Jet '
         plot_type = input('Plot a) jet max. and lat over time or b) jet max. and lat for different experiments?')
         if plot_type == 'a':
-            plot_jet(select_files(exp, time, file_suffix, years, diff_basis),\
+            plot_jet(discard_spinup2(exp, time, file_suffix, years),\
                 p, labels, colors, style, cols, wind, basis)
         if plot_type == 'b':
-            jetvexp(select_files(exp, time, file_suffix, years, diff_basis),\
+            jetvexp(discard_spinup2(exp, time, file_suffix, years),\
                 [0, 2, 4], p, r'Strength of Heating (K day$^{-1}$)', basis)
     elif level == 'c':
         p = 10 # pressure level at which we want to find the SPV (hPa)
         wind = 'SPV '
         plot_type = input('Plot a) SPV @ 10hPa, 60N over time or b) SPV max. and lat for different experiments?')
         if plot_type == 'a':
-            plot_vtx(select_files(exp, time, file_suffix, years, diff_basis),\
-            labels, colors, style, cols, basis)
+            find_SPV(exp)
+            #plot_vtx(exp, True, labels, colors, style, cols, basis)
         elif plot_type == 'b':
-            vtxvexp(select_files(exp, time, file_suffix, years, diff_basis),\
+            vtxvexp(discard_spinup2(exp, time, file_suffix, years),\
                 [0, 0.5, 2, 4, 6, 8], p, r'Strength of Heating (K day$^{-1}$)', basis)
