@@ -135,7 +135,7 @@ def plot_winds(ds, labels, colors, style, cols, fig_name, X, ra):
     plt.tick_params(axis='both', labelsize = 'large', which='both', direction='in')
     plt.legend(loc='upper center' , bbox_to_anchor=(0.5, -0.07),fancybox=False, shadow=True, ncol=cols, fontsize='large')
     plt.title('Mean Zonal Winds at ~{:.0f}hPa'.format(X), fontsize='x-large')
-    plt.savefig(fig_name+'_winds.png', bbox_inches = 'tight')
+    plt.savefig(fig_name+'_winds.pdf', bbox_inches = 'tight')
     return plt.close()
 
 def plot_jet(files, p, labels, colors, style, cols, wind, fig_name):
@@ -162,7 +162,7 @@ def plot_jet(files, p, labels, colors, style, cols, wind, fig_name):
     ax.tick_params(axis='both', labelsize = 'large', which='both', direction='in')
     plt.legend(loc='upper center' , bbox_to_anchor=(0.5, -0.07), fancybox=False, shadow=True, ncol=cols, fontsize='large')
     plt.title('NH '+wind+'Latitude at p ~{0:.0f} hPa'.format(p), fontsize='x-large')
-    plt.savefig(fig_name+'_maxlat.png', bbox_inches = 'tight')
+    plt.savefig(fig_name+'_maxlat.pdf', bbox_inches = 'tight')
     plt.close()
 
     fig2, ax2 = plt.subplots(figsize=(12,8))
@@ -174,7 +174,7 @@ def plot_jet(files, p, labels, colors, style, cols, wind, fig_name):
     ax2.tick_params(axis='both', labelsize = 'large', which='both', direction='in')
     plt.legend(loc='upper center' , bbox_to_anchor=(0.5, -0.07), fancybox=False, shadow=True, ncol=cols, fontsize='large')
     plt.title('NH '+wind+'Strength at p ~{0:.0f} hPa'.format(p), fontsize='x-large')
-    plt.savefig(fig_name+'_maxwind.png', bbox_inches = 'tight')
+    plt.savefig(fig_name+'_maxwind.pdf', bbox_inches = 'tight')
     
     return plt.close()
 
@@ -199,7 +199,7 @@ def jetvexp(files, exp, p, xlabel, fig_name):
     ax2.tick_params(axis='both', labelsize = 'large', which='both', direction='in')
     plt.legend(loc='upper right' , fancybox=False, shadow=True, ncol=1, fontsize='large')
     plt.title(r'Max. NH Jet Strength and Location at $p \sim 850$ hPa', fontsize='x-large')
-    plt.savefig(fig_name+'_jetvexp.png', bbox_inches = 'tight')
+    plt.savefig(fig_name+'_jetvexp.pdf', bbox_inches = 'tight')
 
     return plt.close()
 
@@ -217,21 +217,34 @@ def find_SPV(exp):
     """
     Steps through each dataset to find vortex strength over time.
     Uses 60N and 10hPa as per SSW definiton.
-    Also finds SSW statistics.
+    Saves as a file.
     """
-    print("finding wind speeds at 60N, 10hPa")
+    print(datetime.now(), " - finding wind speeds at 60N, 10hPa")
     for i in range(len(exp)):
+        print(datetime.now(), " - ", exp[i])
         files = discard_spinup2(exp[i], time, file_suffix, years)
         ds = xr.open_mfdataset(files, decode_times=False)
         SPV = ds.ucomp.mean(dim='lon').sel(pfull=10, method='nearest').sel(lat=60, method='nearest')
-        textfile = open(exp[i]+'_SPV.txt', 'w')
-        SPV_list = SPV.to_numpy().tolist()
-        for j in SPV_list:
-            textfile.write(str(j) + '\n')
-        textfile.close()
+        save_SPV(exp[i], SPV)
 
-def find_SSWs(SPV):
+def save_SPV(exp, SPV):
+    textfile = open(exp+'_SPV.txt', 'w')
+    SPV_list = SPV.to_numpy().tolist()
+    for j in SPV_list:
+        textfile.write(str(j) + '\n')
+    return textfile.close()
+
+def open_SPV(exp):
+    textfile = open(exp+'_SPV.txt', 'r')
+    SPV = textfile.read().replace('\n', ' ').split(' ')
+    SPV = SPV[:len(SPV)-1]
+    textfile.close()
+    SPV = np.asarray([float(j) for j in SPV])
+    return SPV
+
+def find_SSW(SPV):
     #finding SSWs
+    print(datetime.now(), " - finding SSWs")
     SPV_flag = np.select([SPV<0, SPV>0], [True, False], True)
     days = len(SPV)
     count = 0
@@ -241,12 +254,24 @@ def find_SSWs(SPV):
                 subset = SPV_flag[k-20:k]
                 if True not in subset:
                     count += 1
-    winters = (12/4) * (days/360)
-    SSWs_w = '{0:.2f} SSWs per winter (± {1:.2f})'.format((count/winters),calc_error(count, winters))
-    SSWs_h = '{0:.2f} SSWs per 100 days (± {1:.2f})'.format((count/days)*100,calc_error(count, days)*100)
-    print(SSWs_w, ', ', SSWs_h)
+    #winters = (12/4) * (days/360)
+    #SSWs_w = (count/winters)
+    #SSWs_w_err = calc_error(count, winters)
+    SSWs_h = (count/days)*100
+    SSWs_h_err = calc_error(count, days)*100
+    return SSWs_h, SSWs_h_err
 
-def plot_vtx(exp, SSWs, labels, colors, style, cols, fig_name):
+def find_SSWs(exp):
+    h_list = []
+    h_err_list = []
+    for i in range(len(exp)):
+        SPV = open_SPV(exp[i])
+        h, h_err = find_SSW(SPV)
+        h_list.append(h)
+        h_err_list.append(h_err)
+    return h_list, h_err_list
+
+def plot_vtx(exp, labels, colors, style, cols, fig_name):
     """
     Plots strength of winds at 60N, 10 hPa only.
     Best for 2 datsets, the second of which has its SSW statistics as a plot subtitle
@@ -255,13 +280,7 @@ def plot_vtx(exp, SSWs, labels, colors, style, cols, fig_name):
     print(datetime.now(), " - plotting SPV")
     fig, ax = plt.subplots(figsize=(10,6))
     for i in range(len(exp)):
-        textfile = open(exp[i]+'_SPV.txt', 'r')
-        SPV = textfile.read().replace('\n', ' ').split(' ')
-        SPV = SPV[:len(SPV)-1]
-        textfile.close()
-        SPV = np.asarray([float(j) for j in SPV])
-        if SSWs == True:
-            find_SSWs(SPV)
+        SPV = open_SPV(exp[i])
         ax.plot(SPV, color=colors[i], linewidth=1, linestyle=style[i], label=labels[i])
     ax.axhline(0, color='k', linewidth=0.5)
     ax.set_xlim(1,len(SPV))
@@ -271,7 +290,7 @@ def plot_vtx(exp, SSWs, labels, colors, style, cols, fig_name):
     plt.legend(loc='upper center' , bbox_to_anchor=(0.5, -0.1), fancybox=False, shadow=True, ncol=cols, fontsize='large')
     #plt.suptitle(r'Vortex Strength at $p \sim 10$ hPa, $\theta \sim 60 \degree$N', fontsize='xx-large')
     plt.title('With Polar Heating', fontsize='x-large')
-    plt.savefig(fig_name+'_vtx3.png', bbox_inches = 'tight')
+    plt.savefig(fig_name+'_vtx.pdf', bbox_inches = 'tight')
     
     return plt.close()
 
@@ -282,32 +301,57 @@ def vtxvexp(files, exp, p, xlabel, fig_name):
     """
     lats, lats_sd, maxwinds, maxwinds_sd = winds_errs(files, p)
 
-    print("plotting SPV maxima over time")
-    fig, ax = plt.subplots(figsize=(12,8))
+    print("plotting SPV maxima v experiment")
+    fig, ax = plt.subplots(figsize=(10,8))
     ax.errorbar(exp, maxwinds, yerr=maxwinds_sd, fmt='o', linewidth=1.25, capsize=5, color='#C0392B', linestyle=':')
     ax.set_xticks(exp)
-    ax.set_xlabel(xlabel, fontsize='large')
-    ax.set_ylabel(r'Max. SPV Speed (ms$^{-1}$)', color='#C0392B', fontsize='large')
-    ax.tick_params(axis='both', labelsize = 'large', which='both', direction='in')
+    ax.set_xlabel(xlabel, fontsize='x-large')
+    ax.set_ylabel(r'Max. SPV Speed (ms$^{-1}$)', color='#C0392B', fontsize='x-large')
+    ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
     ax2 = ax.twinx()
     ax2.errorbar(exp, lats, yerr=lats_sd, fmt='o', linewidth=1.25, capsize=5, color='#2980B9', linestyle=':')
-    ax2.set_ylabel(r'Max. SPV Latitude ($\degree$N)', color='#2980B9', fontsize='large')
-    ax2.tick_params(axis='both', labelsize = 'large', which='both', direction='in')
-    plt.title(r'Max. NH SPV Strength and Location at $p \sim 10$ hPa', fontsize='x-large')
-    plt.savefig(fig_name+'_SPVvheat.png', bbox_inches = 'tight')
+    ax2.set_ylabel(r'Max. SPV Latitude ($\degree$N)', color='#2980B9', fontsize='x-large')
+    ax2.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
+    plt.title(r'Max. NH SPV Strength and Location at $p \sim 10$ hPa', fontsize='xx-large')
+    plt.savefig(fig_name+'_SPVvheat.pdf', bbox_inches = 'tight')
+
+    return plt.close()
+
+def SSWsvexp(exp, x, xlabel, fig_name):
+    """
+    Plots SSW frequency against (heating) experiment.
+    """
+    SSWs, errors = find_SSWs(exp)
+    print("plotting SSWs v experiment")
+    fig, ax = plt.subplots(figsize=(10,6))
+    ax.errorbar(x, SSWs, yerr=errors, fmt='o', linewidth=1.25, capsize=5, color='#C0392B', linestyle=':')
+    ax.set_xticks(x)
+    ax.set_xlabel(xlabel, fontsize='x-large')
+    ax.set_ylabel(r'SSWs per 100 days', fontsize='x-large')
+    ax.axhline(0.42, color='#2980B9', linewidth=0.5)
+    ax.text(6.15, 0.425, 'ERA-Interim', color='#2980B9', fontsize='x-large')
+    ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
+    plt.title(r'SSW Frequency', fontsize='xx-large')
+    plt.savefig(fig_name+'_SSWsvheat.pdf', bbox_inches = 'tight')
 
     return plt.close()
 
 if __name__ == '__main__': 
     #User set
     time = 'daily'
-    years = 40 # user sets no. of years worth of data to ignore due to spin-up
+    years = 2 # user sets no. of years worth of data to ignore due to spin-up
     file_suffix = '_interp'
 
     #Set-up data to be read in
     basis = 'PK_e0v4z13'
-    exp = [basis,\
-        basis+'_q6m2y45l800u200']        
+    exp = [basis+'_q6m2y45l800u200',\
+        basis+'_w15a4p900f800g50_q6m2y45l800u200',\
+        basis+'_w15a4p800f800g50_q6m2y45l800u200',\
+        basis+'_w15a4p700f800g50_q6m2y45l800u200',\
+        basis+'_w15a4p600f800g50_q6m2y45l800u200',\
+        basis+'_w15a4p500f800g50_q6m2y45l800u200',\
+        basis+'_w15a4p400f800g50_q6m2y45l800u200',\
+        basis+'_w15a4p300f800g50_q6m2y45l800u200']        
     
     #User choices for plotting - aesthetics
     label_type = input(r'Plot a) different $\gamma$, b) different $\epsilon, z_{oz}$, c) heat or d) diff. vs. original?')
@@ -355,10 +399,12 @@ if __name__ == '__main__':
     elif level == 'c':
         p = 10 # pressure level at which we want to find the SPV (hPa)
         wind = 'SPV '
-        plot_type = input('Plot a) SPV @ 10hPa, 60N over time or b) SPV max. and lat for different experiments?')
+        plot_type = input('Plot a) SPV @ 10hPa, 60N over time or b) SPV max. and lat for different experiments, c) SSWs for different experiments?')
         if plot_type == 'a':
             find_SPV(exp)
-            #plot_vtx(exp, True, labels, colors, style, cols, basis)
+            #plot_vtx(exp, labels, colors, style, cols, basis)
         elif plot_type == 'b':
             vtxvexp(discard_spinup2(exp, time, file_suffix, years),\
-                [0, 0.5, 2, 4, 6, 8], p, r'Strength of Heating (K day$^{-1}$)', basis)
+                [0, 900, 800, 700, 600, 500, 400, 300], p, r'Depth of Heating ($p_{top}$, hPa)', basis)
+        elif plot_type == 'c':
+            SSWsvexp(exp, ['0', '900', '800', '700', '600', '500', '400', '300'], r'Depth of Heating ($p_{top}$, hPa)', basis)
