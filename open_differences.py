@@ -39,7 +39,7 @@ def plots(ds1, ds2, exp_name):
     plt.ylim(min(z), upper_z) #goes to ~1hPa
     plt.tick_params(axis='both', labelsize = 'large', which='both', direction='in')
     plt.title('Difference in Mean Zonal Wind', fontsize='x-large')
-    plt.savefig(exp_name+'_udiff.png', bbox_inches = 'tight')
+    plt.savefig(exp_name+'_udiff.pdf', bbox_inches = 'tight')
     plt.close()
 
     fig2, ax2 = plt.subplots(figsize=(10,8))
@@ -56,7 +56,7 @@ def plots(ds1, ds2, exp_name):
     plt.ylim(min(z), upper_z) #goes to ~1hPa
     plt.tick_params(axis='both', labelsize = 'large', which='both', direction='in')
     plt.title('Difference in Mean Temperature', fontsize='x-large')
-    plt.savefig(exp_name+'_Tdiff.png', bbox_inches = 'tight')
+    plt.savefig(exp_name+'_Tdiff.pdf', bbox_inches = 'tight')
     plt.close()
 
 if __name__ == '__main__': 
