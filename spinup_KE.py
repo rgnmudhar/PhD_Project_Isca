@@ -16,10 +16,11 @@ def calc_TKE(u,v):
     return 0.5 * upv
 
 path = '/disco/share/rm811/isca_data/' #'../isca_data/'
-exp_name = 'PK_e0v3.5z13_q6m2y45l800u200'
+exp_name = 'PK_e0v4z13_w15a4p600f800g50_q6m2y45l800u200'
 files=sorted(glob(path+exp_name+'/run*/atmos_daily.nc'))
 iter = np.arange(0,len(files))
 KE = []
+print("finding KE")
 for i in iter:
     #print(i)
     file  = files[i]
@@ -40,11 +41,12 @@ for i in iter:
     TKE_avg = np.nanmean(TKE_box) # should I weight pressures too? How?
     KE.append(TKE_avg)
 
+print("plotting")
 fig, ax = plt.subplots(figsize=(11,6))
 ax.plot(iter+1, KE, color='k')
 ax.set_xlim(1,len(files))
 ax.set_xlabel("Run no.")       
 ax.set_ylabel('TKE', color='k')
 plt.title("Total Kinetic Energy for "+exp_name) #~{0:.0f}y worth".format(len(files)/12))
-plt.savefig(exp_name+'_spinup.png', bbox_inches = 'tight')
+plt.savefig(exp_name+'_spinup.pdf', bbox_inches = 'tight')
 plt.close()

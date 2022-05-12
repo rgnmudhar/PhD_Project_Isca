@@ -181,7 +181,7 @@ def plot_single(ds, p_min, lat_min, exp_name, alt=True):
     ax3.set_title('PC autocorrelation', fontsize='x-large')
 
 
-    plt.savefig(exp_name+'_eofs.png', bbox_inches = 'tight')
+    plt.savefig(exp_name+'_eofs.pdf', bbox_inches = 'tight')
     plt.close()
 
     return plt.show()
@@ -212,7 +212,7 @@ def plot_multi(ds1, ds2, ds3, ds4, p_min, lat_min, labels, colors, style, cols, 
     plt.ylim(-0.2,1)
     plt.tick_params(axis='both', labelsize = 'large', which='both', direction='in')
     plt.title('EOF1 PC autocorrelation', fontsize='x-large')
-    plt.savefig(fig_name+'_pcs.png', bbox_inches = 'tight')
+    plt.savefig(fig_name+'_pcs.pdf', bbox_inches = 'tight')
     plt.close()
 
     return plt.show()
@@ -221,7 +221,7 @@ if __name__ == '__main__':
     plot_type = input("a) single or b) multi?")
 
     time = 'daily'
-    years = 2 # user sets no. of years worth of data to ignore due to spin-up
+    years = 22 # user sets no. of years worth of data to ignore due to spin-up
     file_suffix = '_interp'    
 
     # For EOFs follow Sheshadri & Plumb 2017, use p>100hPa, lat>20degN
@@ -229,8 +229,9 @@ if __name__ == '__main__':
     lat_min = 20  # degrees
 
     if plot_type=='a':
-        exp_name = 'PK_e0v3z13_q6m2y45l800u200'
+        exp_name = 'PK_e0v4z13' #_w15a4p600f800g50_q6m2y45l800u200'
         ds = add_phalf(exp_name, time, file_suffix, years)
+        print(exp_name)
         plot_single(ds, p_min, lat_min, exp_name, alt=False)
     
     elif plot_type=='b':
