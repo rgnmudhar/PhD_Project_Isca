@@ -40,10 +40,9 @@ def add_phalf(exp_name, time, file_suffix, years):
     Assign phalf levels from uninterpolated to interpolated datset.
     """    
     files = discard_spinup2(exp_name, time, file_suffix, years)
-    files_original = discard_spinup2(exp_name, time, '', years) #discard_spinup2('PK_eps0_vtx3_zoz13_7y', time, '', years)
 
     ds = xr.open_mfdataset(files, decode_times=False)
-    ds_original = xr.open_mfdataset(files_original, decode_times=False)
+    ds_original = xr.open_mfdataset('atmos_daily_T42_p40.nc', decode_times=False)
     ds = ds.assign_coords({"phalf":ds_original.phalf})
 
     return ds
