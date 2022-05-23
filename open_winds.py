@@ -11,23 +11,6 @@ import cftime
 from datetime import datetime
 from shared_functions import *
 
-def winds_errs(files, p):
-    """
-    Uses jet_locator functions to find location and strength of the tropospheric jet (850 hPa).
-    """
-    print("calculating standard deviation errors")
-    lats = []
-    lats_sd = []
-    maxs = []
-    maxs_sd = []
-    for i in range(len(files)):
-        lat, max = jet_timeseries(files[i], np.arange(0,len(files[i])), p)
-        lats.append(np.mean(lat))
-        maxs.append(np.mean(max))
-        lats_sd.append(np.std(lat))
-        maxs_sd.append(np.std(max))
-    return lats, lats_sd, maxs, maxs_sd
-
 def calc_jet_lat_quad(u, lats, p, plot=False):
     """
     Function for finding location and strength of maximum given zonal wind u(lat) field.
@@ -35,7 +18,7 @@ def calc_jet_lat_quad(u, lats, p, plot=False):
     """
     print("finding location and strength of maximum of zonal wind ")
     # Restrict to 3 points around maximum
-    u_new = u.mean(dim='time').mean(dim='lon').sel(pfull=p, method='nearest')
+    u_new = u.mean(dim='lon').sel(pfull=p, method='nearest')
     u_max = np.where(u_new == np.ma.max(u_new))[0][0]
     u_near = u_new[u_max-1:u_max+2]
     lats_near = lats[u_max-1:u_max+2]
@@ -81,24 +64,23 @@ def open_ra():
 
     return lat_ra, u_ra, p_ra
 
-def jet_timeseries(files, iter, p):
+def jet_timeseries(file, p):
     """
     Steps through each dataset to find jet latitude/maximum over time.
     Amended to only look at NH tropospheric jet.
     """
-    print("finding jet maxima over time")
+    print(datetime.now(), " - finding jet maxima over time")
     jet_maxima = []
     jet_lats = []
-    for i in iter:
-        file  = files[i]
-        ds = xr.open_dataset(file, decode_times=False)
-        lat = ds.coords['lat'].data
-        u = ds.ucomp
-        # restrict to NH:
-        u = u[:,:,int(len(lat)/2):len(lat),:]
-        lat = lat[int(len(lat)/2):len(lat)] 
+    ds = xr.open_dataset(file, decode_times=False)
+    lat = ds.coords['lat'].data
+    u = ds.ucomp
+    # restrict to NH:
+    u = u[:,:,int(len(lat)/2):len(lat),:]
+    lat = lat[int(len(lat)/2):len(lat)] 
+    for i in range(len(u)):
         # find and store jet maxima and latitudes for each month
-        jet_lat, jet_max = calc_jet_lat_quad(u, lat, p)
+        jet_lat, jet_max = calc_jet_lat_quad(u[i], lat, p)
         jet_maxima.append(jet_max)
         jet_lats.append(jet_lat)
 
@@ -203,15 +185,49 @@ def jetvexp(files, exp, p, xlabel, fig_name):
 
     return plt.close()
 
-def calc_error(nevents, nyears):
+def save_file(exp, var, input):
+    textfile = open(exp+'_'+input+'.txt', 'w')
+    if isinstance(var, list):
+        l = var
+    else:
+        l = var.to_numpy().tolist()
+    for j in l:
+        textfile.write(str(j) + '\n')
+    return textfile.close()
+
+def open_file(exp, input):
+    textfile = open(exp+'_'+input+'.txt', 'r')
+    list = textfile.read().replace('\n', ' ').split(' ')
+    list = list[:len(list)-1]
+    textfile.close()
+    list = np.asarray([float(j) for j in list])
+    return list
+
+def winds_errs(exp, p, name):
     """
-    For the SSW frequency finder from Will Seviour
-    Returns the 95% error interval assuming a binomial distribution:
-    e.g. http://www.sigmazone.com/binomial_confidence_interval.htm
+    Uses jet_locator functions to find location and strength of the tropospheric jet (850 hPa) or SPV (10 hPa).
     """
-    p = nevents / float(nyears)
-    e = 1.96 * np.sqrt(p * (1 - p) / nyears)
-    return e
+    print(datetime.now(), " - calculating standard deviation errors")
+    maxlats = []
+    maxwinds = []
+    maxlats_sd = []
+    maxwinds_sd = []
+    for i in range(len(exp)):
+        files = discard_spinup2(exp[i], time, file_suffix, years)
+        lats = []
+        maxs = []
+        for j in range(len(files)):
+            lat, max = jet_timeseries(files[j], p)
+            lats.append(lat)
+            maxs.append(max)
+        maxlats.append(np.mean(lats))
+        maxwinds.append(np.mean(maxs))
+        maxlats_sd.append(np.std(lats)/np.sqrt(len(files)*30))
+        maxwinds_sd.append(np.std(maxs)/np.sqrt(len(files)*30))
+    save_file(name, maxlats, 'maxlats')
+    save_file(name, maxwinds, 'maxwinds')
+    save_file(name, maxlats_sd, 'maxlats_sd')
+    save_file(name, maxwinds_sd, 'maxwinds_sd')
 
 def find_SPV(exp):
     """
@@ -225,22 +241,59 @@ def find_SPV(exp):
         files = discard_spinup2(exp[i], time, file_suffix, years)
         ds = xr.open_mfdataset(files, decode_times=False)
         SPV = ds.ucomp.mean(dim='lon').sel(pfull=10, method='nearest').sel(lat=60, method='nearest')
-        save_SPV(exp[i], SPV)
+        save_file(exp[i], SPV, 'SPV')
 
-def save_SPV(exp, SPV):
-    textfile = open(exp+'_SPV.txt', 'w')
-    SPV_list = SPV.to_numpy().tolist()
-    for j in SPV_list:
-        textfile.write(str(j) + '\n')
-    return textfile.close()
+def plot_vtx(exp, labels, colors, style, cols, fig_name):
+    """
+    Plots strength of winds at 60N, 10 hPa only.
+    Best for 2 datsets, the second of which has its SSW statistics as a plot subtitle
+    """
+    
+    print(datetime.now(), " - plotting SPV")
+    fig, ax = plt.subplots(figsize=(10,6))
+    for i in range(len(exp)):
+        SPV = open_file(exp[i], 'SPV')
+        ax.plot(SPV, color=colors[i], linewidth=1, linestyle=style[i], label=labels[i])
+    ax.axhline(0, color='k', linewidth=0.5)
+    ax.set_xlim(1,len(SPV))
+    ax.set_xlabel('Day', fontsize='x-large')       
+    ax.set_ylabel(r'Zonal Wind Speed (ms$^{-1}$)', color='k', fontsize='x-large')
+    ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
+    plt.legend(loc='upper center' , bbox_to_anchor=(0.5, -0.1), fancybox=False, shadow=True, ncol=cols, fontsize='x-large')
+    plt.savefig(fig_name+'_vtx.pdf', bbox_inches = 'tight')
+    
+    return plt.close()
 
-def open_SPV(exp):
-    textfile = open(exp+'_SPV.txt', 'r')
-    SPV = textfile.read().replace('\n', ' ').split(' ')
-    SPV = SPV[:len(SPV)-1]
-    textfile.close()
-    SPV = np.asarray([float(j) for j in SPV])
-    return SPV
+def vtxvexp(exp, p, xlabel, name):
+    """
+    Uses jet_locator functions to find location and strength of maximum stratopsheric vortex (10 hPa).
+    Then plots this against (heating) experiment.
+    """
+    print(datetime.now(), " - plotting SPV maxima v experiment")
+    fig, ax = plt.subplots(figsize=(10,6))
+    ax.errorbar(exp, open_file(name, 'maxwinds'), yerr=open_file(name, 'maxwinds_sd'), fmt='o', linewidth=1.25, capsize=5, color='#B30000', linestyle=':')
+    ax.set_xticks(exp)
+    ax.set_xlabel(xlabel, fontsize='x-large')
+    ax.set_ylabel(r'Max. SPV Speed (ms$^{-1}$)', color='#B30000', fontsize='x-large')
+    ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
+    ax2 = ax.twinx()
+    ax2.errorbar(exp, open_file(name, 'maxlats'), yerr=open_file(name, 'maxlats_sd'), fmt='o', linewidth=1.25, capsize=5, color='#0099CC', linestyle=':')
+    ax2.set_ylabel(r'Max. SPV Latitude ($\degree$N)', color='#0099CC', fontsize='x-large')
+    ax2.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
+    #plt.title(r'Max. NH SPV Strength and Location at $p \sim 10$ hPa', fontsize='xx-large')
+    plt.savefig(name+'_SPVvheat.pdf', bbox_inches = 'tight')
+
+    return plt.close()
+
+def calc_error(nevents, nyears):
+    """
+    For the SSW frequency finder from Will Seviour
+    Returns the 95% error interval assuming a binomial distribution:
+    e.g. http://www.sigmazone.com/binomial_confidence_interval.htm
+    """
+    p = nevents / float(nyears)
+    e = 1.96 * np.sqrt(p * (1 - p) / nyears)
+    return e
 
 def find_SSW(SPV):
     #finding SSWs
@@ -265,64 +318,30 @@ def find_SSWs(exp):
     h_list = []
     h_err_list = []
     for i in range(len(exp)):
-        SPV = open_SPV(exp[i])
+        SPV = open_file(exp[i], 'SPV')
         h, h_err = find_SSW(SPV)
         h_list.append(h)
         h_err_list.append(h_err)
     return h_list, h_err_list
 
-def plot_vtx(exp, labels, colors, style, cols, fig_name):
-    """
-    Plots strength of winds at 60N, 10 hPa only.
-    Best for 2 datsets, the second of which has its SSW statistics as a plot subtitle
-    """
-    
-    print(datetime.now(), " - plotting SPV")
-    fig, ax = plt.subplots(figsize=(10,6))
-    for i in range(len(exp)):
-        SPV = open_SPV(exp[i])
-        ax.plot(SPV, color=colors[i], linewidth=1, linestyle=style[i], label=labels[i])
-    ax.axhline(0, color='k', linewidth=0.5)
-    ax.set_xlim(1,len(SPV))
-    ax.set_xlabel('Day', fontsize='x-large')       
-    ax.set_ylabel(r'Zonal Wind Speed (ms$^{-1}$)', color='k', fontsize='x-large')
-    ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
-    plt.legend(loc='upper center' , bbox_to_anchor=(0.5, -0.1), fancybox=False, shadow=True, ncol=cols, fontsize='large')
-    #plt.suptitle(r'Vortex Strength at $p \sim 10$ hPa, $\theta \sim 60 \degree$N', fontsize='xx-large')
-    plt.title('With Polar Heating', fontsize='x-large')
-    plt.savefig(fig_name+'_vtx.pdf', bbox_inches = 'tight')
-    
-    return plt.close()
-
-def vtxvexp(files, exp, p, xlabel, fig_name):
-    """
-    Uses jet_locator functions to find location and strength of maximum stratopsheric vortex (10 hPa).
-    Then plots this against (heating) experiment.
-    """
-    lats, lats_sd, maxwinds, maxwinds_sd = winds_errs(files, p)
-
-    print("plotting SPV maxima v experiment")
-    fig, ax = plt.subplots(figsize=(10,8))
-    ax.errorbar(exp, maxwinds, yerr=maxwinds_sd, fmt='o', linewidth=1.25, capsize=5, color='#C0392B', linestyle=':')
-    ax.set_xticks(exp)
-    ax.set_xlabel(xlabel, fontsize='x-large')
-    ax.set_ylabel(r'Max. SPV Speed (ms$^{-1}$)', color='#C0392B', fontsize='x-large')
-    ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
-    ax2 = ax.twinx()
-    ax2.errorbar(exp, lats, yerr=lats_sd, fmt='o', linewidth=1.25, capsize=5, color='#2980B9', linestyle=':')
-    ax2.set_ylabel(r'Max. SPV Latitude ($\degree$N)', color='#2980B9', fontsize='x-large')
-    ax2.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
-    plt.title(r'Max. NH SPV Strength and Location at $p \sim 10$ hPa', fontsize='xx-large')
-    plt.savefig(fig_name+'_SPVvheat.pdf', bbox_inches = 'tight')
-
-    return plt.close()
+def SSWsperrun(exp):
+    SPV = open_file(exp, 'SPV')
+    years = np.arange(5, int(len(SPV)/360)+5, 5)
+    SSWs = []
+    errors = []
+    for n in years:
+        h, h_err = find_SSW(SPV[:int(n*360)])
+        SSWs.append(h)
+        errors.append(h_err)
+    return SSWs, errors, years
 
 def SSWsvexp(exp, x, xlabel, fig_name):
     """
     Plots SSW frequency against (heating) experiment.
     """
     SSWs, errors = find_SSWs(exp)
-    print("plotting SSWs v experiment")
+    print(SSWs, errors)
+    print(datetime.now(), " - plotting SSWs v experiment")
     fig, ax = plt.subplots(figsize=(10,6))
     ax.errorbar(x, SSWs, yerr=errors, fmt='o', linewidth=1.25, capsize=5, color='#C0392B', linestyle=':')
     ax.set_xticks(x)
@@ -333,6 +352,27 @@ def SSWsvexp(exp, x, xlabel, fig_name):
     ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
     plt.title(r'SSW Frequency', fontsize='xx-large')
     plt.savefig(fig_name+'_SSWsvheat.pdf', bbox_inches = 'tight')
+
+    return plt.close()
+
+def SSWsvruntime(exp, colors, labels, fig_name):
+    """
+    Plots SSW frequency against (heating) experiment.
+    """
+
+    print(datetime.now(), " - plotting SSWs v run length")
+    fig, ax = plt.subplots(figsize=(10,6))
+    for i in range(len(exp)):
+        SSWs, errors, years = SSWsperrun(exp[i])
+        ax.errorbar(years, SSWs, yerr=errors, fmt='o', linewidth=1.25, capsize=5, color=colors[i], linestyle=':', label=labels[i])
+    ax.set_xticks(years)
+    ax.set_xlabel('Years Run', fontsize='x-large')
+    ax.set_ylabel(r'SSWs per 100 days', fontsize='x-large')
+    ax.axhline(0.42, color='k', linewidth=1, label='ERA-Interim')
+    ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
+    plt.legend(loc='upper right',  fancybox=False, shadow=True, ncol=3, fontsize='large')
+    plt.title(r'SSW Frequency', fontsize='xx-large')
+    plt.savefig(fig_name+'_SSWsvrun.pdf', bbox_inches = 'tight')
 
     return plt.close()
 
@@ -375,7 +415,7 @@ if __name__ == '__main__':
         ra = False
     elif label_type == 'd':
         labels = ['original', 'heating perturbation']
-        colors = ['#2980B9', '#C0392B']
+        colors = ['#0099CC', '#B30000']
         style = ['-', '-']
         cols = 2
         ra = False
@@ -401,10 +441,12 @@ if __name__ == '__main__':
         wind = 'SPV '
         plot_type = input('Plot a) SPV @ 10hPa, 60N over time or b) SPV max. and lat for different experiments, c) SSWs for different experiments?')
         if plot_type == 'a':
-            find_SPV(exp)
-            #plot_vtx(exp, labels, colors, style, cols, basis)
+            #find_SPV(exp)
+            plot_vtx(exp, labels, colors, style, cols, basis)
         elif plot_type == 'b':
-            vtxvexp(discard_spinup2(exp, time, file_suffix, years),\
-                [0, 900, 800, 700, 600, 500, 400, 300], p, r'Depth of Heating ($p_{top}$, hPa)', basis)
+            #winds_errs(exp, p, basis+'_depth')
+            vtxvexp(['0', '900', '800', '700', '600', '500', '400', '300'], p, r'Depth of Heating ($p_{top}$, hPa)', basis+'_depth')
         elif plot_type == 'c':
-            SSWsvexp(exp, ['0', '900', '800', '700', '600', '500', '400', '300'], r'Depth of Heating ($p_{top}$, hPa)', basis)
+            #SSWsvexp(exp, ['0', '900', '800', '700', '600', '500', '400', '300'], r'Depth of Heating ($p_{top}$, hPa)', basis)
+            SSWsvruntime(exp, ['#B30000', '#FF9900', '#FFCC00', '#00B300', '#0099CC', '#4D0099', '#CC0080', '#666666'],\
+            ['0 hPa', '900 hPa', '800 hPa', '700 hPa', '600 hPa', '500 hPa', '400 hPa', '300 hPa'], basis)
