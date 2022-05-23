@@ -163,17 +163,17 @@ def difference(a1, a2, coord1, coord2, dim1, dim2, unit):
     
     return diff_xr
 
-def diff_variables(ds1, ds2, lat, lon, z, p):
+def diff_variables(ds1, ds2, lat, p):
     """
     Find difference between datasets.
     Start with zonal wind and temperature.
     """
     uz1 = uz(ds1)
     uz2 = uz(ds2)
-    uz_diff = difference(uz1, uz2, z, lat, 'lat', 'pfull', r'ms$^{-1}$')
+    uz_diff = difference(uz1, uz2, p, lat, 'lat', 'pfull', r'ms$^{-1}$')
 
     Tz1 = Tz(ds1)
     Tz2 = Tz(ds2)
-    Tz_diff = difference(Tz1, Tz2, z, lat, 'lat', 'pfull', 'K')
+    Tz_diff = difference(Tz1, Tz2, p, lat, 'lat', 'pfull', 'K')
 
     return uz_diff, Tz_diff
