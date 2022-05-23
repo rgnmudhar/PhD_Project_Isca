@@ -86,4 +86,3 @@ if __name__ == '__main__':
     # Delete all temporary plots from working directory
     for i in range(0,len(images)):
         os.remove(images[i])
-
