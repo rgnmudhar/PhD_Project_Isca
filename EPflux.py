@@ -7,6 +7,7 @@ import xarray as xr
 import matplotlib.pyplot as plt
 from shared_functions import *
 from aostools import climate
+from datetime import datetime
 
 def calc_ep(ds):
     t = ds.temp
@@ -22,6 +23,7 @@ def calc_ep(ds):
     return uz, div, ep1, ep2
 
 def plot_single(ds, exp_name):
+    print(datetime.now(), " - calculating variables")
     p = ds.coords['pfull'].data
     lat = ds.coords['lat'].data
     uz, div, ep1, ep2 = calc_ep(ds)
@@ -29,8 +31,10 @@ def plot_single(ds, exp_name):
     #Filled contour plot of time-mean EP flux divergence plus EP flux arrows and zonal wind contours
     divlvls = np.arange(-12,13,1)
     ulvls = np.arange(-200, 200, 10)
-    fig, ax = plt.subplots(figsize=(8,6))
+    fig, ax = plt.subplots(figsize=(6,6), constrained_layout=True)
+    print(datetime.now(), " - plot uz")
     uz.plot.contour(colors='k', linewidths=0.5, alpha=0.4, levels=ulvls)
+    print(datetime.now(), " - plot EP flux divergence")
     cs = div.plot.contourf(levels=divlvls, cmap='RdBu_r', add_colorbar=False)
     cb = plt.colorbar(cs)
     cb.set_label(label=r'Divergence (m s$^{-1}$ day$^{-1}$)', size='large')
@@ -38,16 +42,18 @@ def plot_single(ds, exp_name):
     plt.draw()
     ticklabs = cb.ax.get_yticklabels()
     cb.ax.set_yticklabels(ticklabs, fontsize='large')
-    climate.PlotEPfluxArrows(ds.lat,ds.pfull,ep1,ep2,fig,ax,yscale='log')
-    plt.xlabel(r'Latitude ($\degree$N)', fontsize='x-large')
+    plt.show()
+    print(datetime.now(), " - plot EP flux arrows")
+    ax = climate.PlotEPfluxArrows(ds.lat,ds.pfull,ep1,ep2,fig,ax,yscale='log')
+    plt.xlabel(r'Latitude ($\degree$N)', fontsize='xx-large')
     plt.xlim(0,90)
-    plt.xticks([0, 45, 90], ['0', '45', '90'])
-    plt.ylabel('Pressure (hPa)', fontsize='x-large')
+    plt.xticks([10, 30, 50, 70, 90], ['10', '30', '50', '70', '90'])
+    plt.ylabel('Pressure (hPa)', fontsize='xx-large')
     plt.yscale('log')
     plt.ylim(max(p), 1) #to 1 hPa
-    plt.tick_params(axis='both', labelsize = 'large', which='both', direction='in')
+    plt.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
     #plt.title('Time and Zonal Mean EP Flux', fontsize='x-large')
-    plt.savefig(exp+'_EPflux.pdf', bbox_inches = 'tight')
+    plt.savefig(exp_name+'_EPflux.pdf', bbox_inches = 'tight')
     return plt.close()
 
 def plot_diff(ds1, ds2, exp):
@@ -84,7 +90,7 @@ def plot_diff(ds1, ds2, exp):
 if __name__ == '__main__': 
     #Set-up data to be read in
     basis = 'PK_e0v4z13'
-    exp_name = basis+'_q6m2y45l800u200' #_w15a4p300f800g50_q6m2y45l800u200'
+    exp_name = basis+'_w25a4p800f800g50_q6m2y45l800u200'
     exp = [exp_name, basis]
     time = 'daily'
     file_suffix = '_interp'
@@ -92,6 +98,7 @@ if __name__ == '__main__':
     
     plot_type = input("Plot a) single experiment or b) difference between 2 experiments?")
     if plot_type =='a':
+        print(datetime.now(), " - opening files")
         ds = discard_spinup1(exp[0], time, file_suffix, years)
         plot_single(ds, exp_name)
     elif plot_type == 'b':

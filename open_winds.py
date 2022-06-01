@@ -186,7 +186,7 @@ def jetvexp(files, exp, p, xlabel, fig_name):
     return plt.close()
 
 def save_file(exp, var, input):
-    textfile = open(exp+'_'+input+'.txt', 'w')
+    textfile = open('../Files/'+exp+'_'+input+'.txt', 'w')
     if isinstance(var, list):
         l = var
     else:
@@ -196,7 +196,7 @@ def save_file(exp, var, input):
     return textfile.close()
 
 def open_file(exp, input):
-    textfile = open(exp+'_'+input+'.txt', 'r')
+    textfile = open('../Files/'+exp+'_'+input+'.txt', 'r')
     list = textfile.read().replace('\n', ' ').split(' ')
     list = list[:len(list)-1]
     textfile.close()
@@ -250,35 +250,69 @@ def plot_vtx(exp, labels, colors, style, cols, fig_name):
     """
     
     print(datetime.now(), " - plotting SPV")
-    fig, ax = plt.subplots(figsize=(10,6))
+    fig, ax = plt.subplots(figsize=(6,6))
     for i in range(len(exp)):
         SPV = open_file(exp[i], 'SPV')
         ax.plot(SPV, color=colors[i], linewidth=1, linestyle=style[i], label=labels[i])
     ax.axhline(0, color='k', linewidth=0.5)
     ax.set_xlim(1,len(SPV))
-    ax.set_xlabel('Day', fontsize='x-large')       
-    ax.set_ylabel(r'Zonal Wind Speed (ms$^{-1}$)', color='k', fontsize='x-large')
+    ax.set_xlabel('Months Simulated', fontsize='x-large')       
+    ax.set_ylabel(r'Zonal Wind (ms$^{-1}$)', color='k', fontsize='x-large')
     ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
-    plt.legend(loc='upper center' , bbox_to_anchor=(0.5, -0.1), fancybox=False, shadow=True, ncol=cols, fontsize='x-large')
+    ax.set_xticks([10*(12*30), 20*(12*30), 30*(12*30), 40*(12*30)], [10*12, 20*12, 30*12, 40*12])
+    plt.legend(loc='upper center' , bbox_to_anchor=(0.5, 0.11), fancybox=False, shadow=False, ncol=cols, fontsize='x-large')
     plt.savefig(fig_name+'_vtx.pdf', bbox_inches = 'tight')
     
     return plt.close()
 
-def vtxvexp(exp, p, xlabel, name):
+def SPVvexp(exp, exp_names, xlabel, name):
+    """
+    Uses jet_locator functions to find location and strength of maximum stratopsheric vortex (10 hPa).
+    Then plots this against (heating) experiment.
+    """
+    print(datetime.now(), " - plotting SPV mean and variance v experiment")
+    mean = []
+    err = []
+    sd = []
+    for i in range(len(exp)):
+        SPV = open_file(exp[i], 'SPV')
+        mean.append(np.mean(SPV))
+        err.append(np.std(SPV/np.sqrt(len(SPV)))) 
+        sd.append(np.std(SPV))
+    fig, ax = plt.subplots(figsize=(10,6))
+    ax.errorbar(exp_names[1:], mean[1:], yerr=err[1:], fmt='o', linewidth=1.25, capsize=5, color='#B30000', linestyle=':')
+    ax.set_xticks(exp_names)
+    ax.set_xlabel(xlabel, fontsize='x-large')
+    ax.set_ylim(30, 35)
+    ax.set_ylabel(r'10 hPa, 60 N Zonal Wind Mean (ms$^{-1}$)', fontsize='x-large', color='#B30000')
+    ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
+    ax2 = ax.twinx()
+    ax2.plot(exp_names[1:], sd[1:], marker='o', linewidth=1.25, color='#4D0099', linestyle=':')
+    ax2.set_ylim(13,19)
+    ax2.set_ylabel(r'10 hPa, 60 N Zonal Wind S.D.(ms$^{-1}$)', color='#4D0099', fontsize='x-large')
+    ax2.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
+    #plt.title(r'Max. NH SPV Strength and Location at $p \sim 10$ hPa, 60N', fontsize='xx-large')
+    plt.savefig(name+'_SPVvheat.pdf', bbox_inches = 'tight')
+
+    return plt.close()
+
+def vtxvexp(exp, xlabel, name):
     """
     Uses jet_locator functions to find location and strength of maximum stratopsheric vortex (10 hPa).
     Then plots this against (heating) experiment.
     """
     print(datetime.now(), " - plotting SPV maxima v experiment")
     fig, ax = plt.subplots(figsize=(10,6))
-    ax.errorbar(exp, open_file(name, 'maxwinds'), yerr=open_file(name, 'maxwinds_sd'), fmt='o', linewidth=1.25, capsize=5, color='#B30000', linestyle=':')
+    ax.errorbar(exp, open_file(name, 'maxwinds')[1:], yerr=open_file(name, 'maxwinds_sd')[1:], fmt='o', linewidth=1.25, capsize=5, color='#B30000', linestyle=':')
     ax.set_xticks(exp)
+    ax.set_ylim(51,56)
     ax.set_xlabel(xlabel, fontsize='x-large')
-    ax.set_ylabel(r'Max. SPV Speed (ms$^{-1}$)', color='#B30000', fontsize='x-large')
+    ax.set_ylabel(r'Strength of Max. 10 hPa Zonal Wind (ms$^{-1}$)', color='#B30000', fontsize='x-large')
     ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
     ax2 = ax.twinx()
-    ax2.errorbar(exp, open_file(name, 'maxlats'), yerr=open_file(name, 'maxlats_sd'), fmt='o', linewidth=1.25, capsize=5, color='#0099CC', linestyle=':')
-    ax2.set_ylabel(r'Max. SPV Latitude ($\degree$N)', color='#0099CC', fontsize='x-large')
+    ax2.errorbar(exp, open_file(name, 'maxlats')[1:], yerr=open_file(name, 'maxlats_sd')[1:], fmt='o', linewidth=1.25, capsize=5, color='#4D0099', linestyle=':')
+    ax2.set_yticks(np.arange(69,71.5,0.5))
+    ax2.set_ylabel(r'Laitude of Max. 10 hPa Zonal Wind ($\degree$N)', color='#4D0099', fontsize='x-large')
     ax2.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
     #plt.title(r'Max. NH SPV Strength and Location at $p \sim 10$ hPa', fontsize='xx-large')
     plt.savefig(name+'_SPVvheat.pdf', bbox_inches = 'tight')
@@ -340,24 +374,63 @@ def SSWsvexp(exp, x, xlabel, fig_name):
     Plots SSW frequency against (heating) experiment.
     """
     SSWs, errors = find_SSWs(exp)
+    og = SSWs[0]
+    og_err = errors[0]
     print(SSWs, errors)
     print(datetime.now(), " - plotting SSWs v experiment")
     fig, ax = plt.subplots(figsize=(10,6))
-    ax.errorbar(x, SSWs, yerr=errors, fmt='o', linewidth=1.25, capsize=5, color='#C0392B', linestyle=':')
+    ax.errorbar(x, SSWs[1:], yerr=errors[1:], fmt='o', linewidth=1.25, capsize=5, color='#B30000', linestyle=':')
+    ax.set_xlim(-0.5,6.5)
     ax.set_xticks(x)
     ax.set_xlabel(xlabel, fontsize='x-large')
     ax.set_ylabel(r'SSWs per 100 days', fontsize='x-large')
-    ax.axhline(0.42, color='#2980B9', linewidth=0.5)
-    ax.text(6.15, 0.425, 'ERA-Interim', color='#2980B9', fontsize='x-large')
+    ax.axhline(0.42, color='#4D0099', linewidth=0.5)
+    ax.text(5.4, 0.425, 'ERA-Interim', color='#4D0099', fontsize='x-large')
+    ax.axhline(og, color='#666666', linewidth=0.5)
+    ax.fill_between(range(-1,8), (og - og_err), (og + og_err), facecolor ='gainsboro', alpha = 0.4)
+    ax.text(5.75, 0.335, 'Control', color='#666666', fontsize='x-large')
     ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
-    plt.title(r'SSW Frequency', fontsize='xx-large')
+    #plt.title(r'SSW Frequency', fontsize='xx-large')
     plt.savefig(fig_name+'_SSWsvheat.pdf', bbox_inches = 'tight')
+
+    return plt.close()
+
+def SSWsvexp2(exp1, exp2, x1, xlabel1, x2, xlabel2, fig_name):
+    """
+    Plots SSW frequency against (heating) experiment for 2 types of experiment.
+    """
+    SSWs1, errors1 = find_SSWs(exp1)
+    SSWs2, errors2 = find_SSWs(exp2)
+    og = SSWs1[0]
+    og_err = errors1[0]
+    
+    print(datetime.now(), " - plotting SSWs v experiment")
+    fig, ax = plt.subplots(figsize=(10,6))
+    ax.errorbar(x1, SSWs1[1:], yerr=errors1[1:], fmt='o', linewidth=1.25, capsize=5, color='#B30000', linestyle=':')
+    ax.set_xlim(-0.5,6.5)
+    ax.set_xticks(x1)
+    ax.set_xlabel(xlabel1, fontsize='x-large', color='#B30000')
+    ax.set_ylabel(r'SSWs per 100 days', fontsize='x-large')
+    ax.axhline(0.42, color='#0099CC', linewidth=0.5)
+    ax.text(5.4, 0.425, 'ERA-Interim', color='#0099CC', fontsize='x-large')
+    ax.axhline(og, color='#666666', linewidth=0.5)
+    ax.fill_between(range(-1,8), (og - og_err), (og + og_err), facecolor ='gainsboro', alpha = 0.4)
+    ax.text(5.75, 0.335, 'Control', color='#666666', fontsize='x-large')
+    ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
+    ax2 = ax.twiny()
+    ax2.errorbar(x2, SSWs2[1:], yerr=errors2[1:], fmt='o', linewidth=1.25, capsize=5, color='#4D0099', linestyle=':')
+    ax2.set_xlim(-0.5,6.5)
+    ax2.set_xticks(x2)
+    ax2.set_xlabel(xlabel2, fontsize='x-large', color='#4D0099')
+    ax2.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
+    #plt.title(r'SSW Frequency', fontsize='xx-large')
+    plt.savefig(fig_name+'_SSWsvheat2.pdf', bbox_inches = 'tight')
 
     return plt.close()
 
 def SSWsvruntime(exp, colors, labels, fig_name):
     """
-    Plots SSW frequency against (heating) experiment.
+    Plots SSW frequency for each (heating) experiment vs. run time.
     """
 
     print(datetime.now(), " - plotting SSWs v run length")
@@ -385,13 +458,21 @@ if __name__ == '__main__':
     #Set-up data to be read in
     basis = 'PK_e0v4z13'
     exp = [basis+'_q6m2y45l800u200',\
+        #basis+'_w10a4p800f800g50_q6m2y45l800u200',\
+        #basis+'_w15a4p800f800g50_q6m2y45l800u200',\
+        #basis+'_w20a4p800f800g50_q6m2y45l800u200',\
+        #basis+'_w25a4p800f800g50_q6m2y45l800u200',\
+        #basis+'_w30a4p800f800g50_q6m2y45l800u200',\
+        #basis+'_w35a4p800f800g50_q6m2y45l800u200',\
+        #basis+'_w40a4p800f800g50_q6m2y45l800u200']
+    #exp2 = [basis+'_q6m2y45l800u200',\
         basis+'_w15a4p900f800g50_q6m2y45l800u200',\
         basis+'_w15a4p800f800g50_q6m2y45l800u200',\
         basis+'_w15a4p700f800g50_q6m2y45l800u200',\
         basis+'_w15a4p600f800g50_q6m2y45l800u200',\
         basis+'_w15a4p500f800g50_q6m2y45l800u200',\
         basis+'_w15a4p400f800g50_q6m2y45l800u200',\
-        basis+'_w15a4p300f800g50_q6m2y45l800u200']        
+       basis+'_w15a4p300f800g50_q6m2y45l800u200']     
     
     #User choices for plotting - aesthetics
     label_type = input(r'Plot a) different $\gamma$, b) different $\epsilon, z_{oz}$, c) heat or d) diff. vs. original?')
@@ -414,7 +495,7 @@ if __name__ == '__main__':
         cols = 4
         ra = False
     elif label_type == 'd':
-        labels = ['original', 'heating perturbation']
+        labels = ['no asymmetry', 'asymmetry']
         colors = ['#0099CC', '#B30000']
         style = ['-', '-']
         cols = 2
@@ -444,9 +525,11 @@ if __name__ == '__main__':
             #find_SPV(exp)
             plot_vtx(exp, labels, colors, style, cols, basis)
         elif plot_type == 'b':
-            #winds_errs(exp, p, basis+'_depth')
-            vtxvexp(['0', '900', '800', '700', '600', '500', '400', '300'], p, r'Depth of Heating ($p_{top}$, hPa)', basis+'_depth')
+            #winds_errs(exp, p, basis+'_extent')
+            SPVvexp(exp, ['control', '900', '800', '700', '600', '500', '400', '300'], 'Depth of Heating (hPa)', basis+'_depth')
+            #vtxvexp(['10', '15', '20', '25', '30', '35', '40'], r'Extent of Heating ($\degree$)', basis+'_extent')
         elif plot_type == 'c':
-            #SSWsvexp(exp, ['0', '900', '800', '700', '600', '500', '400', '300'], r'Depth of Heating ($p_{top}$, hPa)', basis)
-            SSWsvruntime(exp, ['#B30000', '#FF9900', '#FFCC00', '#00B300', '#0099CC', '#4D0099', '#CC0080', '#666666'],\
-            ['0 hPa', '900 hPa', '800 hPa', '700 hPa', '600 hPa', '500 hPa', '400 hPa', '300 hPa'], basis)
+            SSWsvexp(exp, ['10', '15', '20', '25', '30', '35', '40'], r'Extent of Heating ($\degree$)', basis)
+            #SSWsvexp2(exp, exp2, ['10', '15', '20', '25', '30', '35', '40'], r'Extent of Heating ($\degree$)', ['900', '800', '700', '600', '500', '400', '300'], 'Depth of Heating (hPa)', basis)
+            #SSWsvruntime(exp, ['#B30000', '#FF9900', '#FFCC00', '#00B300', '#0099CC', '#4D0099', '#CC0080', '#666666'],\
+            #['0 hPa', '900 hPa', '800 hPa', '700 hPa', '600 hPa', '500 hPa', '400 hPa', '300 hPa'], basis)

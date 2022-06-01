@@ -8,6 +8,7 @@ import xarray as xr
 import numpy as np
 import matplotlib.pyplot as plt
 from shared_functions import *
+from datetime import datetime
 
 def plot_single(ds, exp_name):
     # Set-up variables from the dataset
@@ -39,7 +40,7 @@ def plot_single(ds, exp_name):
     # Zonal Average Zonal Wind Speed and Temperature
     lvls2a = np.arange(160, 330, 5)
     lvls2b = np.arange(-200, 200, 5)
-    fig2, ax = plt.subplots(figsize=(8,6))
+    fig2, ax = plt.subplots(figsize=(6,6))
     cs2a = ax.contourf(lat, p, T, levels=lvls2a, cmap='RdBu_r')
     ax.contourf(cs2a, colors='none')
     cs2b = ax.contour(lat, p, u, colors='k', levels=lvls2b, linewidths=1)
@@ -48,8 +49,10 @@ def plot_single(ds, exp_name):
     cb.set_label(label='Temperature (K)', size='x-large')
     cb.ax.tick_params(labelsize='x-large')
     plt.xlabel('Latitude', fontsize='x-large')
-    plt.xlim(-90,90)
-    plt.xticks([-90, -45, 0, 45, 90], ['90S', '45S', '0', '45N', '90N'])
+    plt.xlim(0,90)
+    plt.xticks([10, 30, 50, 70, 90], ['10', '30', '50', '70', '90'])
+    #plt.xlim(-90,90)
+    #plt.xticks([-90, -45, 0, 45, 90], ['90S', '45S', '0', '45N', '90N'])
     plt.ylabel('Pressure (hPa)', fontsize='x-large')
     plt.ylim(max(p), upper_p) #goes to ~1hPa
     plt.yscale('log')
@@ -92,29 +95,31 @@ def plot_single(ds, exp_name):
 
 def plot_diff(ds1, ds2, exp_name):
     # Set-up variables from the dataset
+    print(datetime.now(), " - finding coords")
     lat = ds1.coords['lat'].data
     lon = ds1.coords['lon'].data
     p = ds1.coords['pfull'].data
     upper_p = ds1.coords['pfull'].sel(pfull=1, method='nearest') # in order to cap plots at pressure = 1hPa
-    z = altitude(p)
 
+    print(datetime.now(), " - finding variables")
     u_diff, T_diff = diff_variables(ds1, ds2, lat, p)
     u = uz(ds1)
     T = Tz(ds1)
 
-    lvls1 = np.arange(-35, 37.5, 2.5)
+    print(datetime.now(), " - plotting u diff")
+    lvls1 = np.arange(-20, 22.5, 2.5)
     lvls2 = np.arange(-200, 200, 10)
-    fig1, ax1 = plt.subplots(figsize=(8,6))
+    fig1, ax1 = plt.subplots(figsize=(6,6))
     cs1 = ax1.contourf(lat, p, u_diff, levels=lvls1, cmap='RdBu_r')
     ax1.contourf(cs1, colors='none')
-    cs2 = ax1.contour(lat, p, u, colors='k', levels=lvls2, linewidths=1)
+    cs2 = ax1.contour(lat, p, u, colors='k', levels=lvls2, linewidths=1, alpha=0.4)
     cs2.collections[int(len(lvls2)/2)].set_linewidth(1.5)
     cb = plt.colorbar(cs1)
     cb.set_label(label=r'Difference (ms$^{-1}$)', size='x-large')
     cb.ax.tick_params(labelsize='x-large')
-    plt.xlabel('Latitude', fontsize='x-large')
-    plt.xlim(-90,90)
-    plt.xticks([-90, -45, 0, 45, 90], ['90S', '45S', '0', '45N', '90N'])
+    plt.xlabel(r'Latitude ($\degree$N)', fontsize='x-large')
+    plt.xlim(0,90)
+    plt.xticks([10, 30, 50, 70, 90], ['10', '30', '50', '70', '90'])
     plt.ylabel('Pressure (hPa)', fontsize='x-large')
     plt.ylim(max(p), upper_p) #goes to ~1hPa
     plt.yscale('log')
@@ -123,19 +128,20 @@ def plot_diff(ds1, ds2, exp_name):
     plt.savefig(exp_name+'_udiff.pdf', bbox_inches = 'tight')
     plt.close()
 
-    lvls3 = np.arange(-35, 37.5, 2.5)
+    print(datetime.now(), " - plotting T diff")
+    lvls3 = np.arange(-20, 22.5, 2.5)
     lvls4 = np.arange(160, 330, 10)
-    fig2, ax2 = plt.subplots(figsize=(10,8))
+    fig2, ax2 = plt.subplots(figsize=(6,6))
     cs3 = ax2.contourf(lat, p, T_diff, levels=lvls3, cmap='RdBu_r')
     ax2.contourf(cs3, colors='none')
-    cs4 = ax2.contour(lat, p, T, colors='k', levels=lvls4, linewidths=1)
+    cs4 = ax2.contour(lat, p, T, colors='k', levels=lvls4, linewidths=1, alpha=0.4)
     cs4.collections[int(len(lvls4)/2)].set_linewidth(1.5)
     cb = plt.colorbar(cs3)
     cb.set_label(label=r'Temperature (K)', size='x-large')
     cb.ax.tick_params(labelsize='x-large')
-    plt.xlabel('Latitude', fontsize='x-large')
-    plt.xlim(-90,90)
-    plt.xticks([-90, -45, 0, 45, 90], ['90S', '45S', '0', '45N', '90N'])
+    plt.xlabel(r'Latitude ($\degree$N)', fontsize='x-large')
+    plt.xlim(0,90)
+    plt.xticks([10, 30, 50, 70, 90], ['10', '30', '50', '70', '90'])
     plt.ylabel('Pressure (hPa)', fontsize='x-large')
     plt.ylim(max(p), upper_p) #goes to ~1hPa
     plt.yscale('log')
@@ -147,8 +153,8 @@ def plot_diff(ds1, ds2, exp_name):
 if __name__ == '__main__': 
     #Set-up data to be read in
     basis = 'PK_e0v4z13'
-    exp_name = basis+'_w15a4p300f800g50_q6m2y45l800u200'
-    exp = [exp_name, basis]
+    exp_name = basis+'_q6m2y45l800u200' #_w15a4p900f800g50
+    exp = [exp_name, basis+'_q6m2y45l800u200']
     time = 'daily'
     file_suffix = '_interp'
     years = 2 # user sets no. of years worth of data to ignore due to spin-up
@@ -158,6 +164,7 @@ if __name__ == '__main__':
         ds = discard_spinup1(exp[0], time, file_suffix, years)
         plot_single(ds, exp_name)
     elif plot_type == 'b':
+        print(datetime.now(), " - opening files")
         ds1 = discard_spinup1(exp[0], time, file_suffix, years)
         ds2 = discard_spinup1(exp[1], time, file_suffix, years)
         plot_diff(ds1, ds2, exp_name)
