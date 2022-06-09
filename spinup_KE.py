@@ -40,13 +40,15 @@ for i in range(len(files)):
 save_file(exp_name, KE, 'KE')
 
 # option to plot the KE over time
-#print("plotting")
-#KE = open_file(exp_name, 'KE')
-#fig, ax = plt.subplots(figsize=(10,6))
-#ax.plot(len(KE), KE, color='k')
-#ax.set_xlim(1,len(KE))
-#ax.set_xlabel("Days Simulated")       
-#ax.set_ylabel('TKE', color='k')
-#plt.title("Total Kinetic Energy for "+exp_name)
-#plt.savefig(exp_name+'_spinup.pdf', bbox_inches = 'tight')
-#plt.close()
+plot = False
+if plot == True:
+    print("plotting")
+    KE = open_file(exp_name, 'KE')
+    fig, ax = plt.subplots(figsize=(10,6))
+    ax.plot(len(KE), KE, color='k')
+    ax.set_xlim(1,len(KE))
+    ax.set_xlabel("Days Simulated")       
+    ax.set_ylabel('TKE', color='k')
+    plt.title("Total Kinetic Energy for "+exp_name)
+    plt.savefig(exp_name+'_spinup.pdf', bbox_inches = 'tight')
+    plt.close()
