@@ -96,7 +96,7 @@ def AM_times(pcs, lags):
 
     return tau1, tau2
 
-def plot_single(ds, p_min, lat_min, exp_name, alt=True):
+def plot_single(ds, p_min, lat_min, exp_name):
     """
     Plots equivalent to Fig 4a-c from Sheshadri & Plumb.
     """
@@ -112,18 +112,11 @@ def plot_single(ds, p_min, lat_min, exp_name, alt=True):
     # Set-up coordinates
     lat = ds.coords['lat'].sel(lat=slice(lat_min,90))
     p = ds.coords['pfull'].sel(pfull=slice(p_min,1000))
-    z = altitude(p)
 
     # Set-up variables
-    if alt==True:
-        # Use altitude rather than pressure for vertical
-        uz = use_altitude(uz.mean(dim='time'), z, lat, 'pfull', 'lat', 'm/s')
-        eof1 = use_altitude(eofs.sel(mode=0), z, lat, 'pfull', 'lat', '')
-        eof2 = use_altitude(eofs.sel(mode=1), z, lat, 'pfull', 'lat', '')
-    else:
-        uz = uz.mean(dim='time')
-        eof1 = eofs.sel(mode=0)
-        eof2 = eofs.sel(mode=1)
+    uz = uz.mean(dim='time')
+    eof1 = eofs.sel(mode=0)
+    eof2 = eofs.sel(mode=1)
     
     # Now plot on a single figure
     fig = plt.figure(figsize=(19,6))
@@ -131,16 +124,11 @@ def plot_single(ds, p_min, lat_min, exp_name, alt=True):
     #fig.suptitle(exp_name, fontsize='large')
 
     ax1 = fig.add_subplot(1,3,1)
-    if alt==True:
-        eof_1 = eof1.plot.contourf(ax=ax1, cmap='RdBu_r', levels=21, add_colorbar=False)
-        uz.plot.contour(ax=ax1, colors='k', levels=ulvls)
-        ax1.set_ylabel('Pseudo-Altitude (km)', fontsize='large')
-    else:
-        eof_1 = eof1.plot.contourf(ax=ax1, cmap='RdBu_r', yincrease=False, levels=21, add_colorbar=False)
-        plt.colorbar(eof_1)
-        uz.plot.contour(ax=ax1, colors='k', yincrease=False, levels=ulvls)
-        ax1.set_ylabel('Pressure (hPa)', fontsize='large')
-        ax1.set_ylim(925,100)
+    eof_1 = eof1.plot.contourf(ax=ax1, cmap='RdBu_r', yincrease=False, levels=21, add_colorbar=False)
+    plt.colorbar(eof_1)
+    uz.plot.contour(ax=ax1, colors='k', yincrease=False, levels=ulvls)
+    ax1.set_ylabel('Pressure (hPa)', fontsize='large')
+    ax1.set_ylim(925,100)
 
     ax1.set_xlabel(r'Latitude ($\degree$N)', fontsize='large')
     ax1.tick_params(axis='both', labelsize = 'medium', which='both', direction='in')
@@ -148,18 +136,12 @@ def plot_single(ds, p_min, lat_min, exp_name, alt=True):
         .format(100*variance_fractions.values[0],\
         tau1), fontsize='x-large')
     
-
     ax2 = fig.add_subplot(1,3,2)
-    if alt==True:
-        eof_2 = eof2.plot.contourf(ax=ax2, cmap='RdBu_r', levels=21, add_colorbar=False)
-        uz.plot.contour(ax=ax2, colors='k', levels=ulvls)
-        ax2.set_ylabel('Pseudo-Altitude (km)', fontsize='large')
-    else:
-        eof_2 = eof2.plot.contourf(ax=ax2, cmap='RdBu_r', yincrease=False, levels=21, add_colorbar=False)
-        plt.colorbar(eof_2)
-        uz.plot.contour(ax=ax2, colors='k', yincrease=False, levels=ulvls)
-        ax2.set_ylabel('Pressure (hPa)', fontsize='large')
-        ax2.set_ylim(925,100)
+    eof_2 = eof2.plot.contourf(ax=ax2, cmap='RdBu_r', yincrease=False, levels=21, add_colorbar=False)
+    plt.colorbar(eof_2)
+    uz.plot.contour(ax=ax2, colors='k', yincrease=False, levels=ulvls)
+    ax2.set_ylabel('Pressure (hPa)', fontsize='large')
+    ax2.set_ylim(925,100)
     
     ax2.set_xlabel(r'Latitude ($\degree$N)', fontsize='large')
     ax2.tick_params(axis='both', labelsize = 'medium', which='both', direction='in')
@@ -221,7 +203,7 @@ if __name__ == '__main__':
     plot_type = input("a) single or b) multi?")
 
     time = 'daily'
-    years = 22 # user sets no. of years worth of data to ignore due to spin-up
+    years = 2 # user sets no. of years worth of data to ignore due to spin-up
     file_suffix = '_interp'    
 
     # For EOFs follow Sheshadri & Plumb 2017, use p>100hPa, lat>20degN
@@ -229,7 +211,7 @@ if __name__ == '__main__':
     lat_min = 20  # degrees
 
     if plot_type=='a':
-        exp_name = 'PK_e0v4z13' #_w15a4p600f800g50_q6m2y45l800u200'
+        exp_name = 'PK_e0v4z13_w40a4p800f800g50_q6m2y45l800u200'
         ds = add_phalf(exp_name, time, file_suffix, years)
         print(exp_name)
         plot_single(ds, p_min, lat_min, exp_name, alt=False)
@@ -258,21 +240,3 @@ if __name__ == '__main__':
         labels = ['no heat', r'p$_{top}$ = 800 hPa', r'p$_{top}$ = 600 hPa', r'p$_{top}$ = 400 hPa']
 
         plot_multi(ds1, ds2, ds3, ds4, p_min, lat_min, labels, colors, style, cols, 'PK_eps0_vtx1_zoz13_heating3')        
-
-
-"""
-# Plot the PC timeseries
-t = ds.coords['time']
-times=[]
-for i in range(len(t)):
-    times.append(t[i]-t[0])
-fig2 = plt.figure(figsize=(6,5))
-plt.plot(times, pcs[0, 0], linewidth=2)
-ax = plt.gca()
-ax.axhline(0, color='k')
-ax.set_xlim(0, max(times))
-ax.set_xlabel('Days')
-ax.set_ylabel('Normalized Units')
-ax.set_title('PC1 Time Series', fontsize='x-large')
- plt.show()
-"""
