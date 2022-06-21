@@ -82,10 +82,10 @@ def winds_errs(indir, exp, p, name):
         maxwinds.append(np.mean(max))
         maxlats_sd.append(np.std(lat)/np.sqrt(n))
         maxwinds_sd.append(np.std(max)/np.sqrt(n))
-    save_file(name, maxlats, 'maxlats')
-    save_file(name, maxwinds, 'maxwinds')
-    save_file(name, maxlats_sd, 'maxlats_sd')
-    save_file(name, maxwinds_sd, 'maxwinds_sd')
+    save_file(name, maxlats, 'maxlats'+str(p))
+    save_file(name, maxwinds, 'maxwinds'+str(p))
+    save_file(name, maxlats_sd, 'maxlats_sd'+str(p))
+    save_file(name, maxwinds_sd, 'maxwinds_sd'+str(p))
 
 def find_SPV(indir, exp):
     """
@@ -170,5 +170,8 @@ if __name__ == '__main__':
         #basis+'_w15a4p400f800g50_q6m2y45l800u200',\
         #basis+'_w15a4p300f800g50_q6m2y45l800u200']
 
-    winds_errs(indir, exp, 10, exp[0])
+    p = 10
+    winds_errs(indir, exp, p, exp[0])
+    p = 850
+    winds_errs(indir, exp, p, exp[0])
     find_SPV(indir, exp)

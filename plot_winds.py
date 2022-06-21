@@ -160,13 +160,10 @@ if __name__ == '__main__':
     xlabel_depth = 'Depth of Heating (hPa)'
     xlabel_extent = r'Extent of Heating ($\degree$)'
 
-    labels = ['hi', 'hi!']
-    colors = ['#B30000', '#FF9900']
-    style = ['-', ':']
-    cols = len(exp)
-
     if level == 'a':
         p = 900 #hPa
+        style = ['-', ':']
+        cols = len(exp)
         plot_winds(indir, exp, labels, colors, style, cols, exp[0], p)
 
     elif level == 'b':
