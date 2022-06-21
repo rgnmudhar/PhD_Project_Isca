@@ -8,60 +8,16 @@ import xarray as xr
 import numpy as np
 import matplotlib.pyplot as plt
 
-def discard_spinup1(exp_name, time, file_suffix, years):
-    """
-    Ignore initial spin-up period of X years.
-    Output dataset.
-    """
-    path = '/disco/share/rm811/isca_data/'
-    files = sorted(glob(path+exp_name+'/run*'+'/atmos_'+time+file_suffix+'.nc'))
-    max_months = len(files)
-    min_months = years*12
-    files = files[min_months:max_months+1]
-    ds = xr.open_mfdataset(files, decode_times=False)
-
-    return ds
-
-def discard_spinup2(exp_name, time, file_suffix, years):
-    """
-    Ignore initial spin-up period of X years.
-    Output list of file names.
-    """
-    path = '/disco/share/rm811/isca_data/'
-    files = sorted(glob(path+exp_name+'/run*'+'/atmos_'+time+file_suffix+'.nc'))
-    max_months = len(files)
-    min_months = years*12
-    files = files[min_months:max_months+1]
-
-    return files
-
-def add_phalf(exp_name, time, file_suffix, years):
+def add_phalf(exp_name, file_name):
     """
     Assign phalf levels from uninterpolated to interpolated datset.
-    """    
-    files = discard_spinup2(exp_name, time, file_suffix, years)
+    """
 
-    ds = xr.open_mfdataset(files, decode_times=False)
+    ds = xr.open_dataset(exp_name+file_name, decode_times=False)
     ds_original = xr.open_mfdataset('../atmos_daily_T42_p40.nc', decode_times=False)
     ds = ds.assign_coords({"phalf":ds_original.phalf})
 
     return ds
-
-def Tz(ds):
-    """
-    Take mean of average zonal temperature by taking averages along time and longitude dimensions.
-    """
-    Tz = ds.temp.mean(dim='time').mean(dim='lon').data 
-    
-    return Tz
-
-def Teqz(ds):
-    """
-    Take mean of average zonal temperature by taking averages along time and longitude dimensions.
-    """
-    Tz = ds.teq.mean(dim='time').mean(dim='lon').data 
-    
-    return Tz
 
 def T_potential(p, P_surf, T, lat):
     """
@@ -76,22 +32,6 @@ def T_potential(p, P_surf, T, lat):
             theta[i,j] = T[i,j] * ((P_surf[j]/100)/p[i])**Kappa #potential temperature calculation with P_surf converted to hPa
     
     return theta
-
-def P_surf(ds, lat, lon):
-    """
-    Take mean of surface temperature by taking a mean along time dimension.
-    """
-    p = ds.ps.mean(dim='time').data 
-    
-    return p
-
-def uz(ds):
-    """
-    Take mean of zonal wind speed by taking a mean along time and longitude dimensions.
-    """
-    uz = ds.ucomp.mean(dim='time').mean(dim='lon').data
-   
-    return uz
 
 def calc_streamfn(v, p, lat): #KEEP
     """
@@ -109,16 +49,6 @@ def calc_streamfn(v, p, lat): #KEEP
             psi[ilev,ilat] = psi[ilev-1,ilat] + coeff*np.cos(np.deg2rad(lat[ilat])) \
                              * v[ilev,ilat] * (p[ilev]-p[ilev-1])
     # Make into an xarray DataArray
-    
-    return psi
-
-def v(ds, p, lat):
-    """
-    Take annual mean of meridional wind speed by taking a mean along time and longitude dimensions.
-    Use this to calculate the streamfunction using the dedicated function.
-    """
-    v_anm = ds.vcomp.mean(dim='time').mean(dim='lon').data
-    psi = calc_streamfn(v_anm, p, lat)
     
     return psi
 
