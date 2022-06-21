@@ -42,7 +42,7 @@ def add_phalf(exp_name, time, file_suffix, years):
     files = discard_spinup2(exp_name, time, file_suffix, years)
 
     ds = xr.open_mfdataset(files, decode_times=False)
-    ds_original = xr.open_mfdataset('atmos_daily_T42_p40.nc', decode_times=False)
+    ds_original = xr.open_mfdataset('../atmos_daily_T42_p40.nc', decode_times=False)
     ds = ds.assign_coords({"phalf":ds_original.phalf})
 
     return ds
@@ -93,7 +93,7 @@ def uz(ds):
    
     return uz
 
-def calc_streamfn(v, p, lat):
+def calc_streamfn(v, p, lat): #KEEP
     """
     Calculates the meridional mass streamfunction from v wind in kg/s.
     """
@@ -122,7 +122,7 @@ def v(ds, p, lat):
     
     return psi
 
-def altitude(p):
+def altitude(p): #KEEP
     """
     Finds altitude from pressure using z = -H*log10(p/p0).
     """
@@ -143,7 +143,7 @@ def altitude(p):
     
     return z_xr
 
-def use_altitude(x, coord1, coord2, dim1, dim2, unit):
+def use_altitude(x, coord1, coord2, dim1, dim2, unit): #KEEP
     """
     Creates new DataArray that uses z in place of pfull.
     """
@@ -151,7 +151,7 @@ def use_altitude(x, coord1, coord2, dim1, dim2, unit):
     x_xr.attrs['units'] = unit
     return x_xr
 
-def difference(a1, a2, coord1, coord2, dim1, dim2, unit):
+def difference(a1, a2, coord1, coord2, dim1, dim2, unit): #KEEP
     """
     Take the difference between 2 datasets and create an xarray DataArray.
     """
@@ -163,17 +163,30 @@ def difference(a1, a2, coord1, coord2, dim1, dim2, unit):
     
     return diff_xr
 
-def diff_variables(ds1, ds2, lat, p):
+def diff_variables(x, y, lat, p): #KEEP
     """
     Find difference between datasets.
     Start with zonal wind and temperature.
     """
-    uz1 = uz(ds1)
-    uz2 = uz(ds2)
-    uz_diff = difference(uz1, uz2, p, lat, 'lat', 'pfull', r'ms$^{-1}$')
-
-    Tz1 = Tz(ds1)
-    Tz2 = Tz(ds2)
-    Tz_diff = difference(Tz1, Tz2, p, lat, 'lat', 'pfull', 'K')
+    uz_diff = difference(x[0], x[1], p, lat, 'lat', 'pfull', r'ms$^{-1}$')
+    Tz_diff = difference(y[0], y[1], p, lat, 'lat', 'pfull', 'K')
 
     return uz_diff, Tz_diff
+
+def save_file(exp, var, input):
+    textfile = open('../Files/'+exp+'_'+input+'.txt', 'w')
+    if isinstance(var, list):
+        l = var
+    else:
+        l = var.to_numpy().tolist()
+    for j in l:
+        textfile.write(str(j) + '\n')
+    return textfile.close()
+
+def open_file(exp, input):
+    textfile = open('../Files/'+exp+'_'+input+'.txt', 'r')
+    list = textfile.read().replace('\n', ' ').split(' ')
+    list = list[:len(list)-1]
+    textfile.close()
+    list = np.asarray([float(j) for j in list])
+    return list
