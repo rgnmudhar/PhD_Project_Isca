@@ -198,15 +198,15 @@ if __name__ == '__main__':
     lat_min = 20  # degrees
 
     if plot_type=='a':
-        ds = add_phalf(indir+exp[0], '_zmean.nc')
+        ds = add_phalf(indir+exp[0], '_uz.nc')
         uz = ds.ucomp
-        utz = xr.open_dataset(indir+exp[0]+'_tzmean.nc', decode_times=False).ucomp[0]
+        utz = xr.open_dataset(indir+exp[0]+'_utz.nc', decode_times=False).ucomp[0]
         plot_single(uz, utz, p_min, lat_min, exp[0])
     
     elif plot_type=='b':
         uz = []
         for i in range(len(exp)):
-            ds = add_phalf(indir+exp[i], '_zmean.nc')
+            ds = add_phalf(indir+exp[i], '_uz.nc')
             uz.append(ds.ucomp)
 
         labels = ['label1', 'label2']

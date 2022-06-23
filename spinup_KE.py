@@ -15,28 +15,22 @@ def calc_TKE(u,v):
     upv = u*u + v*v
     return 0.5 * upv
 
-path = str(sys.argv[1]) 
-exp_name = str(sys.argv[2])
-files=sorted(glob(path+'/'+exp_name+'/run*/*.nc'))
+indir = '/disco/share/rm811/processed/'
+exp = 'PK_e0v4z13_q6m2y45l800u200'
 KE = []
 print("finding KE")
-for i in range(len(files)):
-    print(i)
-    file  = files[i]
-    ds = xr.open_dataset(file, decode_times=False)
-    u = ds.ucomp.mean(dim='lon')
-    v = ds.vcomp.mean(dim='lon')
-    coslat = np.cos(np.deg2rad(u.coords['lat'].values)).clip(0., 1.) # need to weight due to different box sizes over grid
-    lat_wgts = np.sqrt(coslat)
-    for j in range(len(u)):
-        print(j)
-        TKE_box = np.empty_like(u[j])
-        for q in range(len(ds.coords['pfull'].data)):
-            for k in range(len(ds.coords['lat'].data)):
-                TKE_box[q,k] = calc_TKE(u[j][q,k], v[j][q,k])
-        TKE_box = np.average(TKE_box, axis=1, weights=lat_wgts)
-        TKE_avg = np.nanmean(TKE_box) # should I weight pressures too? How?
-        KE.append(TKE_avg)
+uz = xr.open_dataset(indir+exp+'_uz.nc', decode_times=False).ucomp[0]
+vz = xr.open_dataset(indir+exp+'_vz.nc', decode_times=False).vcomp[0]
+coslat = np.cos(np.deg2rad(uz.coords['lat'].values)).clip(0., 1.) # need to weight due to different box sizes over grid
+lat_wgts = np.sqrt(coslat)
+for j in range(len(uz)):
+    TKE_box = np.empty_like(uz[j])
+    for q in range(len(uz.coords['pfull'].data)):
+        for k in range(len(uz.coords['lat'].data)):
+            TKE_box[q,k] = calc_TKE(uz[j][q,k], vz[j][q,k])
+    TKE_box = np.average(TKE_box, axis=1, weights=lat_wgts)
+    TKE_avg = np.nanmean(TKE_box) # should I weight pressures too? How?
+    KE.append(TKE_avg)
 save_file(exp_name, KE, 'KE')
 
 # option to plot the KE over time

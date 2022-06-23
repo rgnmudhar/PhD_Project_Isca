@@ -19,7 +19,7 @@ def plot_winds(indir, exp, labels, colors, style, cols, name, p):
     fig = plt.subplots(1,1, figsize=(10,6))
     plt.axhline(0, color='#D2D0D3', linewidth=0.5)
     for i in range(len(exp)):
-        uz = xr.open_dataset(indir+exp[i]+'_tzmean.nc', decode_times=False).ucomp[0]
+        uz = xr.open_dataset(indir+exp[i]+'_utz.nc', decode_times=False).ucomp[0]
         lat = uz.lat
         plt.plot(uz.lat, uz.sel(pfull=p, method='nearest'), color=colors[i], linestyle=style[i], label=labels[i])   
     plt.xlabel('Latitude', fontsize='large')

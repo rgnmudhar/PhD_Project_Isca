@@ -7,7 +7,7 @@ from glob import glob
 import xarray as xr
 import numpy as np
 import matplotlib.pyplot as plt
-from shared_functions import *
+from open_winds import *
 from datetime import datetime
 
 def plot_single(u, T, heat, lat, p, upper_p, exp_name):
@@ -132,21 +132,20 @@ if __name__ == '__main__':
     plot_type = input("Plot a) single experiment or b) difference between 2 experiments?")
 
     print(datetime.now(), " - opening files")
-    ds = xr.open_dataset(indir+exp[0]+'_tzmean.nc', decode_times=False)
-    uz = ds.ucomp[0]
-    tz = ds.temp[0]
-    lat = ds.coords['lat'].data
-    p = ds.coords['pfull'].data
-    upper_p = ds.coords['pfull'].sel(pfull=1, method='nearest') # in order to cap plots at pressure = 1hPa
+    uz = xr.open_dataset(indir+exp[0]+'_utz.nc', decode_times=False).ucomp[0]
+    Tz = xr.open_dataset(indir+exp[0]+'_Ttz.nc', decode_times=False).temp[0]
+    lat = uz.coords['lat'].data
+    p = uz.coords['pfull'].data
+    upper_p = uz.coords['pfull'].sel(pfull=1, method='nearest') # in order to cap plots at pressure = 1hPa
 
     if plot_type =='a':
-        plot_single(uz, tz, heat, lat, p, upper_p, exp[0])
+        plot_single(uz, Tz, heat, lat, p, upper_p, exp[0])
     elif plot_type == 'b':
-        u = [uz, xr.open_dataset(indir+exp[1]+'_tzmean.nc', decode_times=False).ucomp[0]]
-        t = [tz, xr.open_dataset(indir+exp[1]+'_tzmean.nc', decode_times=False).temp[0]]
-        plot_diff(u, t, heat, lat, p, upper_p, exp[0])
+        u = [uz, xr.open_dataset(indir+exp[1]+'_utz.nc', decode_times=False).ucomp[0]]
+        T = [Tz, xr.open_dataset(indir+exp[1]+'_Ttz.nc', decode_times=False).temp[0]]
+        plot_diff(u, T, heat, lat, p, upper_p, exp[0])
 
 #Meridional Stream Function
-#MSF = calc_streamfn(ds.vcomp[0], p, lat) 
+#MSF = calc_streamfn(xr.open_dataset(indir+exp[0]+'_vtz.nc', decode_times=False).vcomp[0], p, lat) 
 #MSF_xr = xr.DataArray(MSF, coords=[p,lat], dims=['pfull','lat'])  # Make into an xarray DataArray
 #MSF_xr.attrs['units']=r'kgs$^{-1}$'

@@ -106,13 +106,13 @@ if __name__ == '__main__':
     print(datetime.now(), " - opening files")
     u = xr.open_dataset(indir+exp[0]+'_u.nc', decode_times=False).ucomp
     v = xr.open_dataset(indir+exp[0]+'_v.nc', decode_times=False).vcomp
-    t = xr.open_dataset(indir+exp[0]+'_t.nc', decode_times=False).temp
-    uz = xr.open_dataset(indir+exp[0]+'_tzmean.nc', decode_times=False).ucomp[0]
+    T = xr.open_dataset(indir+exp[0]+'_T.nc', decode_times=False).temp
+    utz = xr.open_dataset(indir+exp[0]+'_utz.nc', decode_times=False).ucomp[0]
     
     if plot_type =='a':
-        plot_single(uz, u, v, t, exp[0], heat)
+        plot_single(utz, u, v, T, exp[0], heat)
     elif plot_type == 'b':
-        u = [u, xr.open_dataset(indir+exp[1]+'_u.nc', decode_times=False).ucomp+2]
-        v = [v, xr.open_dataset(indir+exp[1]+'_v.nc', decode_times=False).vcomp+2]
-        t = [t, xr.open_dataset(indir+exp[1]+'_t.nc', decode_times=False).temp+2]
-        plot_diff(uz, u, v, t, exp[0], heat)
+        u = [u, xr.open_dataset(indir+exp[1]+'_u.nc', decode_times=False).ucomp]
+        v = [v, xr.open_dataset(indir+exp[1]+'_v.nc', decode_times=False).vcomp]
+        T = [T, xr.open_dataset(indir+exp[1]+'_T.nc', decode_times=False).temp]
+        plot_diff(utz, u, v, T, exp[0], heat)

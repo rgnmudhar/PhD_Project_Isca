@@ -2,19 +2,18 @@ import xarray as xr
 import numpy as np
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
-from shared_functions import *
 
-def anomaly(gph):
+def anomaly(a, az):
     print("finding anomaly")
-    anom = gph - gph.mean(dim='lon')
+    anom = a - az
     return anom
 
-def plot(var, ds, x, p, lvls):
+def plot(var, x, p, lvls):
     print("plotting")
     asym = xr.open_dataset('/home/links/rm811/Isca/input/asymmetry/'+var+'.nc', decode_times=False)
     heat = asym.sel(pfull=500, method='nearest').variables[var]
     ax = plt.axes(projection=ccrs.NorthPolarStereo())
-    cs = ax.contourf(ds.coords['lon'].data, ds.coords['lat'].data, x,\
+    cs = ax.contourf(asym.coords['lon'].data, asym.coords['lat'].data, x,\
         cmap='RdBu_r', levels=lvls, transform = ccrs.PlateCarree())
     cb = plt.colorbar(cs, pad=0.1)
     cb.set_label(label='Geopotential Height Anomaly (m)', size='x-large')
@@ -29,15 +28,12 @@ def plot(var, ds, x, p, lvls):
     plt.savefig(var+'_'+str(p)+'gph.pdf', bbox_inches = 'tight')
     return plt.close()
 
+indir = '/disco/share/rm811/processed/'
 var = 'q6m2y45l800u200'
 exp = 'PK_e0v4z13_' + var
-time = 'daily'
-years = 37 # user sets no. of years worth of data to ignore due to spin-up
-file_suffix = '_interp'
-files = discard_spinup2(exp, time, file_suffix, years)
-print("finding gph")
-ds = xr.open_mfdataset(files, decode_times=False)
-gph_t = ds.height.mean(dim='time')
 p = 200
+print("finding gph")
+gph_t = xr.open_dataset(indir+exp+'_ht.nc', decode_times=False).height.sel(pfull=p, method='nearest')
+gph_tz = xr.open_dataset(indir+exp+'_htz.nc', decode_times=False).height.sel(pfull=p, method='nearest')
 
-plot(var, ds, anomaly(gph_t.sel(pfull=p, method='nearest')), p, np.arange(-200,220,20)) #np.arange(-250,260,10)) np.arange(-120,130,10)
+plot(var, anomaly(gph_t, gph_tz)[0], p, np.arange(-200,220,20)) #np.arange(-250,260,10)) np.arange(-120,130,10)

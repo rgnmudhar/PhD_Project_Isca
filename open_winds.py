@@ -56,7 +56,7 @@ def winds_errs(indir, exp, p, name):
     maxlats_sd = []
     maxwinds_sd = []
     for i in range(len(exp)):
-        ds = xr.open_dataset(indir+exp[i]+'_zmean.nc', decode_times=False)
+        ds = xr.open_dataset(indir+exp[i]+'_uz.nc', decode_times=False)
         lat = ds.coords['lat'].data
         u = ds.ucomp
         n = len(ds.time)
@@ -79,7 +79,7 @@ def find_SPV(indir, exp):
     print(datetime.now(), " - finding wind speeds at 60N, 10hPa")
     for i in range(len(exp)):
         print(datetime.now(), " - ", exp[i])
-        SPV = xr.open_dataset(indir+exp[i]+'_zmean.nc', decode_times=False).ucomp.sel(pfull=10, method='nearest').sel(lat=60, method='nearest')
+        SPV = xr.open_dataset(indir+exp[i]+'_uz.nc', decode_times=False).ucomp.sel(pfull=10, method='nearest').sel(lat=60, method='nearest')
         save_file(exp[i], SPV, 'SPV')
 
 def calc_error(nevents, nyears):
@@ -136,7 +136,7 @@ if __name__ == '__main__':
     #Set-up data to be read in
     indir = '/disco/share/rm811/processed/'
     basis = 'PK_e0v4z13'
-    exp = ['test', 'test'] #[basis, basis+'_q6m2y45l800u200']#,\
+    exp = [basis, basis+'_q6m2y45l800u200']#,\
         #basis+'_w10a4p800f800g50_q6m2y45l800u200',\
         #basis+'_w15a4p800f800g50_q6m2y45l800u200',\
         #basis+'_w20a4p800f800g50_q6m2y45l800u200',\
