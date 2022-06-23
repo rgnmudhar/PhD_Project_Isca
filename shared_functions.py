@@ -102,3 +102,21 @@ def diff_variables(x, y, lat, p): #KEEP
     Tz_diff = difference(y[0], y[1], p, lat, 'lat', 'pfull', 'K')
 
     return uz_diff, Tz_diff
+
+def save_file(exp, var, input):
+    textfile = open('../Files/'+exp+'_'+input+'.txt', 'w')
+    if isinstance(var, list):
+        l = var
+    else:
+        l = var.to_numpy().tolist()
+    for j in l:
+        textfile.write(str(j) + '\n')
+    return textfile.close()
+
+def open_file(exp, input):
+    textfile = open('../Files/'+exp+'_'+input+'.txt', 'r')
+    list = textfile.read().replace('\n', ' ').split(' ')
+    list = list[:len(list)-1]
+    textfile.close()
+    list = np.asarray([float(j) for j in list])
+    return list
