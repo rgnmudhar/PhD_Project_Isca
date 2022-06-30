@@ -67,6 +67,7 @@ def SPVvexp(exp, exp_names, xlabel, name):
         mean.append(np.mean(SPV))
         err.append(np.std(SPV/np.sqrt(len(SPV)))) 
         sd.append(np.std(SPV))
+    print(mean)
     fig, ax = plt.subplots(figsize=(10,6))
     ax.errorbar(exp_names[1:], mean[1:], yerr=err[1:], fmt='o', linewidth=1.25, capsize=5, color='#B30000', linestyle=':')
     ax.set_xticks(exp_names)
