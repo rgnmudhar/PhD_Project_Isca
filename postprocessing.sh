@@ -62,12 +62,6 @@ ncra ${exp}_vz.nc ${exp}_vtz.nc
 ncra ${exp}_Tz.nc ${exp}_Ttz.nc
 ncra ${exp}_hz.nc ${exp}_htz.nc
 
-# check KE spin-up
-echo "$(date)"
-echo spin_up
-cd $analysisdir
-nice -19 ipython spinup_KE.py $indir $exp
-
 # remove file with all included
 # move created files to folder for processed data
 echo $exp
