@@ -20,9 +20,11 @@ def postprocess(exp):
     os.chdir(indir + exp)
     runs = sorted(glob('run*'))
     n = len(runs) - 1
-    run_plevel.main(indir, exp, n)
+    #os.chdir(plevdir)
+    #run_plevel.main(indir, exp, n)
 
     # delete pre-interpolation files
+    os.chdir(indir + exp)
     files = glob('*/atmos_daily.nc', recursive=True)
     for f in files:
         try:
@@ -82,14 +84,44 @@ def postprocess(exp):
 
 basis = 'PK_e0v4z13'
 perturb = '_q6m2y45l800u200'
-exp = [basis, basis+perturb] #, \
-    #basis+'_w15a4p900f800g50'+perturb, \
-    #basis+'_w15a4p800f800g50'+perturb, \
-    #basis+'_w15a4p700f800g50'+perturb, \
-    #basis+'_w15a4p600f800g50'+perturb, \
-    #basis+'_w15a4p400f800g50'+perturb, \
-    #basis+'_w15a4p500f800g50'+perturb, \
-    #basis+'_w15a4p300f800g50'+perturb]
+polar = '_w15a4p800f800g50'
+exp = ['PK_e0v1z18',\
+    'PK_e0v2z18',\
+    'PK_e0v3z18',\
+    'PK_e0v4z18',\
+    'PK_e0v1z13',\
+    'PK_e0v2z13',\
+    'PK_e0v3z13',\
+    basis+perturb, \
+    basis+'_w15a4p300f800g50'+perturb, \
+    basis+'_w15a4p700f800g50'+perturb, \
+    basis+'_w15a4p900f800g50'+perturb]    
 
 for i in range(len(exp)):
     postprocess(exp[i])
+
+    """
+    [basis+polar, \
+    basis+'_w15a4p900f800g50'+perturb, \
+    basis+polar+perturb, \
+    basis+'_w15a4p700f800g50'+perturb, \
+    basis+'_w15a4p600f800g50'+perturb, \
+    basis+'_w15a4p400f800g50'+perturb, \
+    basis+'_w15a4p500f800g50'+perturb, \
+    basis+'_w15a4p300f800g50'+perturb, \
+    basis+'_w10a4p800f800g50'+perturb, \
+    basis+'_w20a4p800f800g50'+perturb, \
+    basis+'_w25a4p800f800g50'+perturb, \
+    basis+'_w30a4p800f800g50'+perturb, \
+    basis+'_w35a4p800f800g50'+perturb, \
+    basis+'_w40a4p800f800g50'+perturb]
+
+    ['PK_e10v1z18',\
+    'PK_e10v2z18',\
+    'PK_e10v3z18',\
+    'PK_e10v4z18',\
+    'PK_e10v1z13',\
+    'PK_e10v2z13',\
+    'PK_e10v3z13',\
+    'PK_e10v4z13']
+    """
