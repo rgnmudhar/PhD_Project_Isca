@@ -190,8 +190,8 @@ if __name__ == '__main__':
     plot_type = input("a) single or b) multi?")
 
     indir = '/disco/share/rm811/processed/'
-    basis = 'PK_e0v4z13'
-    exp = ['test', 'test'] #[basis, basis+'_q6m2y45l800u200']
+    basis = 'PK_e0v4z18'
+    exp = [basis] #, basis+'_q6m2y45l800u200']
 
     # For EOFs follow Sheshadri & Plumb 2017, use p>100hPa, lat>20degN
     p_min = 100  # hPa

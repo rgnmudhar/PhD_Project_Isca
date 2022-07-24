@@ -30,7 +30,7 @@ def plot_single(uz, u, v, t, exp_name, heat):
     print(datetime.now(), " - plot uz")
     uz.plot.contour(colors='k', linewidths=0.5, alpha=0.4, levels=ulvls)
     print(datetime.now(), " - plot polar heat")
-    plt.contour(lat, p, heat, colors='g', linewidths=0.25, alpha=0.4, levels=11)
+    #plt.contour(lat, p, heat, colors='g', linewidths=0.25, alpha=0.4, levels=11)
     print(datetime.now(), " - plot EP flux divergence")
     cs = div.plot.contourf(levels=divlvls, cmap='RdBu_r', add_colorbar=False)
     cb = plt.colorbar(cs)
@@ -92,15 +92,16 @@ def plot_diff(uz, u, v, t, exp_name, heat):
 if __name__ == '__main__': 
     #Set-up data to be read in
     indir = '/disco/share/rm811/processed/'
-    basis = 'PK_e0v4z13'
+    basis = 'PK_e0v4z18'
     filename = 'w15a4p300f800g50_q6m2y45l800u200'
-    exp = [basis+'_'+filename, basis+'_q6m2y45l800u200']
+    exp = [basis] #+'_'+filename, basis+'_q6m2y45l800u200']
 
     #Read in data to plot polar heat contours
-    file = '/disco/share/rm811/isca_data/' + basis + '_' + filename + '/run0100/atmos_daily_interp.nc'
-    ds = xr.open_dataset(file)
-    heat = ds.local_heating.sel(lon=180, method='nearest').mean(dim='time')
-   
+    #file = '/disco/share/rm811/isca_data/' + basis + '_' + filename + '/run0100/atmos_daily_interp.nc'
+    #ds = xr.open_dataset(file)
+    #heat = ds.local_heating.sel(lon=180, method='nearest').mean(dim='time')
+    heat = 0
+
     plot_type = input("Plot a) single experiment or b) difference between 2 experiments?")
 
     print(datetime.now(), " - opening files")

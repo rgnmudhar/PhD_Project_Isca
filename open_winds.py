@@ -50,21 +50,20 @@ def winds_errs(indir, exp, p, name):
     """
     Uses jet_locator functions to find location and strength of the tropospheric jet (850 hPa) or SPV (10 hPa).
     """
-    print(datetime.now(), " - calculating standard deviation errors")
     maxlats = []
     maxwinds = []
     maxlats_sd = []
     maxwinds_sd = []
-    for i in range(len(exp)):
-        ds = xr.open_dataset(indir+exp[i]+'_uz.nc', decode_times=False)
-        lat = ds.coords['lat'].data
-        u = ds.ucomp
-        n = len(ds.time)
-        lat, max = jet_timeseries(u, lat, p)
-        maxlats.append(np.mean(lat))
-        maxwinds.append(np.mean(max))
-        maxlats_sd.append(np.std(lat)/np.sqrt(n))
-        maxwinds_sd.append(np.std(max)/np.sqrt(n))
+    print(datetime.now(), " - calculating standard deviation errors")
+    ds = xr.open_dataset(indir+exp+'_uz.nc', decode_times=False)
+    lat = ds.coords['lat'].data
+    u = ds.ucomp
+    n = len(ds.time)
+    lat, max = jet_timeseries(u, lat, p)
+    maxlats.append(np.mean(lat))
+    maxwinds.append(np.mean(max))
+    maxlats_sd.append(np.std(lat)/np.sqrt(n))
+    maxwinds_sd.append(np.std(max)/np.sqrt(n))
     save_file(name, maxlats, 'maxlats'+str(p))
     save_file(name, maxwinds, 'maxwinds'+str(p))
     save_file(name, maxlats_sd, 'maxlats_sd'+str(p))
@@ -136,25 +135,37 @@ if __name__ == '__main__':
     #Set-up data to be read in
     indir = '/disco/share/rm811/processed/'
     basis = 'PK_e0v4z13'
-    exp = [basis, basis+'_q6m2y45l800u200']#,\
-        #basis+'_w10a4p800f800g50_q6m2y45l800u200',\
-        #basis+'_w15a4p800f800g50_q6m2y45l800u200',\
-        #basis+'_w20a4p800f800g50_q6m2y45l800u200',\
-        #basis+'_w25a4p800f800g50_q6m2y45l800u200',\
-        #basis+'_w30a4p800f800g50_q6m2y45l800u200',\
-        #basis+'_w35a4p800f800g50_q6m2y45l800u200',\
-        #basis+'_w40a4p800f800g50_q6m2y45l800u200']
-    #exp2 = [basis+'_q6m2y45l800u200',\
-        #basis+'_w15a4p900f800g50_q6m2y45l800u200',\
-        #basis+'_w15a4p800f800g50_q6m2y45l800u200',\
-        #basis+'_w15a4p700f800g50_q6m2y45l800u200',\
-        #basis+'_w15a4p600f800g50_q6m2y45l800u200',\
-        #basis+'_w15a4p500f800g50_q6m2y45l800u200',\
-        #basis+'_w15a4p400f800g50_q6m2y45l800u200',\
-        #basis+'_w15a4p300f800g50_q6m2y45l800u200']
+    exp = ['PK_e0v1z13',\
+        'PK_e0v1z18',\
+        'PK_e0v2z13',\
+        'PK_e0v2z18',\
+        'PK_e0v3z13',\
+        'PK_e0v3z18',\
+        basis,\
+        'PK_e0v4z18',\
+        basis+'_q6m2y45l800u200',\
+        basis+'_w15a4p800f800g50',\
+        basis+'_w10a4p800f800g50_q6m2y45l800u200',\
+        basis+'_w15a4p800f800g50_q6m2y45l800u200',\
+        basis+'_w20a4p800f800g50_q6m2y45l800u200',\
+        basis+'_w25a4p800f800g50_q6m2y45l800u200',\
+        basis+'_w30a4p800f800g50_q6m2y45l800u200',\
+        basis+'_w35a4p800f800g50_q6m2y45l800u200',\
+        basis+'_w40a4p800f800g50_q6m2y45l800u200',\
+        basis+'_w15a4p900f800g50_q6m2y45l800u200',\
+        basis+'_w15a4p800f800g50_q6m2y45l800u200',\
+        basis+'_w15a4p700f800g50_q6m2y45l800u200',\
+        basis+'_w15a4p600f800g50_q6m2y45l800u200',\
+        basis+'_w15a4p500f800g50_q6m2y45l800u200',\
+        basis+'_w15a4p400f800g50_q6m2y45l800u200',\
+        basis+'_w15a4p300f800g50_q6m2y45l800u200']
 
-    p = 10
-    winds_errs(indir, exp, p, exp[0])
-    p = 850
-    winds_errs(indir, exp, p, exp[0])
+    for i in range(len(exp)):
+        name = exp[i]
+        print(datetime.now(), " - ", exp[i])
+        p = 10
+        winds_errs(indir, exp[i], p, name)
+        p = 850
+        winds_errs(indir, exp[i], p, name)
+    
     find_SPV(indir, exp)
