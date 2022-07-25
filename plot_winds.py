@@ -136,21 +136,7 @@ if __name__ == '__main__':
     indir = '/disco/share/rm811/processed/'
     basis = 'PK_e0v4z13'
     exp = [basis, basis+'_q6m2y45l800u200']#,\
-        #basis+'_w10a4p800f800g50_q6m2y45l800u200',\
-        #basis+'_w15a4p800f800g50_q6m2y45l800u200',\
-        #basis+'_w20a4p800f800g50_q6m2y45l800u200',\
-        #basis+'_w25a4p800f800g50_q6m2y45l800u200',\
-        #basis+'_w30a4p800f800g50_q6m2y45l800u200',\
-        #basis+'_w35a4p800f800g50_q6m2y45l800u200',\
-        #basis+'_w40a4p800f800g50_q6m2y45l800u200']
-    #exp2 = [basis+'_q6m2y45l800u200',\
-        #basis+'_w15a4p900f800g50_q6m2y45l800u200',\
-        #basis+'_w15a4p800f800g50_q6m2y45l800u200',\
-        #basis+'_w15a4p700f800g50_q6m2y45l800u200',\
-        #basis+'_w15a4p600f800g50_q6m2y45l800u200',\
-        #basis+'_w15a4p500f800g50_q6m2y45l800u200',\
-        #basis+'_w15a4p400f800g50_q6m2y45l800u200',\
-        #basis+'_w15a4p300f800g50_q6m2y45l800u200'] 
+        #basis+'_w15a4p800f800g50_q6m2y45l800u200]
     
     #User choices for plotting - subjects
     level = input('Plot a) near-surface winds, b) tropospheric jet, c) stratospheric polar vortex?')

@@ -24,7 +24,7 @@ def plot_single(u, T, heat, lat, p, upper_p, exp_name):
     cb = plt.colorbar(cs2a)
     cb.set_label(label='Temperature (K)', size='x-large')
     cb.ax.tick_params(labelsize='x-large')
-    #plt.contour(lat, p, heat, colors='g', linewidths=1, alpha=0.4, levels=11)
+    plt.contour(lat, p, heat, colors='g', linewidths=1, alpha=0.4, levels=11)
     plt.xlabel('Latitude', fontsize='x-large')
     plt.xlim(0,90)
     plt.xticks([10, 30, 50, 70, 90], ['10', '30', '50', '70', '90'])
@@ -120,16 +120,14 @@ def plot_diff(u, T, heat, lat, p, upper_p, exp_name):
 if __name__ == '__main__': 
     #Set-up data to be read in
     indir = '/disco/share/rm811/processed/'
-    basis = 'PK_e0v4z18'
-    filename = 'w15a4p300f800g50_q6m2y45l800u200'
-    #exp = [basis+'_'+filename, basis+'_q6m2y45l800u200']
-    exp = [basis]
+    basis = 'PK_e0v4z13'
+    filename = 'w40a4p800f800g50_q6m2y45l800u200'
+    exp = [basis+'_'+filename, basis+'_q6m2y45l800u200']
 
     #Read in data to plot polar heat contours
-    #file = '/disco/share/rm811/isca_data/' + basis + '_' + filename + '/run0100/atmos_daily_interp.nc'
-    #ds = xr.open_dataset(file)
-    #heat = ds.local_heating.sel(lon=180, method='nearest').mean(dim='time')
-    heat = 0
+    file = '/disco/share/rm811/isca_data/' + basis + '_' + filename + '/run0100/atmos_daily_interp.nc'
+    ds = xr.open_dataset(file)
+    heat = ds.local_heating.sel(lon=180, method='nearest').mean(dim='time')
 
     plot_type = input("Plot a) single experiment or b) difference between 2 experiments?")
 

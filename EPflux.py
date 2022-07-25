@@ -39,15 +39,16 @@ def plot_single(uz, u, v, t, exp_name, heat):
     fig.canvas.draw()
     ticklabs = cb.ax.get_yticklabels()
     cb.ax.set_yticklabels(ticklabs, fontsize='large')
+    print(datetime.now(), " - plot EP flux arrows")
+    ax = climate.PlotEPfluxArrows(lat, p, ep1, ep2, fig, ax, yscale='log')
+    plt.yscale('log')
+    plt.ylim(max(p), 1) #to 1 hPa
     plt.xlabel(r'Latitude ($\degree$N)', fontsize='xx-large')
     plt.xlim(0,90)
     plt.xticks([10, 30, 50, 70, 90], ['10', '30', '50', '70', '90'])
     plt.ylabel('Pressure (hPa)', fontsize='xx-large')
     plt.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
-    print(datetime.now(), " - plot EP flux arrows")
-    ax = climate.PlotEPfluxArrows(lat, p, ep1, ep2, fig, ax, yscale='log')
-    plt.yscale('log')
-    plt.ylim(max(p), 1) #to 1 hPa
+    
     #plt.title('Time and Zonal Mean EP Flux', fontsize='x-large')
     plt.savefig(exp_name+'_EPflux.pdf', bbox_inches = 'tight')
     return plt.close()
@@ -77,24 +78,24 @@ def plot_diff(uz, u, v, t, exp_name, heat):
     fig.canvas.draw()
     ticklabs = cb.ax.get_yticklabels()
     cb.ax.set_yticklabels(ticklabs, fontsize='large')
-    plt.xlabel(r'Latitude ($\degree$N)', fontsize='xx-large')
-    plt.xlim(0,90)
-    plt.xticks([10, 30, 50, 70, 90], ['10', '30', '50', '70', '90'])
-    plt.ylabel('Pressure (hPa)', fontsize='xx-large')
     print(datetime.now(), " - plot EP flux arrows")
     ax = climate.PlotEPfluxArrows(lat, p, ep1_diff, ep2_diff, fig, ax, yscale='log')
     plt.yscale('log')
     plt.ylim(max(p), 1) #to 1 hPa
-    plt.tick_params(axis='both', labelsize = 'large', which='both', direction='in')
+    plt.xlabel(r'Latitude ($\degree$N)', fontsize='xx-large')
+    plt.xlim(0,90)
+    plt.xticks([10, 30, 50, 70, 90], ['10', '30', '50', '70', '90'])
+    plt.ylabel('Pressure (hPa)', fontsize='xx-large')
+    plt.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
     plt.savefig(exp_name+'_EPfluxdiff.pdf', bbox_inches = 'tight')
     return plt.close()
 
 if __name__ == '__main__': 
     #Set-up data to be read in
     indir = '/disco/share/rm811/processed/'
-    basis = 'PK_e0v4z18'
-    filename = 'w15a4p300f800g50_q6m2y45l800u200'
-    exp = [basis] #+'_'+filename, basis+'_q6m2y45l800u200']
+    basis = 'PK_e0v4z13'
+    filename = 'q6m2y45l800u200'
+    exp = [basis] #+'_'+filename, basis]
 
     #Read in data to plot polar heat contours
     #file = '/disco/share/rm811/isca_data/' + basis + '_' + filename + '/run0100/atmos_daily_interp.nc'
