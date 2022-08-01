@@ -30,7 +30,7 @@ def plot_single(uz, u, v, t, exp_name, heat):
     print(datetime.now(), " - plot uz")
     uz.plot.contour(colors='k', linewidths=0.5, alpha=0.4, levels=ulvls)
     print(datetime.now(), " - plot polar heat")
-    #plt.contour(lat, p, heat, colors='g', linewidths=0.25, alpha=0.4, levels=11)
+    plt.contour(lat, p, heat, colors='g', linewidths=0.25, alpha=0.4, levels=11)
     print(datetime.now(), " - plot EP flux divergence")
     cs = div.plot.contourf(levels=divlvls, cmap='RdBu_r', add_colorbar=False)
     cb = plt.colorbar(cs)
@@ -48,7 +48,6 @@ def plot_single(uz, u, v, t, exp_name, heat):
     plt.xticks([10, 30, 50, 70, 90], ['10', '30', '50', '70', '90'])
     plt.ylabel('Pressure (hPa)', fontsize='xx-large')
     plt.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
-    
     #plt.title('Time and Zonal Mean EP Flux', fontsize='x-large')
     plt.savefig(exp_name+'_EPflux.pdf', bbox_inches = 'tight')
     return plt.close()
@@ -56,6 +55,7 @@ def plot_single(uz, u, v, t, exp_name, heat):
 def plot_diff(uz, u, v, t, exp_name, heat):
     p = uz.coords['pfull']
     lat = uz.coords['lat']
+    print(datetime.now(), " - calculating variables")
     div1, ep1a, ep2a = calc_ep(u[0], v[0], t[0])
     div2, ep1b, ep2b = calc_ep(u[1], v[1], t[1])
     div_diff = div1 - div2
@@ -94,14 +94,13 @@ if __name__ == '__main__':
     #Set-up data to be read in
     indir = '/disco/share/rm811/processed/'
     basis = 'PK_e0v4z13'
-    filename = 'q6m2y45l800u200'
-    exp = [basis] #+'_'+filename, basis]
+    filename = 'w15a4p600f800g50_q6m2y45l800u200'
+    exp = [basis+'_'+filename, basis+'_q6m2y45l800u200']
 
     #Read in data to plot polar heat contours
-    #file = '/disco/share/rm811/isca_data/' + basis + '_' + filename + '/run0100/atmos_daily_interp.nc'
-    #ds = xr.open_dataset(file)
-    #heat = ds.local_heating.sel(lon=180, method='nearest').mean(dim='time')
-    heat = 0
+    file = '/disco/share/rm811/isca_data/' + basis + '_' + filename + '/run0100/atmos_daily_interp.nc'
+    ds = xr.open_dataset(file)
+    heat = ds.local_heating.sel(lon=180, method='nearest').mean(dim='time')
 
     plot_type = input("Plot a) single experiment or b) difference between 2 experiments?")
 
