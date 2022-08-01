@@ -94,7 +94,7 @@ if __name__ == '__main__':
     #Set-up data to be read in
     indir = '/disco/share/rm811/processed/'
     basis = 'PK_e0v4z13'
-    filename = 'w15a4p600f800g50_q6m2y45l800u200'
+    filename = 'w35a4p800f800g50_q6m2y45l800u200'
     exp = [basis+'_'+filename, basis+'_q6m2y45l800u200']
 
     #Read in data to plot polar heat contours
