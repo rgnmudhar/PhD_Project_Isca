@@ -52,7 +52,7 @@ def postprocess(exp):
     nco.ncks(input = all, output = exp+'_v.nc', options = ['-v vcomp'])
     nco.ncks(input = all, output = exp+'_T.nc', options = ['-v temp'])
     nco.ncks(input = all, output = exp+'_h.nc', options = ['-v height'])
-    
+
     # zonal means
     print(datetime.now(), ' - zonal means')
     nco.ncwa(input = exp+'_u.nc', output = exp+'_uz.nc', options = ['-a lon'])
@@ -83,19 +83,12 @@ def postprocess(exp):
 
 
 basis = 'PK_e0v4z13'
-perturb = '_q6m2y45l800u200'
+perturb = '_q6m2y45' #l800u200'
 polar = '_w15a4p800f800g50'
-exp = ['PK_e0v1z18',\
-    'PK_e0v2z18',\
-    'PK_e0v3z18',\
-    'PK_e0v4z18',\
-    'PK_e0v1z13',\
-    'PK_e0v2z13',\
-    'PK_e0v3z13',\
-    basis+perturb, \
-    basis+'_w15a4p300f800g50'+perturb, \
-    basis+'_w15a4p700f800g50'+perturb, \
-    basis+'_w15a4p900f800g50'+perturb]    
+exp = [basis+'_a4x75y90w5v30p800'+perturb,\
+        basis+'_a4x75y180w5v30p800'+perturb,\
+        basis+'_a4x75y270w5v30p800'+perturb,\
+        basis+'_a4x75y0w5v30p800'+perturb]    
 
 for i in range(len(exp)):
     postprocess(exp[i])
