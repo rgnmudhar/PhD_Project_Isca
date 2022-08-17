@@ -146,6 +146,7 @@ def calc_Ro(indir, exp, p):
     L = len(lat_range) * 6.371e6
     u_sub = u.sel(lat=slice(lat_min, lat_max)).data
     U = np.max(u_sub)
+    print(U)
     Ro = Rossby(U, L)
     return Ro
         
@@ -153,14 +154,14 @@ if __name__ == '__main__':
     #Set-up data to be read in
     indir = '/disco/share/rm811/processed/'
     basis = 'PK_e0v4z13'
-    exp = [basis+'_q6m2y45l800u200',\
-        basis+'_w15a4p900f800g50_q6m2y45l800u200',\
-        basis+'_w15a4p800f800g50_q6m2y45l800u200',\
-        basis+'_w15a4p700f800g50_q6m2y45l800u200',\
-        basis+'_w15a4p600f800g50_q6m2y45l800u200',\
-        basis+'_w15a4p500f800g50_q6m2y45l800u200',\
-        basis+'_w15a4p400f800g50_q6m2y45l800u200',\
-        basis+'_w15a4p300f800g50_q6m2y45l800u200']
+    exp = [basis+'_q6m2y45l800u200']#,\
+        #basis+'_w15a4p900f800g50_q6m2y45l800u200',\
+        #basis+'_w15a4p800f800g50_q6m2y45l800u200',\
+        #basis+'_w15a4p600f800g50_q6m2y45l800u200',\
+        #basis+'_w15a4p500f800g50_q6m2y45l800u200',\
+        #basis+'_w15a4p700f800g50_q6m2y45l800u200',\
+        #basis+'_w15a4p400f800g50_q6m2y45l800u200',\
+        #basis+'_w15a4p300f800g50_q6m2y45l800u200']
          
         #[basis+'_q6m2y45l800u200',\
         #basis+'_w15a2p800f800g50_q6m2y45l800u200',\
@@ -169,7 +170,7 @@ if __name__ == '__main__':
         #basis+'_w15a8p800f800g50_q6m2y45l800u200']
    
 
-    p = 5
+    p = 10
     #winds_errs(indir, exp, p, basis+'_depth')
     Ro = []
     for i in range(len(exp)):
