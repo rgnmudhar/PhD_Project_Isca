@@ -129,4 +129,8 @@ def fillnas(indir, exp):
         file = run_list[i]+'/atmos_daily_interp.nc'
         ds = xr.open_dataset(file, decode_times=False)
         ds_new = ds.fillna(0)
+<<<<<<< HEAD
         ds_new.to_netcdf(file, format="NETCDF3_CLASSIC")
+=======
+        ds_new.to_netcdf(file, format="NETCDF3_CLASSIC")
+>>>>>>> 406bda5f17a6b28cdab97c2964fc43c4d2be1368
