@@ -3,6 +3,7 @@ Script for functions involving winds - near-surface, tropospheric jet and strato
 """
 
 from glob import glob
+from re import L
 import xarray as xr
 import numpy as np
 from datetime import datetime
@@ -132,6 +133,22 @@ def SSWsperrun(exp):
         errors.append(h_err)
     return SSWs, errors, years
 
+def Rossby(U, L): #(U, lat, L):
+    O = 2 * np.pi / 86400
+    Ro = U / (2 * O * L) #Ro = U / (2 * O * 2 * np.sin(lat) * L)
+    return Ro
+
+def calc_Ro(indir, exp, p):
+    u = xr.open_dataset(indir+exp+'_utz.nc', decode_times=False).ucomp[0].sel(pfull=p, method='nearest')
+    lat_max = 90
+    lat_min = 60
+    lat_range = np.arange(lat_min, lat_max, 1)
+    L = len(lat_range) * 6.371e6
+    u_sub = u.sel(lat=slice(lat_min, lat_max)).data
+    U = np.max(u_sub)
+    Ro = Rossby(U, L)
+    return Ro
+        
 if __name__ == '__main__': 
     #Set-up data to be read in
     indir = '/disco/share/rm811/processed/'
@@ -150,15 +167,16 @@ if __name__ == '__main__':
         #basis+'_w15a4p800f800g50_q6m2y45l800u200',\
         #basis+'_w15a6p800f800g50_q6m2y45l800u200',\
         #basis+'_w15a8p800f800g50_q6m2y45l800u200']
+   
 
-        
-        
-        
+    p = 5
+    #winds_errs(indir, exp, p, basis+'_depth')
+    Ro = []
+    for i in range(len(exp)):
+        Ro.append(calc_Ro(indir, exp[i], p))
+    print(Ro)
 
-    p = 10
-    winds_errs(indir, exp, p, basis+'_depth')
-
-    p = 850
-    winds_errs(indir, exp, p, basis+'_depth')
+    #p = 850
+    #winds_errs(indir, exp, p, basis+'_depth')
     
     #find_SPV(indir, exp)

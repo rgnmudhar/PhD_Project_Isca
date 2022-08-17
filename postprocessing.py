@@ -50,6 +50,7 @@ def postprocess(exp):
     all = exp+'_all.nc'
     nco.ncks(input = all, output = exp+'_u.nc', options = ['-v ucomp'])
     nco.ncks(input = all, output = exp+'_v.nc', options = ['-v vcomp'])
+    nco.ncks(input = all, output = exp+'_w.nc', options = ['-v omega'])
     nco.ncks(input = all, output = exp+'_T.nc', options = ['-v temp'])
     nco.ncks(input = all, output = exp+'_h.nc', options = ['-v height'])
 
@@ -85,10 +86,7 @@ def postprocess(exp):
 basis = 'PK_e0v4z13'
 perturb = '_q6m2y45' #l800u200'
 polar = '_w15a4p800f800g50'
-exp = [basis+'_a4x75y90w5v30p800'+perturb,\
-        basis+'_a4x75y180w5v30p800'+perturb,\
-        basis+'_a4x75y270w5v30p800'+perturb,\
-        basis+'_a4x75y0w5v30p800'+perturb]    
+exp = [basis+'_a4x75y180w5v30p400'+perturb]
 
 for i in range(len(exp)):
     postprocess(exp[i])
