@@ -9,7 +9,7 @@ from aostools import climate
 from datetime import datetime
 
 def calc_ep(u, v, t):
-    ep1, ep2, div1, div2 = climate.ComputeEPfluxDivXr(u, v, t, 'lon', 'lat', 'pfull', 'time')
+    ep1, ep2, div1, div2 = climate.ComputeEPfluxDivXr(u, v, t, 'lon', 'lat', 'pfull', 'time', do_ubar=True)
     # take time mean of relevant quantities
     div = div1 + div2
     div = div.mean(dim='time')
@@ -95,7 +95,7 @@ if __name__ == '__main__':
     indir = '/disco/share/rm811/processed/'
     basis = 'PK_e0v4z13'
     filename = 'w15a4p400f800g50_q6m2y45l800u200'
-    exp = [basis+'_'+filename, basis+'_w15a2p400f800g50_q6m2y45l800u200']
+    exp = [basis] #+'_'+filename, basis+'_w15a2p400f800g50_q6m2y45l800u200']
 
     #Read in data to plot polar heat contours
     file = '/disco/share/rm811/isca_data/' + basis + '_' + filename + '/run0100/atmos_daily_interp.nc'
