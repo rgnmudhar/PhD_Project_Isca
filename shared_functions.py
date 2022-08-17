@@ -120,3 +120,13 @@ def open_file(exp, input):
     textfile.close()
     list = np.asarray([float(j) for j in list])
     return list
+
+def fillnas(indir, exp):
+    dir = indir+exp
+    run_list = sorted(glob(dir+'/run*'))
+    for i in range(len(run_list)):
+        print(i)
+        file = run_list[i]+'/atmos_daily_interp.nc'
+        ds = xr.open_dataset(file, decode_times=False)
+        ds_new = ds.fillna(0)
+        ds_new.to_netcdf(file, format="NETCDF3_CLASSIC")
