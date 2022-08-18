@@ -199,9 +199,10 @@ def plot_pdf(exp, labels, colors, name):
 
     return plt.close()
 
-def plot_sd(indir, exp):
+def find_sd(indir, exp):
     print(datetime.now(), " - opening files")
     u = xr.open_dataset(indir+exp+'_uz.nc', decode_times=False).ucomp
+    utz = xr.open_dataset(indir+exp+'_utz.nc', decode_times=False).ucomp
     p = u.coords['pfull']
     lat = u.coords['lat']
     sd = np.empty_like(u[0])
@@ -209,14 +210,16 @@ def plot_sd(indir, exp):
     for i in range(len(p)):
         for j in range(len(lat)):
             sd[i,j] = np.std(u[:,i,j])
-    
+    return lat, p, utz, sd
+
+def plot_sd(lat, p, u, sd, lvls, exp, colors):
+    ulvls = np.arange(-200, 200, 10)
     print(datetime.now(), " - plotting")
-    lvls = np.arange(-200, 210, 10)
     fig, ax = plt.subplots(figsize=(6,6))
-    cs1 = ax.contourf(lat, p, sd, levels=np.arange(0, 42, 2), cmap='Blues')
+    cs1 = ax.contourf(lat, p, sd, levels=lvls, cmap=colors)
     ax.contourf(cs1, colors='none')
-    cs2 = ax.contour(lat, p, u[0], colors='k', levels=lvls, linewidths=1, alpha=0.4)
-    cs2.collections[int(len(lvls)/2)].set_linewidth(1.5)
+    cs2 = ax.contour(lat, p, u[0], colors='k', levels=ulvls, linewidths=1, alpha=0.4)
+    cs2.collections[int(len(ulvls)/2)].set_linewidth(1.5)
     cb = plt.colorbar(cs1)
     cb.set_label(label=r'Zonal-mean Zonal Wind S.D. (ms$^{-1}$)', size='x-large')
     cb.ax.tick_params(labelsize='x-large')
@@ -229,9 +232,7 @@ def plot_sd(indir, exp):
     plt.yscale('log')
     plt.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
     plt.savefig(exp+'_sd.pdf', bbox_inches = 'tight')
-    
     return plt.close()
-    
 
 def SPVvexp2(exp, exp_names, xlabel, name):
     """
@@ -271,7 +272,8 @@ if __name__ == '__main__':
     indir = '/disco/share/rm811/processed/'
     basis = 'PK_e0v4z13'
     perturb = '_q6m2y45l800u200'
-    extension = '_strengthp400'
+    exp = [basis+'_w15a4p800f800g50'+perturb, basis+'_a4x75y180w5v30p800_q6m2y45']
+    extension = 0 #'_strengthp400'
     if extension == '_depth':
         exp = [basis+perturb,\
         basis+'_w15a4p900f800g50'+perturb,\
@@ -339,7 +341,7 @@ if __name__ == '__main__':
             f) s.d. as a function of lat and p?')
         if plot_type == 'a':
             exp = exp[:2]
-            labels = ['no asymmetry', 'asymmetry']
+            labels = ['zonally symmetric', 'off-pole']
             colors = ['#0099CC', '#B30000']
             style = ['-', '-']
             cols = 2
@@ -355,6 +357,14 @@ if __name__ == '__main__':
             plot_pdf(exp, labels, colors, basis+extension)
             SPVvexp2(exp, labels, xlabel, basis+extension)
         elif plot_type == 'f':
-            for i in range(len(exp)):
-                print(datetime.now(), " - ", exp[i])
-                plot_sd(indir, exp[i])
+            plot_what = input('Plot a) climatology or b) difference?)')
+            if plot_what == 'a':
+                for i in range(len(exp)):
+                    print(datetime.now(), " - ", exp[i])
+                    lat, p, u, sd = find_sd(indir, exp[i])
+                    plot_sd(lat, p, u, sd, np.arange(0, 42, 2), exp[i], 'Blues')
+            elif plot_what == 'b':
+                lat, p, u1, sd1 = find_sd(indir, exp[0])
+                lat, p, u2, sd2 = find_sd(indir, exp[1])
+                sd_diff = sd1 - sd2
+                plot_sd(lat, p, u1, sd_diff, np.arange(-10, 11, 1), basis+'_y40-10'+perturb, 'RdBu_r')

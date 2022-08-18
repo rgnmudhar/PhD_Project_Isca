@@ -14,7 +14,7 @@ import run_plevel
 
 def postprocess(exp):
     print(datetime.now(), ' - ', exp)
-
+    """
     # run plevel interpolation
     print(datetime.now(), ' - interpolate')
     os.chdir(indir + exp)
@@ -39,11 +39,11 @@ def postprocess(exp):
     while n < (X * 12):
         os.rename(runs[n], 'spinup'+str(n))
         n += 1
-
+    
     # concatenate all
     print(datetime.now(), ' - concatenate')
     nco = Nco(debug=True)
-    nco.ncrcat(input = 'run*/*.nc', output = exp+'_all.nc', use_shell = True)
+    nco.ncrcat(input = 'run*/*interp.nc', output = exp+'_all.nc', use_shell = True)
 
     # extract variables
     print(datetime.now(), ' - extract variables')
@@ -53,28 +53,39 @@ def postprocess(exp):
     nco.ncks(input = all, output = exp+'_w.nc', options = ['-v omega'])
     nco.ncks(input = all, output = exp+'_T.nc', options = ['-v temp'])
     nco.ncks(input = all, output = exp+'_h.nc', options = ['-v height'])
-
-    # zonal means
-    print(datetime.now(), ' - zonal means')
-    nco.ncwa(input = exp+'_u.nc', output = exp+'_uz.nc', options = ['-a lon'])
-    nco.ncwa(input = exp+'_v.nc', output = exp+'_vz.nc', options = ['-a lon'])
-    nco.ncwa(input = exp+'_T.nc', output = exp+'_Tz.nc', options = ['-a lon'])
-    nco.ncwa(input = exp+'_h.nc', output = exp+'_hz.nc', options = ['-a lon'])
-
+    """
     # time means
     print(datetime.now(), ' - time means')
+    os.chdir(indir + exp)
+    nco = Nco(debug=True)
     nco.ncra(input = exp+'_h.nc', output = exp+'_ht.nc')
-    nco.ncra(input = exp+'_uz.nc', output = exp+'_utz.nc')
-    nco.ncra(input = exp+'_vz.nc', output = exp+'_vtz.nc')
-    nco.ncra(input = exp+'_Tz.nc', output = exp+'_Ttz.nc')
-    nco.ncra(input = exp+'_hz.nc', output = exp+'_htz.nc')
-    
+    nco.ncra(input = exp+'_u.nc', output = exp+'_ut.nc')
+    nco.ncra(input = exp+'_v.nc', output = exp+'_vt.nc')
+    nco.ncra(input = exp+'_T.nc', output = exp+'_Tt.nc')
+
+    # time means
+    print(datetime.now(), ' - time and zonal means')
+    nco.ncra(input = exp+'_ht.nc', output = exp+'_htz.nc')
+    nco.ncra(input = exp+'_ut.nc', output = exp+'_utz.nc')
+    nco.ncra(input = exp+'_vt.nc', output = exp+'_vtz.nc')
+    nco.ncra(input = exp+'_Tt.nc', output = exp+'_Ttz.nc')
+
+    # zonal means
+    # PLEASE NOTE THIS DOES NOT SEEM TO WORK ANYMORE!!!
+    #print(datetime.now(), ' - zonal means')
+    #nco.ncwa(input = exp+'_u.nc', output = exp+'_uz.nc', options = ['-a lon'])
+    #nco.ncwa(input = exp+'_v.nc', output = exp+'_vz.nc', options = ['-a lon'])
+    #nco.ncwa(input = exp+'_T.nc', output = exp+'_Tz.nc', options = ['-a lon'])
+
     # remove file with all included
     # move created files to folder for processed data
     print(datetime.now(), ' - re-arrange files')
+    os.chdir(indir + exp)
     os.remove(exp+'_all.nc')
     os.remove(exp+'_h.nc')
-    os.remove(exp+'_hz.nc')
+    os.remove(exp+'_ut.nc')
+    os.remove(exp+'_vt.nc')
+    os.remove(exp+'_Tt.nc')
     newfiles = glob('*.nc', recursive=True)
     for f in newfiles:
         try:
@@ -86,7 +97,7 @@ def postprocess(exp):
 basis = 'PK_e0v4z13'
 perturb = '_q6m2y45' #l800u200'
 polar = '_w15a4p800f800g50'
-exp = [basis+'_a4x75y180w5v30p400'+perturb]
+exp = [basis+'_a4x75y180w5v30p800']
 
 for i in range(len(exp)):
     postprocess(exp[i])
