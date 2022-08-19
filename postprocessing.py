@@ -57,7 +57,6 @@ def postprocess(exp):
     # time means
     print(datetime.now(), ' - time means')
     os.chdir(indir + exp)
-    nco = Nco(debug=True)
     nco.ncra(input = exp+'_h.nc', output = exp+'_ht.nc')
     nco.ncra(input = exp+'_u.nc', output = exp+'_ut.nc')
     nco.ncra(input = exp+'_v.nc', output = exp+'_vt.nc')
@@ -65,10 +64,10 @@ def postprocess(exp):
 
     # time means
     print(datetime.now(), ' - time and zonal means')
-    nco.ncra(input = exp+'_ht.nc', output = exp+'_htz.nc')
-    nco.ncra(input = exp+'_ut.nc', output = exp+'_utz.nc')
-    nco.ncra(input = exp+'_vt.nc', output = exp+'_vtz.nc')
-    nco.ncra(input = exp+'_Tt.nc', output = exp+'_Ttz.nc')
+    nco.ncwa(input = exp+'_ht.nc', output = exp+'_htz.nc', options = ['-a lon'])
+    nco.ncwa(input = exp+'_ut.nc', output = exp+'_utz.nc', options = ['-a lon'])
+    nco.ncwa(input = exp+'_vt.nc', output = exp+'_vtz.nc', options = ['-a lon'])
+    nco.ncwa(input = exp+'_Tt.nc', output = exp+'_Ttz.nc', options = ['-a lon'])
 
     # zonal means
     # PLEASE NOTE THIS DOES NOT SEEM TO WORK ANYMORE SO HAVE COMMENTED OUT
