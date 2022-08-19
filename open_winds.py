@@ -81,9 +81,9 @@ def find_SPV(indir, exp):
     for i in range(len(exp)):
         print(datetime.now(), " - ", exp[i])
         SPV = xr.open_dataset(indir+exp[i]+'_u.nc', decode_times=False).ucomp\
-            .mean(dim='lon')\
             .sel(pfull=10, method='nearest')\
-            .sel(lat=60, method='nearest')
+            .sel(lat=60, method='nearest')\
+            .mean(dim='lon')
         save_file(exp[i], SPV, 'SPV')
 
 def calc_error(nevents, nyears):
@@ -157,7 +157,7 @@ if __name__ == '__main__':
     #Set-up data to be read in
     indir = '/disco/share/rm811/processed/'
     basis = 'PK_e0v4z13'
-    exp = [basis+'_q6m2y45l800u200']#,\
+    exp = [basis+'_a4x75y180w5v30p400_q6m2y45']#,\
         #basis+'_w15a4p900f800g50_q6m2y45l800u200',\
         #basis+'_w15a4p800f800g50_q6m2y45l800u200',\
         #basis+'_w15a4p600f800g50_q6m2y45l800u200',\
@@ -173,14 +173,14 @@ if __name__ == '__main__':
         #basis+'_w15a8p800f800g50_q6m2y45l800u200']
    
 
-    p = 10
+    #p = 10
     #winds_errs(indir, exp, p, basis+'_depth')
-    Ro = []
-    for i in range(len(exp)):
-        Ro.append(calc_Ro(indir, exp[i], p))
-    print(Ro)
+    #Ro = []
+    #for i in range(len(exp)):
+    #    Ro.append(calc_Ro(indir, exp[i], p))
+    #print(Ro)
 
     #p = 850
     #winds_errs(indir, exp, p, basis+'_depth')
     
-    #find_SPV(indir, exp)
+    find_SPV(indir, exp)

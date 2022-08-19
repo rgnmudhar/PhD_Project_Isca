@@ -273,7 +273,7 @@ if __name__ == '__main__':
     basis = 'PK_e0v4z13'
     perturb = '_q6m2y45l800u200'
     #exp = [basis+'_w15a4p800f800g50'+perturb, basis+'_a4x75y180w5v30p800_q6m2y45']
-    extension = '_width'
+    extension = '_loc'
     if extension == '_depth':
         exp = [basis+perturb,\
         basis+'_w15a4p900f800g50'+perturb,\
@@ -309,8 +309,9 @@ if __name__ == '__main__':
             basis+'_a4x75y0w5v30p800'+perturb,\
             basis+'_a4x75y90w5v30p800'+perturb,\
             basis+'_a4x75y180w5v30p800'+perturb,\
+            basis+'_a4x75y180w5v30p400'+perturb,\
             basis+'_a4x75y270w5v30p800'+perturb]
-        labels = ['no heat', '0', '90', '180', '270']
+        labels = [r'no heat', '0', '90', '180 ($p_{top}=800$ hPa)', '180 ($p_{top}=400$ hPa)', '270']
         xlabel = r'Longitude of Heating ($\degree$E)'
     
     #User choices for plotting - subjects
