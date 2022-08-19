@@ -198,16 +198,16 @@ if __name__ == '__main__':
     lat_min = 20  # degrees
 
     if plot_type=='a':
-        ds = add_phalf(indir+exp[0], '_uz.nc')
-        uz = ds.ucomp
+        ds = add_phalf(indir+exp[0], '_u.nc')
+        uz = ds.ucomp.mean(dim='lon')
         utz = xr.open_dataset(indir+exp[0]+'_utz.nc', decode_times=False).ucomp[0]
         plot_single(uz, utz, p_min, lat_min, exp[0])
     
     elif plot_type=='b':
         uz = []
         for i in range(len(exp)):
-            ds = add_phalf(indir+exp[i], '_uz.nc')
-            uz.append(ds.ucomp)
+            ds = add_phalf(indir+exp[i], '_u.nc')
+            uz.append(ds.ucomp.mean(dim='lon'))
 
         labels = ['label1', 'label2']
         colors = ['#B30000', '#FF9900']

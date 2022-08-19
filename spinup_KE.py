@@ -19,8 +19,8 @@ indir = '/disco/share/rm811/processed/'
 exp = 'PK_e0v4z13_q6m2y45l800u200'
 KE = []
 print("finding KE")
-uz = xr.open_dataset(indir+exp+'_uz.nc', decode_times=False).ucomp[0]
-vz = xr.open_dataset(indir+exp+'_vz.nc', decode_times=False).vcomp[0]
+uz = xr.open_dataset(indir+exp+'_u.nc', decode_times=False).ucomp[0].mean(dim='lon')
+vz = xr.open_dataset(indir+exp+'_v.nc', decode_times=False).vcomp[0].mean(dim='lon')
 coslat = np.cos(np.deg2rad(uz.coords['lat'].values)).clip(0., 1.) # need to weight due to different box sizes over grid
 lat_wgts = np.sqrt(coslat)
 for j in range(len(uz)):

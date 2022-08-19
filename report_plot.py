@@ -40,8 +40,8 @@ if __name__ == '__main__':
     tau = []
     vtx = []
     for i in range(len(exp)):
-        ds = add_phalf(indir+exp[i], '_uz.nc')
-        uz = ds.ucomp
+        ds = add_phalf(indir+exp[i], '_u.nc')
+        uz = ds.ucomp.mean(dim='lon')
         tau.append(return_tau(uz))
         SPV = open_file(exp[i], 'SPV')
         vtx.append(np.mean(SPV))

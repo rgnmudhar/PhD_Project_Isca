@@ -14,12 +14,12 @@ import run_plevel
 
 def postprocess(exp):
     print(datetime.now(), ' - ', exp)
-    """
     # run plevel interpolation
     print(datetime.now(), ' - interpolate')
     os.chdir(indir + exp)
     runs = sorted(glob('run*'))
     n = len(runs) - 1
+    # PLEASE NOTE WITH THE FOLLOWING EXCLUDED, RUN_PLEVEL.PY MUST BE RUN BEFORE THIS SCRIPT
     #os.chdir(plevdir)
     #run_plevel.main(indir, exp, n)
 
@@ -53,7 +53,7 @@ def postprocess(exp):
     nco.ncks(input = all, output = exp+'_w.nc', options = ['-v omega'])
     nco.ncks(input = all, output = exp+'_T.nc', options = ['-v temp'])
     nco.ncks(input = all, output = exp+'_h.nc', options = ['-v height'])
-    """
+
     # time means
     print(datetime.now(), ' - time means')
     os.chdir(indir + exp)
@@ -71,11 +71,10 @@ def postprocess(exp):
     nco.ncra(input = exp+'_Tt.nc', output = exp+'_Ttz.nc')
 
     # zonal means
-    # PLEASE NOTE THIS DOES NOT SEEM TO WORK ANYMORE!!!
+    # PLEASE NOTE THIS DOES NOT SEEM TO WORK ANYMORE SO HAVE COMMENTED OUT
     #print(datetime.now(), ' - zonal means')
     #nco.ncwa(input = exp+'_u.nc', output = exp+'_uz.nc', options = ['-a lon'])
     #nco.ncwa(input = exp+'_v.nc', output = exp+'_vz.nc', options = ['-a lon'])
-    #nco.ncwa(input = exp+'_T.nc', output = exp+'_Tz.nc', options = ['-a lon'])
 
     # remove file with all included
     # move created files to folder for processed data

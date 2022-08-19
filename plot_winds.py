@@ -201,7 +201,7 @@ def plot_pdf(exp, labels, colors, name):
 
 def find_sd(indir, exp):
     print(datetime.now(), " - opening files")
-    u = xr.open_dataset(indir+exp+'_uz.nc', decode_times=False).ucomp
+    u = xr.open_dataset(indir+exp+'_u.nc', decode_times=False).ucomp.mean(dim='lon')
     utz = xr.open_dataset(indir+exp+'_utz.nc', decode_times=False).ucomp
     p = u.coords['pfull']
     lat = u.coords['lat']
@@ -272,8 +272,8 @@ if __name__ == '__main__':
     indir = '/disco/share/rm811/processed/'
     basis = 'PK_e0v4z13'
     perturb = '_q6m2y45l800u200'
-    exp = [basis+'_w15a4p800f800g50'+perturb, basis+'_a4x75y180w5v30p800_q6m2y45']
-    extension = 0 #'_strengthp400'
+    #exp = [basis+'_w15a4p800f800g50'+perturb, basis+'_a4x75y180w5v30p800_q6m2y45']
+    extension = '_width'
     if extension == '_depth':
         exp = [basis+perturb,\
         basis+'_w15a4p900f800g50'+perturb,\
@@ -286,8 +286,8 @@ if __name__ == '__main__':
         labels = ['no heat', '900', '800', '700', '600', '500', '400', '300']
         xlabel = 'Depth of Heating (hPa)'
     elif extension == '_width':
-        exp = [basis+perturb,\
-        basis+'_w10a4p800f800g50'+perturb,\
+        #exp = [basis+perturb,\
+        exp = [basis+'_w10a4p800f800g50'+perturb,\
         basis+'_w15a4p800f800g50'+perturb,\
         basis+'_w20a4p800f800g50'+perturb,\
         basis+'_w25a4p800f800g50'+perturb,\
@@ -296,12 +296,11 @@ if __name__ == '__main__':
         basis+'_w40a4p800f800g50'+perturb]
         labels = ['no heat', '10', '15', '20', '25', '30', '35', '40']
         xlabel = r'Extent of Heating ($\degree$)'
-    elif extension == '_strengthp400':    
-        #exp = [basis+perturb,\
-        exp = [basis+'_w15a2p400f800g50'+perturb,\
-        basis+'_w15a4p400f800g50'+perturb,\
-        basis+'_w15a6p400f800g50'+perturb,\
-        basis+'_w15a8p400f800g50'+perturb]
+    elif extension == '_strengthp800':
+        exp = [basis+'_w15a2p800f800g50'+perturb,\
+        basis+'_w15a4p800f800g50'+perturb,\
+        basis+'_w15a6p800f800g50'+perturb,\
+        basis+'_w15a8p800f800g50'+perturb]
         labels = ['no heat', '2', '4', '6', '8'] #['no heat', '800', '600', '400']
         xlabel = r'Strength of Heating (K day$^{-1}$)'
     elif extension == '_loc':   
