@@ -305,8 +305,8 @@ if __name__ == '__main__':
         xlabel = r'Strength of Heating (K day$^{-1}$)'
     elif extension == '_loc':   
         perturb = '_q6m2y45'
-        exp = [basis+'_q6m2y45l800u200',\
-            basis+'_a4x75y0w5v30p800'+perturb,\
+        #exp = [basis+'_q6m2y45l800u200',\
+        exp = [basis+'_a4x75y0w5v30p800'+perturb,\
             basis+'_a4x75y90w5v30p800'+perturb,\
             basis+'_a4x75y180w5v30p800'+perturb,\
             basis+'_a4x75y180w5v30p400'+perturb,\

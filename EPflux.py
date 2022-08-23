@@ -93,8 +93,8 @@ def aostools_plot(ds, p, lat):
     plt.savefig('aostools_EPflux.pdf', bbox_inches = 'tight')
     return plt.close()
 
-def calc_ep(u, v, t):
-    ep1, ep2, div1, div2 = climate.ComputeEPfluxDivXr(u, v, t, 'lon', 'lat', 'pfull', 'time', do_ubar=True)
+def calc_ep(u, v, w, t):
+    ep1, ep2, div1, div2 = climate.ComputeEPfluxDivXr(u, v, t, 'lon', 'lat', 'pfull', 'time', w=w, do_ubar=True)
     # take time mean of relevant quantities
     div = div1 + div2
     div = div.mean(dim='time')

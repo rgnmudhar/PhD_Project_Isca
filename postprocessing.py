@@ -1,5 +1,7 @@
 from nco import Nco
 from glob import glob
+import xarray as xr
+import numpy as np
 import os
 import sys
 from datetime import datetime
@@ -11,6 +13,26 @@ analysisdir = '/home/links/rm811/scratch/PhD_Project_Isca'
 
 sys.path.append(os.path.abspath(plevdir))
 import run_plevel 
+
+def calc_w():
+    ds = xr.open_dataset('../atmos_daily_T42_p40.nc', decode_times=False)
+    deg2rad = np.pi / 180
+    coslat = np.cos(np.deg2rad(ds.lat))
+    acoslat = 6.371e6 * coslat
+    p = ds.phalf
+    dp = np.diff(p)
+    #p = ds.pfull
+    #dp = np.gradient(p)
+
+    u = xr.open_dataset(outdir+exp+'_u.nc', decode_times=False).ucomp
+    v = xr.open_dataset(outdir+exp+'_v.nc', decode_times=False).vcomp
+    div = u.differentiate('lon', edge_order=2) / deg2rad / acoslat + (v*coslat).differentiate('lat', edge_order=2) / deg2rad / acoslat
+    wcalc_half = -np.cumsum(div.values * (dp*100)[None,:,None,None], axis=1)
+    wcalc_half = np.concatenate((np.zeros((len(ds.time),1,len(ds.lat),len(ds.lon))), wcalc_half), axis=1)
+    wcalc_full = (wcalc_half[:,1:] + wcalc_half[:,:-1]) / 2.
+    ds['omega'] = (['time', 'pfull', 'lat', 'lon'], wcalc_full)
+
+    print(ds.omega.shape)
 
 def postprocess(exp):
     print(datetime.now(), ' - ', exp)
