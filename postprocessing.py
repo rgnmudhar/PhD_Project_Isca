@@ -11,8 +11,19 @@ outdir = '/disco/share/rm811/processed/'
 plevdir = '/home/links/rm811/Isca/postprocessing/plevel_interpolation/scripts'
 analysisdir = '/home/links/rm811/scratch/PhD_Project_Isca'
 
-sys.path.append(os.path.abspath(plevdir))
-import run_plevel 
+nco = Nco(debug=True)
+
+#sys.path.append(os.path.abspath(plevdir))
+#import run_plevel 
+
+def take_zonal_means(indir, outdir):
+    os.chdir(indir)
+    exp = sorted(glob('*'))
+    os.chdir(outdir)
+    for i in range(len(exp)):
+        print(datetime.now(), ' - ' + exp[i] + ' zonal means')
+        nco.ncwa(input = exp[i]+'_u.nc', output = exp[i]+'_uz.nc', options = ['-a lon'])
+        nco.ncwa(input = exp[i]+'_v.nc', output = exp[i]+'_vz.nc', options = ['-a lon'])
 
 def calc_w():
     ds = xr.open_dataset('../atmos_daily_T42_p40.nc', decode_times=False)
@@ -64,7 +75,6 @@ def postprocess(exp):
     
     # concatenate all
     print(datetime.now(), ' - concatenate')
-    nco = Nco(debug=True)
     nco.ncrcat(input = 'run*/*interp.nc', output = exp+'_all.nc', use_shell = True)
 
     # extract variables
@@ -92,10 +102,10 @@ def postprocess(exp):
     nco.ncwa(input = exp+'_Tt.nc', output = exp+'_Ttz.nc', options = ['-a lon'])
 
     # zonal means
-    # PLEASE NOTE THIS DOES NOT SEEM TO WORK ANYMORE SO HAVE COMMENTED OUT
+    # NOTE THAT THE FOLLOWING ONLY SEEMS TO WORK ON GV3 OR GV4
     #print(datetime.now(), ' - zonal means')
-    #nco.ncwa(input = exp+'_u.nc', output = exp+'_uz.nc', options = ['-a lon'])
-    #nco.ncwa(input = exp+'_v.nc', output = exp+'_vz.nc', options = ['-a lon'])
+    nco.ncwa(input = exp+'_u.nc', output = exp+'_uz.nc', options = ['-a lon'])
+    nco.ncwa(input = exp+'_v.nc', output = exp+'_vz.nc', options = ['-a lon'])
 
     # remove file with all included
     # move created files to folder for processed data
@@ -119,31 +129,7 @@ perturb = '_q6m2y45' #l800u200'
 polar = '_w15a4p800f800g50'
 exp = [basis+'_a4x75y180w5v30p800']
 
+#take_zonal_means(indir, outdir)
+
 for i in range(len(exp)):
     postprocess(exp[i])
-
-    """
-    [basis+polar, \
-    basis+'_w15a4p900f800g50'+perturb, \
-    basis+polar+perturb, \
-    basis+'_w15a4p700f800g50'+perturb, \
-    basis+'_w15a4p600f800g50'+perturb, \
-    basis+'_w15a4p400f800g50'+perturb, \
-    basis+'_w15a4p500f800g50'+perturb, \
-    basis+'_w15a4p300f800g50'+perturb, \
-    basis+'_w10a4p800f800g50'+perturb, \
-    basis+'_w20a4p800f800g50'+perturb, \
-    basis+'_w25a4p800f800g50'+perturb, \
-    basis+'_w30a4p800f800g50'+perturb, \
-    basis+'_w35a4p800f800g50'+perturb, \
-    basis+'_w40a4p800f800g50'+perturb]
-
-    ['PK_e10v1z18',\
-    'PK_e10v2z18',\
-    'PK_e10v3z18',\
-    'PK_e10v4z18',\
-    'PK_e10v1z13',\
-    'PK_e10v2z13',\
-    'PK_e10v3z13',\
-    'PK_e10v4z13']
-    """

@@ -201,7 +201,7 @@ def plot_pdf(exp, labels, colors, name):
 
 def find_sd(indir, exp):
     print(datetime.now(), " - opening files")
-    u = xr.open_dataset(indir+exp+'_u.nc', decode_times=False).ucomp.mean(dim='lon')
+    u = xr.open_dataset(indir+exp+'_uz.nc', decode_times=False).ucomp
     utz = xr.open_dataset(indir+exp+'_utz.nc', decode_times=False).ucomp
     p = u.coords['pfull']
     lat = u.coords['lat']
@@ -272,8 +272,8 @@ if __name__ == '__main__':
     indir = '/disco/share/rm811/processed/'
     basis = 'PK_e0v4z13'
     perturb = '_q6m2y45l800u200'
-    #exp = [basis+'_w15a4p800f800g50'+perturb, basis+'_a4x75y180w5v30p800_q6m2y45']
-    extension = '_loc'
+    exp = [basis+'_a4x75y180w5v30p800_q6m2y45', basis+perturb]
+    extension = 0 #'_loc'
     if extension == '_depth':
         exp = [basis+perturb,\
         basis+'_w15a4p900f800g50'+perturb,\
@@ -367,4 +367,4 @@ if __name__ == '__main__':
                 lat, p, u1, sd1 = find_sd(indir, exp[0])
                 lat, p, u2, sd2 = find_sd(indir, exp[1])
                 sd_diff = sd1 - sd2
-                plot_sd(lat, p, u1, sd_diff, np.arange(-10, 11, 1), basis+'_y40-10'+perturb, 'RdBu_r')
+                plot_sd(lat, p, u1, sd_diff, np.arange(-20, 22, 2), exp[0], 'RdBu_r')

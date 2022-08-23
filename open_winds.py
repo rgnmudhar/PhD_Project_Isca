@@ -57,9 +57,9 @@ def winds_errs(indir, exp, p, name):
     maxwinds_sd = []
     print(datetime.now(), " - calculating standard deviation errors")
     for i in range(len(exp)):
-        ds = xr.open_dataset(indir+exp[i]+'_u.nc', decode_times=False)
+        ds = xr.open_dataset(indir+exp[i]+'_uz.nc', decode_times=False)
         lat = ds.coords['lat'].data
-        u = ds.ucomp.mean(dim='lon')
+        u = ds.ucomp
         n = len(ds.time)
         lat, max = jet_timeseries(u, lat, p)
         maxlats.append(np.mean(lat))
@@ -80,10 +80,9 @@ def find_SPV(indir, exp):
     print(datetime.now(), " - finding wind speeds at 60N, 10hPa")
     for i in range(len(exp)):
         print(datetime.now(), " - ", exp[i])
-        SPV = xr.open_dataset(indir+exp[i]+'_u.nc', decode_times=False).ucomp\
+        SPV = xr.open_dataset(indir+exp[i]+'_uz.nc', decode_times=False).ucomp\
             .sel(pfull=10, method='nearest')\
-            .sel(lat=60, method='nearest')\
-            .mean(dim='lon')
+            .sel(lat=60, method='nearest')
         save_file(exp[i], SPV, 'SPV')
 
 def calc_error(nevents, nyears):
