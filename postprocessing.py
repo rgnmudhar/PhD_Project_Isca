@@ -25,26 +25,34 @@ def take_zonal_means(indir, outdir):
         nco.ncwa(input = exp[i]+'_u.nc', output = exp[i]+'_uz.nc', options = ['-a lon'])
         nco.ncwa(input = exp[i]+'_v.nc', output = exp[i]+'_vz.nc', options = ['-a lon'])
 
-def calc_w():
-    ds = xr.open_dataset('../atmos_daily_T42_p40.nc', decode_times=False)
-    deg2rad = np.pi / 180
-    coslat = np.cos(np.deg2rad(ds.lat))
-    acoslat = 6.371e6 * coslat
-    p = ds.phalf
-    dp = np.diff(p)
-    #p = ds.pfull
-    #dp = np.gradient(p)
-
-    u = xr.open_dataset(outdir+exp+'_u.nc', decode_times=False).ucomp
-    v = xr.open_dataset(outdir+exp+'_v.nc', decode_times=False).vcomp
+def calc_w(dir, exp):
+    print(datetime.now(), ' - ', exp)
+    print(datetime.now(), ' - opening u and v')
+    u = xr.open_dataset(dir+exp+'_u.nc', decode_times=False).ucomp
+    v = xr.open_dataset(dir+exp+'_v.nc', decode_times=False).vcomp
+    print(datetime.now(), ' - finding divergence')
     div = u.differentiate('lon', edge_order=2) / deg2rad / acoslat + (v*coslat).differentiate('lat', edge_order=2) / deg2rad / acoslat
+    print(datetime.now(), ' - integrating')
     wcalc_half = -np.cumsum(div.values * (dp*100)[None,:,None,None], axis=1)
-    wcalc_half = np.concatenate((np.zeros((len(ds.time),1,len(ds.lat),len(ds.lon))), wcalc_half), axis=1)
-    wcalc_full = (wcalc_half[:,1:] + wcalc_half[:,:-1]) / 2.
-    ds['omega'] = (['time', 'pfull', 'lat', 'lon'], wcalc_full)
+    wcalc_half = np.concatenate((np.zeros((len(u.time),1,len(u.lat),len(u.lon))), wcalc_half), axis=1)
+    print(datetime.now(), ' - interpolating to full pressure levels')
+    wcalc_full = (wcalc_half[:,1:] + wcalc_half[:,:-1]) / 2. 
 
-    print(ds.omega.shape)
-
+    print(datetime.now(), ' - saving file')
+    coord_list = ['time', 'pfull', 'lat', 'lon']
+    wcalc_ds = xr.Dataset(
+         data_vars=dict(
+             wcalc_full = (coord_list, wcalc_full)
+         ),
+         coords=u.coords
+    )
+    wcalc_ds = wcalc_ds.rename({'wcalc_full' : 'omega'})
+    wcalc_ds.to_netcdf(dir + exp + '_w.nc', format="NETCDF4_CLASSIC",
+             encoding = {'omega': {"dtype": 'float32', '_FillValue': None},
+                    "time": {'_FillValue': None}, "pfull": {'_FillValue': None},
+                    "lat": {'_FillValue': None}, "lon": {'_FillValue': None}}
+                )
+    
 def postprocess(exp):
     print(datetime.now(), ' - ', exp)
     # run plevel interpolation
@@ -124,12 +132,52 @@ def postprocess(exp):
             print(e.strerror, ':', f)
 
 
-basis = 'PK_e0v4z13'
-perturb = '_q6m2y45' #l800u200'
-polar = '_w15a4p800f800g50'
-exp = [basis+'_a4x75y180w5v30p800']
+exp = ['PK_e0v4z13_q6m2y45l800u200',\
+    'PK_e0v4z13_w15a4p900f800g50_q6m2y45l800u200',\
+    'PK_e0v4z13_w15a4p700f800g50_q6m2y45l800u200',\
+    'PK_e0v4z13_w15a4p500f800g50_q6m2y45l800u200',\
+    'PK_e0v4z13_w15a4p300f800g50_q6m2y45l800u200',\
+    'PK_e0v4z13_w10a4p800f800g50_q6m2y45l800u200',\
+    'PK_e0v4z13_w20a4p800f800g50_q6m2y45l800u200',\
+    'PK_e0v4z13_w30a4p800f800g50_q6m2y45l800u200',\
+    'PK_e0v4z13_w40a4p800f800g50_q6m2y45l800u200',\
+    'PK_e0v4z13_w15a4p800f800g50_q6m2y45l800u200',\
+    'PK_e0v4z13_w25a4p800f800g50_q6m2y45l800u200',\
+    'PK_e0v4z13_w35a4p800f800g50_q6m2y45l800u200',\
+    'PK_e0v4z13_w15a2p800f800g50_q6m2y45l800u200',\
+    'PK_e0v4z13_w15a2p400f800g50_q6m2y45l800u200',\
+    'PK_e0v4z13_w15a6p800f800g50_q6m2y45l800u200',\
+    'PK_e0v4z13_w15a8p800f800g50_q6m2y45l800u200',\
+    'PK_e0v4z13_w15a4p400f800g50_q6m2y45l800u200',\
+    'PK_e0v4z13_w15a6p400f800g50_q6m2y45l800u200',\
+    'PK_e0v4z13_w15a8p400f800g50_q6m2y45l800u200',\
+    'PK_e0v4z13_w15a2p600f800g50_q6m2y45l800u200',\
+    'PK_e0v4z13_w15a4p600f800g50_q6m2y45l800u200',\
+    'PK_e0v4z13_w15a6p600f800g50_q6m2y45l800u200',\
+    'PK_e0v4z13_w15a8p600f800g50_q6m2y45l800u200',\
+    'PK_e0v4z13_w15a4p800f800g50',\
+    'PK_e0v4z13_a4x75y180w5v30p800',\
+    'PK_e0v4z13_a4x75y180w5v30p400_q6m2y45',\
+    'PK_e0v4z13_a4x75y180w5v30p800_q6m2y45',\
+    'PK_e0v4z13_a4x75y0w5v30p800_q6m2y45',\
+    'PK_e0v4z13_a4x75y270w5v30p800_q6m2y45',\
+    'PK_e0v4z13_a4x75y90w5v30p800_q6m2y45',\
+    'PK_e0v4z13']
 
 #take_zonal_means(indir, outdir)
 
+#for i in range(len(exp)):
+#    postprocess(exp[i])
+
+print(datetime.now(), ' - calculating constants')
+ds = xr.open_dataset('../atmos_daily_T42_p40.nc', decode_times=False)
+deg2rad = np.pi / 180
+coslat = np.cos(np.deg2rad(ds.lat))
+acoslat = 6.371e6 * coslat
+print(datetime.now(), ' - taking pressure differential')
+p = ds.phalf
+dp = np.diff(p)
+#p = ds.pfull
+#dp = np.gradient(p)
 for i in range(len(exp)):
-    postprocess(exp[i])
+    calc_w(outdir, exp[i])
