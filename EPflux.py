@@ -94,19 +94,21 @@ def aostools_plot(ds, p, lat):
     return plt.close()
 
 def calc_ep(u, v, w, t):
+    print(datetime.now(), ' - finding EP Fluxes')
     ep1, ep2, div1, div2 = climate.ComputeEPfluxDivXr(u, v, t, 'lon', 'lat', 'pfull', 'time', w=w, do_ubar=True)
     # take time mean of relevant quantities
+    print(datetime.now(), ' - taking time mean')
     div = div1 + div2
     div = div.mean(dim='time')
     ep1 = ep1.mean(dim='time')
     ep2 = ep2.mean(dim='time')
     return div, ep1, ep2
 
-def plot_single(uz, u, v, t, exp_name, heat):
+def plot_single(uz, u, v, w, t, exp_name, heat):
     print(datetime.now(), " - calculating variables")
     p = uz.coords['pfull']
     lat = uz.coords['lat']
-    div, ep1, ep2 = calc_ep(u, v, t)
+    div, ep1, ep2 = calc_ep(u, v, w/100, t) # w must be in hPa
 
     #Filled contour plot of time-mean EP flux divergence plus EP flux arrows and zonal wind contours
     divlvls = np.arange(-12,13,1)
@@ -137,12 +139,12 @@ def plot_single(uz, u, v, t, exp_name, heat):
     plt.savefig(exp_name+'_EPflux.pdf', bbox_inches = 'tight')
     return plt.close()
 
-def plot_diff(uz, u, v, t, exp_name, heat):
+def plot_diff(uz, u, v, w, t, exp_name, heat):
     p = uz.coords['pfull']
     lat = uz.coords['lat']
     print(datetime.now(), " - calculating variables")
-    div1, ep1a, ep2a = calc_ep(u[0], v[0], t[0])
-    div2, ep1b, ep2b = calc_ep(u[1], v[1], t[1])
+    div1, ep1a, ep2a = calc_ep(u[0], v[0], w[0], t[0])
+    div2, ep1b, ep2b = calc_ep(u[1], v[1], w[1], t[1])
     div_diff = div1 - div2
     ep1_diff = ep1a - ep1b
     ep2_diff = ep2a - ep2b
@@ -179,11 +181,11 @@ if __name__ == '__main__':
     #Set-up data to be read in
     indir = '/disco/share/rm811/processed/'
     basis = 'PK_e0v4z13'
-    filename = 'w15a4p400f800g50_q6m2y45l800u200'
-    exp = [basis] #+'_'+filename, basis+'_w15a2p400f800g50_q6m2y45l800u200']
+    filename = '_a4x75y180w5v30p400_q6m2y45'
+    exp = [basis + filename]
 
     #Read in data to plot polar heat contours
-    file = '/disco/share/rm811/isca_data/' + basis + '_' + filename + '/run0100/atmos_daily_interp.nc'
+    file = '/disco/share/rm811/isca_data/' + exp[0] + '/run0100/atmos_daily_interp.nc'
     ds = xr.open_dataset(file)
     heat = ds.local_heating.sel(lon=180, method='nearest').mean(dim='time')
 
@@ -192,16 +194,18 @@ if __name__ == '__main__':
     print(datetime.now(), " - opening files")
     u = xr.open_dataset(indir+exp[0]+'_u.nc', decode_times=False).ucomp
     v = xr.open_dataset(indir+exp[0]+'_v.nc', decode_times=False).vcomp
+    w = xr.open_dataset(indir+exp[0]+'_w.nc', decode_times=False).omega
     T = xr.open_dataset(indir+exp[0]+'_T.nc', decode_times=False).temp
     utz = xr.open_dataset(indir+exp[0]+'_utz.nc', decode_times=False).ucomp[0]
     
     if plot_type =='a':
-        plot_single(utz, u, v, T, exp[0], heat)
+        plot_single(utz, u, v, w, T, exp[0], heat)
     elif plot_type == 'b':
         u = [u, xr.open_dataset(indir+exp[1]+'_u.nc', decode_times=False).ucomp]
         v = [v, xr.open_dataset(indir+exp[1]+'_v.nc', decode_times=False).vcomp]
+        w = [w, xr.open_dataset(indir+exp[1]+'_w.nc', decode_times=False).omega]
         T = [T, xr.open_dataset(indir+exp[1]+'_T.nc', decode_times=False).temp]
-        plot_diff(utz, u, v, T, exp[0], heat)
+        plot_diff(utz, u, v, w, T, exp[0], heat)
 
     """
     #Compare Neil and aostools' code
