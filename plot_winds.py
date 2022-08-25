@@ -33,7 +33,7 @@ def plot_winds(indir, exp, labels, colors, style, cols, name, p):
     plt.savefig(name+'_winds.pdf', bbox_inches = 'tight')
     return plt.close()
 
-def plot_vtx(exp, labels, colors, style, cols, fig_name):
+def plot_vtx(dir, exp, labels, colors, style, cols, fig_name):
     """
     Plots strength of winds at 60N, 10 hPa only.
     Best for 2 datsets, the second of which has its SSW statistics as a plot subtitle
@@ -42,7 +42,7 @@ def plot_vtx(exp, labels, colors, style, cols, fig_name):
     print(datetime.now(), " - plotting SPV")
     fig, ax = plt.subplots(figsize=(8,6))
     for i in range(len(exp)):
-        SPV = open_file(exp[i], 'SPV')
+        SPV = open_file(dir, exp[i], 'SPV')
         ax.plot(SPV, color=colors[i], linewidth=1, linestyle=style[i], label=labels[i])
     ax.axhline(0, color='k', linewidth=0.5)
     ax.set_xlim(1,len(SPV))
@@ -55,7 +55,7 @@ def plot_vtx(exp, labels, colors, style, cols, fig_name):
     
     return plt.close()
 
-def SPVvexp1(exp, exp_names, xlabel, name):
+def SPVvexp1(dir, exp, exp_names, xlabel, name):
     """
     Plots the mean and standard deviation of SPV against (heating) experiment.
     """
@@ -65,7 +65,7 @@ def SPVvexp1(exp, exp_names, xlabel, name):
     err = []
     sd = []
     for i in range(len(exp)):
-        SPV = open_file(exp[i], 'SPV')
+        SPV = open_file(dir, exp[i], 'SPV')
         mean.append(np.mean(SPV))
         err.append(np.std(SPV/np.sqrt(len(SPV))))
         sd.append(np.std(SPV))
@@ -89,32 +89,32 @@ def SPVvexp1(exp, exp_names, xlabel, name):
 
     return plt.close()
 
-def windsvexp(labels, xlabel, p, name):
+def windsvexp(dir, labels, xlabel, p, name):
     """
     Uses jet_locator functions to find location and strength of maximum stratopsheric vortex (10 hPa).
     Then plots this against (heating) experiment.
     """
     print(datetime.now(), " - plotting wind maxima vs experiment")
     fig, ax = plt.subplots(figsize=(10,6))
-    ax.errorbar(labels[1:], open_file(name, 'maxwinds'+p)[1:], yerr=open_file(name, 'maxwinds_sd'+p)[1:], fmt='o', linewidth=1.25, capsize=5, color='#B30000', linestyle=':')
+    ax.errorbar(labels[1:], open_file(dir, name, 'maxwinds'+p)[1:], yerr=open_file(dir, name, 'maxwinds_sd'+p)[1:], fmt='o', linewidth=1.25, capsize=5, color='#B30000', linestyle=':')
     ax.set_xticks(labels)
     ax.set_xlabel(xlabel, fontsize='x-large')
     ax.set_ylabel(r'Strength of Max. 10 hPa Zonal Wind (ms$^{-1}$)', color='#B30000', fontsize='x-large')
     ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
     ax2 = ax.twinx()
-    ax2.errorbar(labels[1:], open_file(name, 'maxlats'+p)[1:], yerr=open_file(name, 'maxlats_sd'+p)[1:], fmt='o', linewidth=1.25, capsize=5, color='#4D0099', linestyle=':')
+    ax2.errorbar(labels[1:], open_file(dir, name, 'maxlats'+p)[1:], yerr=open_file(dir, name, 'maxlats_sd'+p)[1:], fmt='o', linewidth=1.25, capsize=5, color='#4D0099', linestyle=':')
     ax2.set_ylabel(r'Laitude of Max. 10 hPa Zonal Wind ($\degree$N)', color='#4D0099', fontsize='x-large')
     ax2.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
     plt.savefig(name+'_windsvexp'+p+'.pdf', bbox_inches = 'tight')
 
     return plt.close()
 
-def SSWsvexp(exp, x, xlabel, fig_name):
+def SSWsvexp(dir, exp, x, xlabel, fig_name):
     """
     Plots SSW frequency against (heating) experiment.
     """
     print(datetime.now(), " - finding SSWs")
-    SSWs, errors = find_SSWs(exp)
+    SSWs, errors = find_SSWs(dir, exp)
     og = SSWs[0]
     og_err = errors[0]
     print(SSWs, errors)
@@ -136,18 +136,18 @@ def SSWsvexp(exp, x, xlabel, fig_name):
 
     return plt.close()
 
-def SSWsvexp_multi(exp, x, xlabel, legend, colors, fig_name):
+def SSWsvexp_multi(dir, exp, x, xlabel, legend, colors, fig_name):
     """
     Plots SSW frequency against (heating) experiment for 3 sets of experiments
     """
     print(datetime.now(), " - finding SSWs")
-    og, og_err = find_SSWs([exp[0]])
+    og, og_err = find_SSWs(dir, [exp[0]])
     og = og[0]
     og_err = og_err[0]
     print(datetime.now(), " - plotting SSWs vs experiment")
     fig, ax = plt.subplots(figsize=(10,6))
     for i in np.arange(1,len(exp),1):
-        SSWs, errors = find_SSWs(exp[i])
+        SSWs, errors = find_SSWs(dir, exp[i])
         ax.errorbar(x[1:], SSWs, yerr=errors, fmt='o', linewidth=1.25, capsize=5, color=colors[i-1], linestyle=':', label=legend[i-1])
     ax.set_xlim(-0.25,2.25)
     ax.set_xticks(x[1:])
@@ -165,38 +165,23 @@ def SSWsvexp_multi(exp, x, xlabel, legend, colors, fig_name):
 
     return plt.close()
 
-def pdf(x, plot=False):
-    x = np.sort(x)
-    ae, loce, scalee = sps.skewnorm.fit(x)
-    p = sps.skewnorm.pdf(x, ae, loce, scalee)
-    if plot==True:
-        s = np.std(x)
-        mean = np.mean(x)
-        f = (1 / (s * np.sqrt(2 * np.pi))) * np.exp(-0.5 * ((x - mean)/s)**2)
-        plt.hist(x, bins = 50, density=True)
-        plt.plot(x, f)
-        plt.plot(x, p)
-        plt.show()
-    mode = x[int(np.argmax(p))]
-    return x, p, mode
-
-def plot_pdf(exp, labels, colors, name):
-    print(datetime.now(), " - plotting SPV pdfs")
+def plot_pdf(dir, exp, input, p, labels, colors, name):
+    print(datetime.now(), " - plotting zonal wind PDFs at {:.0f} hPa".format(p))
     x_min = x_max = 0 
-    fig, ax = plt.subplots(figsize=(8,6))
+    fig, ax = plt.subplots(figsize=(6,6))
     for i in range(len(exp)):
-        SPV = open_file(exp[i], 'SPV')
-        x, f, mode = pdf(SPV)
+        x = xr.open_dataset(dir+exp[i]+input, decode_times=False).ucomp.sel(pfull=p, method='nearest').sel(lat=60, method='nearest')
+        x_sort, f, mode = pdf(x)
         if max(x) > x_max:
             x_max = max(x)
         if min(x) < x_min:
             x_min = min(x)
-        ax.plot(x, f, linewidth=1.25, color=colors[i], label=labels[i])
+        ax.plot(x_sort, f, linewidth=1.25, color=colors[i], label=labels[i])
     ax.set_xlim(x_min, x_max)
+    ax.set_xlabel(r"zonal-mean zonal wind (m s$^{-1}$)", fontsize='x-large')
     ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
     plt.legend(loc='upper right',fancybox=False, shadow=True, ncol=1, fontsize='large')
-    plt.savefig(name+'_pdf.pdf', bbox_inches = 'tight')
-
+    plt.savefig(name+'_{:.0f}pdf.pdf'.format(p), bbox_inches = 'tight')
     return plt.close()
 
 def find_sd(indir, exp):
@@ -234,42 +219,43 @@ def plot_sd(lat, p, u, sd, lvls, exp, colors):
     plt.savefig(exp+'_sd.pdf', bbox_inches = 'tight')
     return plt.close()
 
-def SPVvexp2(exp, exp_names, xlabel, name):
+def SPVvexp2(dir, exp, input, p, exp_names, xlabel, name):
     """
-    Plots the skew and kurtosis of SPV against (heating) experiment.
+    Plots the skew and kurtosis of zonal winds at p hPa against (heating) experiment.
     """
-    print(datetime.now(), " - plotting SPV skew and kurtosis vs experiment")
+    print(datetime.now(), " - plotting skew and kurtosis vs experiment at {:.0f} hPa".format(p))
     skew = []
     kurt = []
     for i in range(len(exp)):
-        SPV = open_file(exp[i], 'SPV')
-        skew.append(sps.skew(SPV))
-        kurt.append(sps.kurtosis(SPV))
+        x = xr.open_dataset(dir+exp[i]+input, decode_times=False).ucomp.sel(pfull=p, method='nearest').sel(lat=60, method='nearest')
+        skew.append(sps.skew(x))
+        kurt.append(sps.kurtosis(x))
     fig, ax = plt.subplots(figsize=(10,6))
     ax.plot(exp_names[1:], skew[1:], marker='o', linewidth=1.25, color='#B30000', linestyle=':')
     ax.set_xticks(exp_names)
     ax.set_xlabel(xlabel, fontsize='x-large')
-    ax.set_ylabel(r'10 hPa, 60 N Zonal Wind Skewness', fontsize='x-large', color='#B30000')
+    ax.set_ylabel('{:.0f} hPa, 60 N Zonal Wind Skewness'.format(p), fontsize='x-large', color='#B30000')
     ax.axhline(skew[0], color='#B30000', linewidth=0.5)
-    ax.text(-0.3, 0.07, 'Control', color='#B30000', fontsize='x-large')
+    ax.text(-0.3, 0.1, 'Control', color='#B30000', fontsize='x-large')
     ax.set_ylim(-0.5, 0.5)
     ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
     ax2 = ax.twinx()
     ax2.plot(exp_names[1:], kurt[1:], marker='o', linewidth=1.25, color='#4D0099', linestyle=':')
-    ax2.set_ylabel(r'10 hPa, 60 N Zonal Wind Kurtosis', color='#4D0099', fontsize='x-large')
+    ax2.set_ylabel('{:.0f} hPa, 60 N Zonal Wind Kurtosis'.format(p), color='#4D0099', fontsize='x-large')
     ax2.axhline(kurt[0], color='#4D0099', linewidth=0.5)
-    ax2.text(3, -0.57, 'Control', color='#4D0099', fontsize='x-large')
-    ax2.set_xlim(-0.5, 3.5)
+    ax2.text(5.75, -0.59, 'Control', color='#4D0099', fontsize='x-large')
+    ax2.set_xlim(-0.5, 6.5)
     ax2.set_ylim(-0.9, 0.9)
     ax2.fill_between(range(-1,8), -1, 0, facecolor ='gainsboro', alpha = 0.4)
-    ax2.text(0.75, -0.5, 'Negative Skew, Lighter Tails', color='#666666', fontsize='x-large')
+    ax2.text(1.5, -0.25, 'Negative Skew, Lighter Tails', color='#666666', fontsize='x-large')
     ax2.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
-    plt.savefig(name+'_SPVstats.pdf', bbox_inches = 'tight')
+    plt.savefig(name+'_{:.0f}stats.pdf'.format(p), bbox_inches = 'tight')
     return plt.close()
 
 if __name__ == '__main__': 
     #Set-up data to be read in
     indir = '/disco/share/rm811/processed/'
+    outdir = '../Files/'
     basis = 'PK_e0v4z13'
     perturb = '_q6m2y45l800u200'
     exp = [basis+'_a4x75y180w5v30p800_q6m2y45', basis+perturb]
@@ -286,8 +272,8 @@ if __name__ == '__main__':
         labels = ['no heat', '900', '800', '700', '600', '500', '400', '300']
         xlabel = 'Depth of Heating (hPa)'
     elif extension == '_width':
-        #exp = [basis+perturb,\
-        exp = [basis+'_w10a4p800f800g50'+perturb,\
+        exp = [basis+perturb,\
+        basis+'_w10a4p800f800g50'+perturb,\
         basis+'_w15a4p800f800g50'+perturb,\
         basis+'_w20a4p800f800g50'+perturb,\
         basis+'_w25a4p800f800g50'+perturb,\
@@ -297,7 +283,8 @@ if __name__ == '__main__':
         labels = ['no heat', '10', '15', '20', '25', '30', '35', '40']
         xlabel = r'Extent of Heating ($\degree$)'
     elif extension == '_strengthp800':
-        exp = [basis+'_w15a2p800f800g50'+perturb,\
+        exp = [basis+perturb,\
+        basis+'_w15a2p800f800g50'+perturb,\
         basis+'_w15a4p800f800g50'+perturb,\
         basis+'_w15a6p800f800g50'+perturb,\
         basis+'_w15a8p800f800g50'+perturb]
@@ -305,17 +292,17 @@ if __name__ == '__main__':
         xlabel = r'Strength of Heating (K day$^{-1}$)'
     elif extension == '_loc':   
         perturb = '_q6m2y45'
-        #exp = [basis+'_q6m2y45l800u200',\
-        exp = [basis+'_a4x75y0w5v30p800'+perturb,\
+        exp = [basis+'_q6m2y45l800u200',\
+            basis+'_a4x75y0w5v30p800'+perturb,\
             basis+'_a4x75y90w5v30p800'+perturb,\
             basis+'_a4x75y180w5v30p800'+perturb,\
             basis+'_a4x75y180w5v30p400'+perturb,\
             basis+'_a4x75y270w5v30p800'+perturb]
-        labels = [r'no heat', '0', '90', '180 ($p_{top}=800$ hPa)', '180 ($p_{top}=400$ hPa)', '270']
+        labels = [r'no heat', '0', '90', '180', '270']
         xlabel = r'Longitude of Heating ($\degree$E)'
     
     #User choices for plotting - subjects
-    level = input('Plot a) near-surface winds, b) tropospheric jet, c) stratospheric polar vortex?')
+    level = input('Plot a) near-surface winds, b) tropospheric jet, c) stratospheric polar vortex or d) lower stratosphere?')
 
     colors = ['#B30000', '#FF9900', '#FFCC00', '#00B300', '#0099CC', '#4D0099', '#CC0080', '#666666']
     legend = [r'A = 2 K day$^{-1}$', r'A = 4 K day$^{-1}$', r'A = 6 K day$^{-1}$', r'A = 8 K day$^{-1}$'] #[r'$p_{top} = 800$ hPa', r'$p_{top} = 600$ hPa', r'$p_{top} = 400$ hPa']
@@ -324,11 +311,11 @@ if __name__ == '__main__':
         p = 900 #hPa
         style = ['-', ':']
         cols = len(exp)
-        plot_winds(indir, exp, labels, colors, style, cols, exp[0], p)
+        plot_winds(outdir, indir, exp, labels, colors, style, cols, exp[0], p)
 
     elif level == 'b':
         p = 850 #hPa
-        windsvexp(labels, xlabel, str(p), basis+extension)
+        windsvexp(outdir, labels, xlabel, str(p), basis+extension)
 
     elif level == 'c':
         p = 10 # pressure level at which we want to find the SPV (hPa)
@@ -345,17 +332,17 @@ if __name__ == '__main__':
             colors = ['#0099CC', '#B30000']
             style = ['-', '-']
             cols = 2
-            plot_vtx(exp, labels, colors, style, cols, exp[0])
+            plot_vtx(outdir, exp, labels, colors, style, cols, exp[0])
         elif plot_type == 'b':
-            windsvexp(labels, xlabel, str(p), basis+extension)
+            windsvexp(outdir, labels, xlabel, str(p), basis+extension)
         elif plot_type == 'c':
-            SPVvexp1(exp, labels, xlabel, basis+extension)
+            SPVvexp1(outdir exp, labels, xlabel, basis+extension)
         elif plot_type == 'd':
-            SSWsvexp(exp, labels, xlabel, basis+extension)
-            #SSWsvexp_multi(exp, labels, xlabel, legend, ['#B30000', '#00B300', '#0099CC', 'k'], basis+extension)
+            SSWsvexp(outdir, exp, labels, xlabel, basis+extension)
+            #SSWsvexp_multi(outdir, exp, labels, xlabel, legend, ['#B30000', '#00B300', '#0099CC', 'k'], basis+extension)
         elif plot_type == 'e':
-            plot_pdf(exp, labels, colors, basis+extension)
-            SPVvexp2(exp, labels, xlabel, basis+extension)
+            plot_pdf(indir, exp, '_uz.nc', p, labels, colors, basis+extension)
+            SPVvexp2(indir, exp, '_uz.nc', p, labels, xlabel, basis+extension)
         elif plot_type == 'f':
             plot_what = input('Plot a) climatology or b) difference?)')
             if plot_what == 'a':
@@ -368,3 +355,8 @@ if __name__ == '__main__':
                 lat, p, u2, sd2 = find_sd(indir, exp[1])
                 sd_diff = sd1 - sd2
                 plot_sd(lat, p, u1, sd_diff, np.arange(-20, 22, 2), exp[0], 'RdBu_r')
+
+    elif level == 'd':
+        p = 100
+        plot_pdf(indir, exp, '_uz.nc', p, labels, colors, basis+extension)
+        SPVvexp2(indir, exp, '_uz.nc', p, labels, xlabel, basis+extension)

@@ -47,7 +47,7 @@ def jet_timeseries(u, lat, p):
 
     return jet_lats, jet_maxima
 
-def winds_errs(indir, exp, p, name):
+def winds_errs(indir, outdir, exp, p, name):
     """
     Uses jet_locator functions to find location and strength of the tropospheric jet (850 hPa) or SPV (10 hPa).
     """
@@ -66,12 +66,12 @@ def winds_errs(indir, exp, p, name):
         maxwinds.append(np.mean(max))
         maxlats_sd.append(np.std(lat)/np.sqrt(n))
         maxwinds_sd.append(np.std(max)/np.sqrt(n))
-    save_file(name, maxlats, 'maxlats'+str(p))
-    save_file(name, maxwinds, 'maxwinds'+str(p))
-    save_file(name, maxlats_sd, 'maxlats_sd'+str(p))
-    save_file(name, maxwinds_sd, 'maxwinds_sd'+str(p))
+    save_file(outdir, name, maxlats, 'maxlats'+str(p))
+    save_file(outdir, name, maxwinds, 'maxwinds'+str(p))
+    save_file(outdir, name, maxlats_sd, 'maxlats_sd'+str(p))
+    save_file(outdir, name, maxwinds_sd, 'maxwinds_sd'+str(p))
 
-def find_SPV(indir, exp):
+def find_SPV(indir, outdir, exp):
     """
     Steps through each dataset to find vortex strength over time.
     Uses 60N and 10hPa as per SSW definiton.
@@ -83,7 +83,7 @@ def find_SPV(indir, exp):
         SPV = xr.open_dataset(indir+exp[i]+'_uz.nc', decode_times=False).ucomp\
             .sel(pfull=10, method='nearest')\
             .sel(lat=60, method='nearest')
-        save_file(exp[i], SPV, 'SPV')
+        save_file(outdir, exp[i], SPV, 'SPV')
 
 def calc_error(nevents, nyears):
     """
@@ -155,6 +155,7 @@ def calc_Ro(indir, exp, p):
 if __name__ == '__main__': 
     #Set-up data to be read in
     indir = '/disco/share/rm811/processed/'
+    outdir = '../Files/'
     basis = 'PK_e0v4z13'
     exp = [basis+'_a4x75y180w5v30p400_q6m2y45']#,\
         #basis+'_w15a4p900f800g50_q6m2y45l800u200',\
@@ -173,13 +174,13 @@ if __name__ == '__main__':
    
 
     #p = 10
-    #winds_errs(indir, exp, p, basis+'_depth')
+    #winds_errs(indir, outdir, exp, p, basis+'_depth')
     #Ro = []
     #for i in range(len(exp)):
     #    Ro.append(calc_Ro(indir, exp[i], p))
     #print(Ro)
 
     #p = 850
-    #winds_errs(indir, exp, p, basis+'_depth')
+    #winds_errs(indir, outdir, exp, p, basis+'_depth')
     
-    find_SPV(indir, exp)
+    find_SPV(indir, outdir, exp)

@@ -6,6 +6,7 @@ import os
 from glob import glob
 import xarray as xr
 import numpy as np
+import scipy.stats as sps
 import matplotlib.pyplot as plt
 
 def add_phalf(exp_name, file_name):
@@ -103,8 +104,8 @@ def diff_variables(x, y, lat, p): #KEEP
 
     return uz_diff, Tz_diff
 
-def save_file(exp, var, input):
-    textfile = open('../Files/'+exp+'_'+input+'.txt', 'w')
+def save_file(dir, exp, var, input):
+    textfile = open(dir+exp+'_'+input+'.txt', 'w')
     if isinstance(var, list):
         l = var
     else:
@@ -113,16 +114,16 @@ def save_file(exp, var, input):
         textfile.write(str(j) + '\n')
     return textfile.close()
 
-def open_file(exp, input):
-    textfile = open('../Files/'+exp+'_'+input+'.txt', 'r')
+def open_file(dir, exp, input):
+    textfile = open(dir+exp+'_'+input, 'r')
     list = textfile.read().replace('\n', ' ').split(' ')
     list = list[:len(list)-1]
     textfile.close()
     list = np.asarray([float(j) for j in list])
     return list
 
-def fillnas(indir, exp):
-    dir = indir+exp
+def fillnas(dir, exp):
+    dir = dir+exp
     run_list = sorted(glob(dir+'/run*'))
     for i in range(len(run_list)):
         print(i)
@@ -130,3 +131,19 @@ def fillnas(indir, exp):
         ds = xr.open_dataset(file, decode_times=False)
         ds_new = ds.fillna(0)
         ds_new.to_netcdf(file, format="NETCDF3_CLASSIC")
+
+def pdf(x, plot=False):
+    x = np.sort(x)
+    ae, loce, scalee = sps.skewnorm.fit(x)
+    p = sps.skewnorm.pdf(x, ae, loce, scalee)
+    if plot==True:
+        s = np.std(x)
+        mean = np.mean(x)
+        f = (1 / (s * np.sqrt(2 * np.pi))) * np.exp(-0.5 * ((x - mean)/s)**2)
+        plt.hist(x, bins = 50, density=True)
+        plt.plot(x, f)
+        plt.plot(x, p)
+        plt.savefig('pdf.pdf')
+    mode = x[int(np.argmax(p))]
+    return x, p, mode
+
