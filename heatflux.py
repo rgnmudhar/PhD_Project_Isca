@@ -56,9 +56,7 @@ if __name__ == '__main__':
         basis+'_w15a4p400f800g50'+perturb,\
         basis+'_w15a4p300f800g50'+perturb]
     labels = ['no heat', '900', '800', '700', '600', '500', '400', '300']
-
     colors = ['#B30000', '#FF9900', '#FFCC00', '#00B300', '#0099CC', '#4D0099', '#CC0080', '#666666']
-    legend = ['no heat', '800 hPa']
     levels = [500, 100, 50, 10]
 
     vpTp = []
@@ -85,7 +83,7 @@ if __name__ == '__main__':
                 x_max = max(x)
             if min(x) < x_min:
                 x_min = min(x)
-            ax.plot(x, f, linewidth=1.25, color=colors[i], label=legend[i])
+            ax.plot(x, f, linewidth=1.25, color=colors[i], label=labels[i])
         ax.set_xlim(x_min, x_max)
         ax.set_xlabel(r"v'T' (m s$^{-1}$ K)", fontsize='x-large')
         ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')

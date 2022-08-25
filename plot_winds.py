@@ -55,21 +55,21 @@ def plot_vtx(dir, exp, labels, colors, style, cols, fig_name):
     
     return plt.close()
 
-def SPVvexp1(dir, exp, exp_names, xlabel, name):
+def SPVvexp1(dir, exp, input, p, exp_names, xlabel, name):
     """
     Plots the mean and standard deviation of SPV against (heating) experiment.
     """
-    print(datetime.now(), " - plotting SPV mean and variance vs experiment")
+    print(datetime.now(), " - plotting average and s.d. vs experiment at {:.0f} hPa".format(p))
     mean = []
     mode = []
     err = []
     sd = []
     for i in range(len(exp)):
-        SPV = open_file(dir, exp[i], 'SPV')
-        mean.append(np.mean(SPV))
-        err.append(np.std(SPV/np.sqrt(len(SPV))))
-        sd.append(np.std(SPV))
-        x, f, m = pdf(SPV)
+        x = xr.open_dataset(dir+exp[i]+input, decode_times=False).ucomp.sel(pfull=p, method='nearest').sel(lat=60, method='nearest')
+        mean.append(np.mean(x))
+        err.append(np.std(x/np.sqrt(len(x))))
+        sd.append(np.std(x))
+        x, f, m = pdf(x)
         mode.append(m)
     fig, ax = plt.subplots(figsize=(10,6))
     ax.errorbar(exp_names[1:], mean[1:], yerr=err[1:], fmt='o', linewidth=1.25, capsize=5, color='#B30000', linestyle=':', label='Mean')
@@ -77,16 +77,48 @@ def SPVvexp1(dir, exp, exp_names, xlabel, name):
     plt.legend(loc='upper center' , bbox_to_anchor=(0.5, 1), fancybox=False, shadow=False, ncol=2, fontsize='x-large')
     ax.set_xticks(exp_names)
     ax.set_xlabel(xlabel, fontsize='x-large')
-    ax.set_ylabel(r'10 hPa, 60 N Zonal Wind Average (ms$^{-1}$)', fontsize='x-large', color='#B30000')
+    ax.set_ylabel('{:.0f} hPa'.format(p)+r' 60 N Zonal Wind Average (m s$^{-1}$)', fontsize='x-large', color='#B30000')
     #ax.set_ylim(36,42)
     ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
     ax2 = ax.twinx()
     ax2.plot(exp_names[1:], sd[1:], marker='o', linewidth=1.25, color='#4D0099', linestyle=':', label='S.D.')
-    ax2.set_ylabel(r'10 hPa, 60 N Zonal Wind S.D. (ms$^{-1}$)', color='#4D0099', fontsize='x-large')
+    ax2.set_ylabel('{:.0f} hPa'.format(p)+r' 60 N Zonal Wind S.D. (m s$^{-1}$)', color='#4D0099', fontsize='x-large')
     #ax2.set_ylim(12,22)
     ax2.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
-    plt.savefig(name+'_SPVvheat.pdf', bbox_inches = 'tight')
+    plt.savefig(name+'_{:.0f}stats1.pdf'.format(p), bbox_inches = 'tight')
+    return plt.close()
 
+def SPVvexp2(dir, exp, input, p, exp_names, xlabel, name):
+    """
+    Plots the skew and kurtosis of zonal winds at p hPa against (heating) experiment.
+    """
+    print(datetime.now(), " - plotting skew and kurtosis vs experiment at {:.0f} hPa".format(p))
+    skew = []
+    kurt = []
+    for i in range(len(exp)):
+        x = xr.open_dataset(dir+exp[i]+input, decode_times=False).ucomp.sel(pfull=p, method='nearest').sel(lat=60, method='nearest')
+        skew.append(sps.skew(x))
+        kurt.append(sps.kurtosis(x))
+    fig, ax = plt.subplots(figsize=(10,6))
+    ax.plot(exp_names[1:], skew[1:], marker='o', linewidth=1.25, color='#B30000', linestyle=':')
+    ax.set_xticks(exp_names)
+    ax.set_xlabel(xlabel, fontsize='x-large')
+    ax.set_ylabel('{:.0f} hPa, 60 N Zonal Wind Skewness'.format(p), fontsize='x-large', color='#B30000')
+    ax.axhline(skew[0], color='#B30000', linewidth=0.5)
+    ax.text(-0.3, 0.1, 'Control', color='#B30000', fontsize='x-large')
+    ax.set_ylim(-0.5, 0.5)
+    ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
+    ax2 = ax.twinx()
+    ax2.plot(exp_names[1:], kurt[1:], marker='o', linewidth=1.25, color='#4D0099', linestyle=':')
+    ax2.set_ylabel('{:.0f} hPa, 60 N Zonal Wind Kurtosis'.format(p), color='#4D0099', fontsize='x-large')
+    ax2.axhline(kurt[0], color='#4D0099', linewidth=0.5)
+    ax2.text(2.75, -0.59, 'Control', color='#4D0099', fontsize='x-large')
+    ax2.set_xlim(-0.5, 3.5)
+    ax2.set_ylim(-0.9, 0.9)
+    ax2.fill_between(range(-1,8), -1, 0, facecolor ='gainsboro', alpha = 0.4)
+    ax2.text(1, -0.75, 'Negative Skew, Lighter Tails', color='#666666', fontsize='x-large')
+    ax2.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
+    plt.savefig(name+'_{:.0f}stats2.pdf'.format(p), bbox_inches = 'tight')
     return plt.close()
 
 def windsvexp(dir, labels, xlabel, p, name):
@@ -219,47 +251,13 @@ def plot_sd(lat, p, u, sd, lvls, exp, colors):
     plt.savefig(exp+'_sd.pdf', bbox_inches = 'tight')
     return plt.close()
 
-def SPVvexp2(dir, exp, input, p, exp_names, xlabel, name):
-    """
-    Plots the skew and kurtosis of zonal winds at p hPa against (heating) experiment.
-    """
-    print(datetime.now(), " - plotting skew and kurtosis vs experiment at {:.0f} hPa".format(p))
-    skew = []
-    kurt = []
-    for i in range(len(exp)):
-        x = xr.open_dataset(dir+exp[i]+input, decode_times=False).ucomp.sel(pfull=p, method='nearest').sel(lat=60, method='nearest')
-        skew.append(sps.skew(x))
-        kurt.append(sps.kurtosis(x))
-    fig, ax = plt.subplots(figsize=(10,6))
-    ax.plot(exp_names[1:], skew[1:], marker='o', linewidth=1.25, color='#B30000', linestyle=':')
-    ax.set_xticks(exp_names)
-    ax.set_xlabel(xlabel, fontsize='x-large')
-    ax.set_ylabel('{:.0f} hPa, 60 N Zonal Wind Skewness'.format(p), fontsize='x-large', color='#B30000')
-    ax.axhline(skew[0], color='#B30000', linewidth=0.5)
-    ax.text(-0.3, 0.1, 'Control', color='#B30000', fontsize='x-large')
-    ax.set_ylim(-0.5, 0.5)
-    ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
-    ax2 = ax.twinx()
-    ax2.plot(exp_names[1:], kurt[1:], marker='o', linewidth=1.25, color='#4D0099', linestyle=':')
-    ax2.set_ylabel('{:.0f} hPa, 60 N Zonal Wind Kurtosis'.format(p), color='#4D0099', fontsize='x-large')
-    ax2.axhline(kurt[0], color='#4D0099', linewidth=0.5)
-    ax2.text(5.75, -0.59, 'Control', color='#4D0099', fontsize='x-large')
-    ax2.set_xlim(-0.5, 6.5)
-    ax2.set_ylim(-0.9, 0.9)
-    ax2.fill_between(range(-1,8), -1, 0, facecolor ='gainsboro', alpha = 0.4)
-    ax2.text(1.5, -0.25, 'Negative Skew, Lighter Tails', color='#666666', fontsize='x-large')
-    ax2.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
-    plt.savefig(name+'_{:.0f}stats.pdf'.format(p), bbox_inches = 'tight')
-    return plt.close()
-
 if __name__ == '__main__': 
     #Set-up data to be read in
     indir = '/disco/share/rm811/processed/'
     outdir = '../Files/'
     basis = 'PK_e0v4z13'
     perturb = '_q6m2y45l800u200'
-    exp = [basis+'_a4x75y180w5v30p800_q6m2y45', basis+perturb]
-    extension = 0 #'_loc'
+    extension = '_strengthp800'
     if extension == '_depth':
         exp = [basis+perturb,\
         basis+'_w15a4p900f800g50'+perturb,\
@@ -296,7 +294,6 @@ if __name__ == '__main__':
             basis+'_a4x75y0w5v30p800'+perturb,\
             basis+'_a4x75y90w5v30p800'+perturb,\
             basis+'_a4x75y180w5v30p800'+perturb,\
-            basis+'_a4x75y180w5v30p400'+perturb,\
             basis+'_a4x75y270w5v30p800'+perturb]
         labels = [r'no heat', '0', '90', '180', '270']
         xlabel = r'Longitude of Heating ($\degree$E)'
@@ -322,10 +319,9 @@ if __name__ == '__main__':
         #User choice for plotting - type
         plot_type = input('Plot a) SPV @ 10hPa, 60N over time, \
             b) 10 hPa max. wind and lat vs experiment, \
-            c) SPV mean and s.d. vs experiment, or \
+            c) distribution and stats, or \
             d) SSW frequency vs experiment, \
-            e) distribution and stats, or \
-            f) s.d. as a function of lat and p?')
+            e) s.d. as a function of lat and p?')
         if plot_type == 'a':
             exp = exp[:2]
             labels = ['zonally symmetric', 'off-pole']
@@ -336,14 +332,13 @@ if __name__ == '__main__':
         elif plot_type == 'b':
             windsvexp(outdir, labels, xlabel, str(p), basis+extension)
         elif plot_type == 'c':
-            SPVvexp1(outdir exp, labels, xlabel, basis+extension)
+            plot_pdf(indir, exp, '_uz.nc', p, labels, colors, basis+extension)
+            SPVvexp1(indir, exp, '_uz.nc', p, labels, xlabel, basis+extension)
+            SPVvexp2(indir, exp, '_uz.nc', p, labels, xlabel, basis+extension)
         elif plot_type == 'd':
             SSWsvexp(outdir, exp, labels, xlabel, basis+extension)
             #SSWsvexp_multi(outdir, exp, labels, xlabel, legend, ['#B30000', '#00B300', '#0099CC', 'k'], basis+extension)
         elif plot_type == 'e':
-            plot_pdf(indir, exp, '_uz.nc', p, labels, colors, basis+extension)
-            SPVvexp2(indir, exp, '_uz.nc', p, labels, xlabel, basis+extension)
-        elif plot_type == 'f':
             plot_what = input('Plot a) climatology or b) difference?)')
             if plot_what == 'a':
                 for i in range(len(exp)):
@@ -359,4 +354,5 @@ if __name__ == '__main__':
     elif level == 'd':
         p = 100
         plot_pdf(indir, exp, '_uz.nc', p, labels, colors, basis+extension)
+        SPVvexp1(indir, exp, '_uz.nc', p, labels, xlabel, basis+extension)
         SPVvexp2(indir, exp, '_uz.nc', p, labels, xlabel, basis+extension)
