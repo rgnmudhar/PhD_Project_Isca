@@ -115,7 +115,7 @@ def save_file(dir, exp, var, input):
     return textfile.close()
 
 def open_file(dir, exp, input):
-    textfile = open(dir+exp+'_'+input, 'r')
+    textfile = open(dir+exp+'_'+input+'.txt', 'r')
     list = textfile.read().replace('\n', ' ').split(' ')
     list = list[:len(list)-1]
     textfile.close()

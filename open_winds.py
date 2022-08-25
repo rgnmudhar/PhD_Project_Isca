@@ -114,18 +114,18 @@ def find_SSW(SPV):
     SSWs_h_err = calc_error(count, days)*100
     return SSWs_h, SSWs_h_err
 
-def find_SSWs(exp):
+def find_SSWs(dir, exp):
     h_list = []
     h_err_list = []
     for i in range(len(exp)):
-        SPV = open_file(exp[i], 'SPV')
+        SPV = open_file(dir, exp[i], 'SPV')
         h, h_err = find_SSW(SPV)
         h_list.append(h)
         h_err_list.append(h_err)
     return h_list, h_err_list
 
-def SSWsperrun(exp):
-    SPV = open_file(exp, 'SPV')
+def SSWsperrun(dir, exp):
+    SPV = open_file(dir, exp, 'SPV')
     years = np.arange(5, int(len(SPV)/360)+5, 5)
     SSWs = []
     errors = []

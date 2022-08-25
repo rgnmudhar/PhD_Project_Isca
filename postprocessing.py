@@ -22,8 +22,7 @@ def take_zonal_means(indir, outdir):
     os.chdir(outdir)
     for i in range(len(exp)):
         print(datetime.now(), ' - ' + exp[i] + ' zonal means')
-        nco.ncwa(input = exp[i]+'_u.nc', output = exp[i]+'_uz.nc', options = ['-a lon'])
-        nco.ncwa(input = exp[i]+'_v.nc', output = exp[i]+'_vz.nc', options = ['-a lon'])
+        nco.ncwa(input = exp[i]+'_T.nc', output = exp[i]+'_Tz.nc', options = ['-a lon'])
 
 def calc_w(dir, exp):
     print(datetime.now(), ' - ', exp)
@@ -114,6 +113,7 @@ def postprocess(exp):
     #print(datetime.now(), ' - zonal means')
     nco.ncwa(input = exp+'_u.nc', output = exp+'_uz.nc', options = ['-a lon'])
     nco.ncwa(input = exp+'_v.nc', output = exp+'_vz.nc', options = ['-a lon'])
+    nco.ncwa(input = exp+'_T.nc', output = exp+'_Tz.nc', options = ['-a lon'])
 
     # remove file with all included
     # move created files to folder for processed data
@@ -167,15 +167,17 @@ exp = ['PK_e0v4z13_q6m2y45l800u200',\
 #for i in range(len(exp)):
 #    postprocess(exp[i])
 
-print(datetime.now(), ' - calculating constants')
-ds = xr.open_dataset('../atmos_daily_T42_p40.nc', decode_times=False)
-deg2rad = np.pi / 180
-coslat = np.cos(np.deg2rad(ds.lat))
-acoslat = 6.371e6 * coslat
-print(datetime.now(), ' - taking pressure differential')
-p = ds.phalf
-dp = np.diff(p)
-#p = ds.pfull
-#dp = np.gradient(p)
-for i in range(len(exp)):
-    calc_w(outdir, exp[i])
+take_zonal_means(indir, outdir)
+
+#print(datetime.now(), ' - calculating constants')
+#ds = xr.open_dataset('../atmos_daily_T42_p40.nc', decode_times=False)
+#deg2rad = np.pi / 180
+#coslat = np.cos(np.deg2rad(ds.lat))
+#acoslat = 6.371e6 * coslat
+#print(datetime.now(), ' - taking pressure differential')
+#p = ds.phalf
+#dp = np.diff(p)
+##p = ds.pfull
+##dp = np.gradient(p)
+#for i in range(len(exp)):
+#    calc_w(outdir, exp[i])
