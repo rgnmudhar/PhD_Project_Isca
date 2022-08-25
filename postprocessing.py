@@ -131,7 +131,6 @@ def postprocess(exp):
         except OSError as e:
             print(e.strerror, ':', f)
 
-
 exp = ['PK_e0v4z13_q6m2y45l800u200',\
     'PK_e0v4z13_w15a4p900f800g50_q6m2y45l800u200',\
     'PK_e0v4z13_w15a4p700f800g50_q6m2y45l800u200',\
@@ -156,7 +155,6 @@ exp = ['PK_e0v4z13_q6m2y45l800u200',\
     'PK_e0v4z13_w15a6p600f800g50_q6m2y45l800u200',\
     'PK_e0v4z13_w15a8p600f800g50_q6m2y45l800u200',\
     'PK_e0v4z13_w15a4p800f800g50',\
-    'PK_e0v4z13_a4x75y180w5v30p800',\
     'PK_e0v4z13_a4x75y180w5v30p400_q6m2y45',\
     'PK_e0v4z13_a4x75y180w5v30p800_q6m2y45',\
     'PK_e0v4z13_a4x75y0w5v30p800_q6m2y45',\
