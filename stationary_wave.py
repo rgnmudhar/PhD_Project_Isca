@@ -2,6 +2,7 @@ import xarray as xr
 import numpy as np
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
+from aostools import climate
 from datetime import datetime
 
 def anomaly(a, az):

@@ -181,8 +181,8 @@ if __name__ == '__main__':
     #Set-up data to be read in
     indir = '/disco/share/rm811/processed/'
     basis = 'PK_e0v4z13'
-    filename = '_a4x75y180w5v30p400_q6m2y45'
-    exp = [basis + filename]
+    perturb = '_q6m2y45l800u200'
+    exp = [basis + '_w15a4p900f800g50' + perturb, basis + perturb]
 
     #Read in data to plot polar heat contours
     file = '/disco/share/rm811/isca_data/' + exp[0] + '/run0100/atmos_daily_interp.nc'
