@@ -150,7 +150,7 @@ def plot_diff(uz, u, v, w, t, exp_name, heat):
     ep2_diff = ep2a - ep2b
 
     #Filled contour plot of the difference in time-mean EP flux divergence
-    difflvls = np.arange(-2,2.2,0.2)
+    difflvls = np.arange(-5,5.5,0.5)
     ulvls = np.arange(-200, 200, 10)
     fig, ax = plt.subplots(figsize=(6,6), constrained_layout=True)
     print(datetime.now(), " - plot uz")
@@ -194,7 +194,7 @@ if __name__ == '__main__':
     print(datetime.now(), " - opening files")
     u = xr.open_dataset(indir+exp[0]+'_u.nc', decode_times=False).ucomp
     v = xr.open_dataset(indir+exp[0]+'_v.nc', decode_times=False).vcomp
-    w = xr.open_dataset(indir+exp[0]+'_w.nc', decode_times=False).omega
+    w = xr.open_dataset(indir+exp[0]+'_w.nc', decode_times=False).omega/100 # Pa --> hPa
     T = xr.open_dataset(indir+exp[0]+'_T.nc', decode_times=False).temp
     utz = xr.open_dataset(indir+exp[0]+'_utz.nc', decode_times=False).ucomp[0]
     
@@ -203,7 +203,7 @@ if __name__ == '__main__':
     elif plot_type == 'b':
         u = [u, xr.open_dataset(indir+exp[1]+'_u.nc', decode_times=False).ucomp]
         v = [v, xr.open_dataset(indir+exp[1]+'_v.nc', decode_times=False).vcomp]
-        w = [w, xr.open_dataset(indir+exp[1]+'_w.nc', decode_times=False).omega]
+        w = [w, xr.open_dataset(indir+exp[1]+'_w.nc', decode_times=False).omega/100] # Pa --> hPa
         T = [T, xr.open_dataset(indir+exp[1]+'_T.nc', decode_times=False).temp]
         plot_diff(utz, u, v, w, T, exp[0], heat)
 
