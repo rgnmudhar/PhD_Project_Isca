@@ -157,30 +157,27 @@ if __name__ == '__main__':
     indir = '/disco/share/rm811/processed/'
     outdir = '../Files/'
     basis = 'PK_e0v4z13'
-    exp = [basis+'_a4x75y180w5v30p400_q6m2y45']#,\
-        #basis+'_w15a4p900f800g50_q6m2y45l800u200',\
-        #basis+'_w15a4p800f800g50_q6m2y45l800u200',\
-        #basis+'_w15a4p600f800g50_q6m2y45l800u200',\
-        #basis+'_w15a4p500f800g50_q6m2y45l800u200',\
-        #basis+'_w15a4p700f800g50_q6m2y45l800u200',\
-        #basis+'_w15a4p400f800g50_q6m2y45l800u200',\
-        #basis+'_w15a4p300f800g50_q6m2y45l800u200']
-         
-        #[basis+'_q6m2y45l800u200',\
-        #basis+'_w15a2p800f800g50_q6m2y45l800u200',\
-        #basis+'_w15a4p800f800g50_q6m2y45l800u200',\
-        #basis+'_w15a6p800f800g50_q6m2y45l800u200',\
-        #basis+'_w15a8p800f800g50_q6m2y45l800u200']
-   
-
-    #p = 10
-    #winds_errs(indir, outdir, exp, p, basis+'_depth')
-    #Ro = []
-    #for i in range(len(exp)):
-    #    Ro.append(calc_Ro(indir, exp[i], p))
-    #print(Ro)
-
-    #p = 850
-    #winds_errs(indir, outdir, exp, p, basis+'_depth')
+    var_type = input("Plot a) depth, b) width, c) location, or d) strength experiments?")
+    if var_type == 'a':
+        extension = '_depth'
+    elif var_type == 'b':
+        extension = '_width'
+    elif var_type == 'c':
+        extension = '_loc'
+    elif var_type == 'd':
+        extension = '_strength'
+    exp = return_exp(extension)[0]
+    #exp = [basis+'_a4x75y180w5v30p400_q6m2y45']
     
-    find_SPV(indir, outdir, exp)
+    #Ro = []
+    for i in range(len(exp)):
+        find_SPV(indir, outdir, exp[i])
+
+        #p = 10
+        #p = 850
+        #winds_errs(indir, outdir, exp[i], p, basis+extension)
+        #Ro.append(calc_Ro(indir, exp[i], p))
+    
+    #print(Ro)
+    
+    
