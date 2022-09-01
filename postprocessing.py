@@ -2,19 +2,11 @@ from nco import Nco
 from glob import glob
 import xarray as xr
 import numpy as np
+import matplotlib.pyplot as plt
 import os
 import sys
+from shared_functions import *
 from datetime import datetime
-
-indir = '/disco/share/rm811/isca_data/'
-outdir = '/disco/share/rm811/processed/'
-plevdir = '/home/links/rm811/Isca/postprocessing/plevel_interpolation/scripts'
-analysisdir = '/home/links/rm811/scratch/PhD_Project_Isca'
-
-nco = Nco(debug=True)
-
-#sys.path.append(os.path.abspath(plevdir))
-#import run_plevel 
 
 def take_zonal_means(indir, outdir):
     os.chdir(indir)
@@ -51,7 +43,45 @@ def calc_w(dir, exp):
                     "time": {'_FillValue': None}, "pfull": {'_FillValue': None},
                     "lat": {'_FillValue': None}, "lon": {'_FillValue': None}}
                 )
-    
+
+def calc_TKE(u,v):
+    upv = u*u + v*v
+    return 0.5 * upv
+
+def find_TKE(dir, exp):
+    """
+    This attempts to use TKE for determining spin-up.
+    For every 'time'  (i.e. atmos_monthly file) take the zonal mean of u and v along longitude.
+    Then at each (lat,p) find 0.5*(u^2 + v^2).
+    Then take a weighted average along lat, and finally a mean along pressure.
+    Based on script by Penelope Maher and discussions with William Seviour.
+    """
+    KE = []
+    print("finding KE")
+    uz = xr.open_dataset(dir+exp+'_uz.nc', decode_times=False).ucomp[0]
+    vz = xr.open_dataset(dir+exp+'_vz.nc', decode_times=False).vcomp[0]
+    coslat = np.cos(np.deg2rad(uz.coords['lat'].values)).clip(0., 1.) # need to weight due to different box sizes over grid
+    lat_wgts = np.sqrt(coslat)
+    for j in range(len(uz)):
+        TKE_box = np.empty_like(uz[j])
+        for q in range(len(uz.coords['pfull'].data)):
+            for k in range(len(uz.coords['lat'].data)):
+                TKE_box[q,k] = calc_TKE(uz[j][q,k], vz[j][q,k])
+        TKE_box = np.average(TKE_box, axis=1, weights=lat_wgts)
+        TKE_avg = np.nanmean(TKE_box) # should I weight pressures too? How?
+        KE.append(TKE_avg)
+    save_file(exp, KE, 'KE')
+
+    print("plotting")
+    KE = open_file(exp, 'KE')
+    fig, ax = plt.subplots(figsize=(10,6))
+    ax.plot(len(KE), KE, color='k')
+    ax.set_xlim(1,len(KE))
+    ax.set_xlabel("Days Simulated")       
+    ax.set_ylabel('total KE', color='k')
+    plt.savefig(exp+'_spinup.pdf', bbox_inches = 'tight')
+    return plt.close()
+
 def postprocess(exp):
     print(datetime.now(), ' - ', exp)
     # run plevel interpolation
@@ -131,7 +161,18 @@ def postprocess(exp):
         except OSError as e:
             print(e.strerror, ':', f)
 
-exp = ['PK_e0v4z13_q6m2y45l800u200',\
+if __name__ == '__main__': 
+    indir = '/disco/share/rm811/isca_data/'
+    outdir = '/disco/share/rm811/processed/'
+    plevdir = '/home/links/rm811/Isca/postprocessing/plevel_interpolation/scripts'
+    analysisdir = '/home/links/rm811/scratch/PhD_Project_Isca'
+
+    nco = Nco(debug=True)
+
+    #sys.path.append(os.path.abspath(plevdir))
+    #import run_plevel 
+
+    exp = ['PK_e0v4z13_q6m2y45l800u200',\
     'PK_e0v4z13_w15a4p900f800g50_q6m2y45l800u200',\
     'PK_e0v4z13_w15a4p700f800g50_q6m2y45l800u200',\
     'PK_e0v4z13_w15a4p500f800g50_q6m2y45l800u200',\
@@ -161,23 +202,25 @@ exp = ['PK_e0v4z13_q6m2y45l800u200',\
     'PK_e0v4z13_a4x75y270w5v30p800_q6m2y45',\
     'PK_e0v4z13_a4x75y90w5v30p800_q6m2y45',\
     'PK_e0v4z13']
+    
+    #take_zonal_means(indir, outdir)
 
-#take_zonal_means(indir, outdir)
+    #print(datetime.now(), ' - calculating constants')
+    #ds = xr.open_dataset('../atmos_daily_T42_p40.nc', decode_times=False)
+    #deg2rad = np.pi / 180
+    #coslat = np.cos(np.deg2rad(ds.lat))
+    #acoslat = 6.371e6 * coslat
+    #print(datetime.now(), ' - taking pressure differential')
+    #p = ds.phalf
+    #dp = np.diff(p)
+    ##p = ds.pfull
+    ##dp = np.gradient(p)
+    
+    for i in range(len(exp)):
+        postprocess(exp[i])
+        #find_TKE(outdir, exp[i])
+        #calc_w(outdir, exp[i])
 
-#for i in range(len(exp)):
-#    postprocess(exp[i])
+    
 
-take_zonal_means(indir, outdir)
-
-#print(datetime.now(), ' - calculating constants')
-#ds = xr.open_dataset('../atmos_daily_T42_p40.nc', decode_times=False)
-#deg2rad = np.pi / 180
-#coslat = np.cos(np.deg2rad(ds.lat))
-#acoslat = 6.371e6 * coslat
-#print(datetime.now(), ' - taking pressure differential')
-#p = ds.phalf
-#dp = np.diff(p)
-##p = ds.pfull
-##dp = np.gradient(p)
-#for i in range(len(exp)):
-#    calc_w(outdir, exp[i])
+    
