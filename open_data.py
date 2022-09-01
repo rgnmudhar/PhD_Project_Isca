@@ -3,17 +3,13 @@
     Also plots differences between 2 datasets - important that they are of the same resolution (e.g. both T21 or both T42)
 """
 
-from glob import glob
-import imageio
-import os
 import xarray as xr
 import numpy as np
 import matplotlib.pyplot as plt
-from open_winds import *
 from shared_functions import *
 from datetime import datetime
 
-def plot(u, T, lvls, heat, lat, p, exp_name, vertical):
+def plot_combo(u, T, lvls, heat, lat, p, exp_name, vertical):
     print(datetime.now(), " - plotting")
     # Plots time and zonal-mean Zonal Wind Speed and Temperature
     fig, ax = plt.subplots(figsize=(6,6))
@@ -96,16 +92,20 @@ def plot_diff(vars, units, lvls, heat, lat, p, exp_name, vertical):
 if __name__ == '__main__': 
     #Set-up data to be read in
     indir = '/disco/share/rm811/processed/'
-    basis = 'PK_e0v4z13'
-    perturb = '_q6m2y45l800u200'
-    ctrl = basis+perturb
-    # make ctrl the first experiment for plotting diffs
-    exp = [ctrl,\
-        basis+'_w15a4p800f800g50'+perturb]
+    var_type = input("Plot a) depth, b) width, c) location, or d) strength experiments?")
+        if var_type == 'a':
+            extension = '_depth'
+        elif var_type == 'b':
+            extension = '_width'
+        elif var_type == 'c':
+            extension = '_loc'
+        elif var_type == 'd':
+            extension = '_strength'
+    exp, labels, xlabel = return_exp(extension)
     upper_p = 1 # hPa
     lvls = [np.arange(160, 330, 10), np.arange(-200, 205, 5)]
 
-    plot_type = input("Plot a) single experiments or b) difference between 2 experiments?")
+    plot_type = input("Plot a) individual experiments or b) difference vs. control?")
     height_type = input("Plot vs. a) log pressure or b) pseudo-altitude?")
 
     for i in range(len(exp)):
@@ -126,7 +126,7 @@ if __name__ == '__main__':
         #MSF_xr.attrs['units']=r'kgs$^{-1}$'
 
         if plot_type =='a':
-            plot(uz, Tz, lvls, heat, lat, p, exp[i], height_type)
+            plot_combo(uz, Tz, lvls, heat, lat, p, exp[i], height_type)
         elif plot_type == 'b':
             if i == 0:
                 print("skipping control")
@@ -135,4 +135,3 @@ if __name__ == '__main__':
                 T = [Tz, xr.open_dataset(indir+exp[0]+'_Ttz.nc', decode_times=False).temp[0]]
                 plot_diff([T, u], ['K', r'ms$^{-1}$'], [np.arange(160, 330, 10), np.arange(-200, 210, 10)],\
                     heat, lat, p, exp[i], height_type)
-
