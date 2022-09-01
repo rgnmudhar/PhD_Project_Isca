@@ -57,7 +57,7 @@ def altitude(p): #KEEP
     """
     Finds altitude from pressure using z = -H*log10(p/p0).
     """
-    H = 8 #scale height km
+    H = 7 #scale height km
     p0 = 1000 #surface pressure hPa    
       
     z = np.empty_like(p)
@@ -94,15 +94,14 @@ def difference(a1, a2, coord1, coord2, dim1, dim2, unit): #KEEP
     
     return diff_xr
 
-def diff_variables(x, y, lat, p): #KEEP
+def diff_variables(x, lat, p, units): #KEEP
     """
     Find difference between datasets.
     Start with zonal wind and temperature.
     """
-    uz_diff = difference(x[0], x[1], p, lat, 'lat', 'pfull', r'ms$^{-1}$')
-    Tz_diff = difference(y[0], y[1], p, lat, 'lat', 'pfull', 'K')
+    x_diff = difference(x[0], x[1], p, lat, 'lat', 'pfull', units)
 
-    return uz_diff, Tz_diff
+    return x_diff
 
 def save_file(dir, exp, var, input):
     textfile = open(dir+exp+'_'+input+'.txt', 'w')
