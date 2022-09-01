@@ -8,6 +8,66 @@ import xarray as xr
 import numpy as np
 import scipy.stats as sps
 import matplotlib.pyplot as plt
+from EPflux import *
+from datetime import datetime
+
+def return_exp(extension):
+    basis = 'PK_e0v4z13'
+    perturb = '_q6m2y45l800u200'
+    if extension == '_depth':
+        exp = [basis+perturb,\
+        basis+'_w15a4p900f800g50'+perturb,\
+        basis+'_w15a4p800f800g50'+perturb,\
+        basis+'_w15a4p700f800g50'+perturb,\
+        basis+'_w15a4p600f800g50'+perturb,\
+        basis+'_w15a4p500f800g50'+perturb,\
+        basis+'_w15a4p400f800g50'+perturb,\
+        basis+'_w15a4p300f800g50'+perturb]
+        labels = ['no heat', '900', '800', '700', '600', '500', '400', '300']
+        xlabel = 'Depth of Heating (hPa)'
+    elif extension == '_width':
+        exp = [basis+perturb,\
+        basis+'_w10a4p800f800g50'+perturb,\
+        basis+'_w15a4p800f800g50'+perturb,\
+        basis+'_w20a4p800f800g50'+perturb,\
+        basis+'_w25a4p800f800g50'+perturb,\
+        basis+'_w30a4p800f800g50'+perturb,\
+        basis+'_w35a4p800f800g50'+perturb,\
+        basis+'_w40a4p800f800g50'+perturb]
+        labels = ['no heat', '10', '15', '20', '25', '30', '35', '40']
+        xlabel = r'Extent of Heating ($\degree$)'
+    elif extension == '_strength':
+        level = input("For depth a) 800, b) 600, or c) 400 hPa?")
+        if level == 'a':
+            exp = [basis+perturb,\
+            basis+'_w15a2p800f800g50'+perturb,\
+            basis+'_w15a4p800f800g50'+perturb,\
+            basis+'_w15a6p800f800g50'+perturb,\
+            basis+'_w15a8p800f800g50'+perturb]
+        elif level == 'b':
+            exp = [basis+perturb,\
+            basis+'_w15a2p600f800g50'+perturb,\
+            basis+'_w15a4p600f800g50'+perturb,\
+            basis+'_w15a6p600f800g50'+perturb,\
+            basis+'_w15a8p600f800g50'+perturb]
+        elif level == 'c':
+            exp = [basis+perturb,\
+            basis+'_w15a2p400f800g50'+perturb,\
+            basis+'_w15a4p400f800g50'+perturb,\
+            basis+'_w15a6p400f800g50'+perturb,\
+            basis+'_w15a8p400f800g50'+perturb]
+        labels = ['no heat', '2', '4', '6', '8'] #['no heat', '800', '600', '400']
+        xlabel = r'Strength of Heating (K day$^{-1}$)'
+    elif extension == '_loc':   
+        perturb = '_q6m2y45'
+        exp = [basis+perturb+'l800u200',\
+            basis+'_a4x75y0w5v30p800'+perturb,\
+            basis+'_a4x75y90w5v30p800'+perturb,\
+            basis+'_a4x75y180w5v30p800'+perturb,\
+            basis+'_a4x75y270w5v30p800'+perturb]
+        labels = [r'no heat', '0', '90', '180', '270']
+        xlabel = r'Longitude of Heating ($\degree$E)'
+    return exp, labels, xlabel
 
 def add_phalf(exp_name, file_name):
     """
@@ -146,3 +206,87 @@ def pdf(x, plot=False):
     mode = x[int(np.argmax(p))]
     return x, p, mode
 
+def plot_pdf(var, dir, exp, input, p, labels, xlabel, colors, name):
+    mode = []
+    mean = []
+    sd = []
+    err = []
+    skew = []
+    kurt = []
+    for j in range(len(p)):
+        if type(p) == int:
+            p1 = p
+        elif type(p) == list:
+            p1 = p[j]
+        print(datetime.now(), " - plotting PDFs at {:.0f} hPa".format(p1))
+        x_min = x_max = 0
+        sub_mode = []
+        sub_mean = []
+        sub_sd = []
+        sub_err = []
+        sub_skew = []
+        sub_kurt = []
+        fig, ax = plt.subplots(figsize=(6,6))
+        for i in range(len(exp)):
+            if var == 'u':
+                x = xr.open_dataset(dir+exp[i]+input, decode_times=False).ucomp.sel(pfull=p1, method='nearest').sel(lat=60, method='nearest')
+            elif var == 'vT':
+                x = vT_level(exp[i], p1)
+            x_sort, f, m = pdf(x)
+            sub_mode.append(m)
+            sub_sd.append(np.std(x))
+            sub_mean.append(np.mean(x))
+            sub_err.append(np.std(x/np.sqrt(len(x))))
+            sub_skew.append(sps.skew(x))
+            sub_kurt.append(sps.kurtosis(x))
+            if max(x) > x_max:
+                x_max = max(x)
+            if min(x) < x_min:
+                x_min = min(x)
+                print(datetime.now(), ' - plotting')
+            ax.plot(x_sort, f, linewidth=1.25, color=colors[i], label=labels[i])
+        mode.append(sub_mode)
+        sd.append(sub_sd)
+        mean.append(sub_mean)
+        err.append(sub_err)
+        skew.append(sub_skew)
+        kurt.append(sub_kurt)
+        ax.set_xlim(x_min, x_max)
+        ax.set_xlabel(xlabel, fontsize='x-large')
+        ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
+        plt.legend(loc='right',fancybox=False, shadow=True, ncol=1, fontsize='large')
+        plt.savefig(name+'_{:.0f}pdf.pdf'.format(p1), bbox_inches = 'tight')
+        plt.close()
+    return mean, mode, sd, err, skew, kurt
+
+def find_sd(x):
+    print(datetime.now(), " - opening files")
+    lat = x.coords['lat']
+    p = x.coords['pfull']
+    sd = np.empty_like(x[0])
+    print(datetime.now(), " - finding zonal mean s.d. over latitude-pressure")
+    for i in range(len(p)):
+        for j in range(len(lat)):
+            sd[i,j] = np.std(x[:,i,j])
+    return lat, p, sd
+
+def NH_zonal(lat, p, x, y, xlvls, ylvls, colors, lab, name):
+    print(datetime.now(), " - plotting")
+    fig, ax = plt.subplots(figsize=(6,6))
+    cs1 = ax.contourf(lat, p, x, levels=xlvls, cmap=colors)
+    ax.contourf(cs1, colors='none')
+    cs2 = ax.contour(lat, p, y[0], colors='k', levels=ylvls, linewidths=1, alpha=0.4)
+    cs2.collections[int(len(ylvls)/2)].set_linewidth(1.5)
+    cb = plt.colorbar(cs1)
+    cb.set_label(label=lab, size='x-large')
+    cb.ax.tick_params(labelsize='x-large')
+    #plt.scatter(lat.sel(lat=60, method='nearest'), p.sel(pfull=10, method='nearest'), marker='x', color='#B30000')
+    plt.xlabel(r'Latitude ($\degree$N)', fontsize='x-large')
+    plt.xlim(0,90)
+    plt.xticks([10, 30, 50, 70, 90], ['10', '30', '50', '70', '90'])
+    plt.ylabel('Pressure (hPa)', fontsize='x-large')
+    plt.ylim(max(p), 1) #goes to ~1hPa
+    plt.yscale('log')
+    plt.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
+    plt.savefig(name, bbox_inches = 'tight')
+    return plt.close()
