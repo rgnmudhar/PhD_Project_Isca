@@ -8,7 +8,7 @@ import xarray as xr
 import numpy as np
 import scipy.stats as sps
 import matplotlib.pyplot as plt
-from EPflux import *
+from fluxes import *
 from datetime import datetime
 
 def return_exp(extension):
