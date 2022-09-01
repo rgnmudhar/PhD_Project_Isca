@@ -14,6 +14,10 @@ from datetime import datetime
 def return_exp(extension):
     basis = 'PK_e0v4z13'
     perturb = '_q6m2y45l800u200'
+    if extension == 'ctrl':
+        exp = [basis+perturb]
+        labels = ['ctrl']
+        xlabel = 'ctrl'
     if extension == '_depth':
         exp = [basis+perturb,\
         basis+'_w15a4p900f800g50'+perturb,\
@@ -206,7 +210,7 @@ def pdf(x, plot=False):
     mode = x[int(np.argmax(p))]
     return x, p, mode
 
-def plot_pdf(var, dir, exp, input, p, labels, xlabel, colors, name):
+def plot_pdf(var, dir, exp, input, vT, p, labels, xlabel, colors, name):
     mode = []
     mean = []
     sd = []
@@ -231,7 +235,7 @@ def plot_pdf(var, dir, exp, input, p, labels, xlabel, colors, name):
             if var == 'u':
                 x = xr.open_dataset(dir+exp[i]+input, decode_times=False).ucomp.sel(pfull=p1, method='nearest').sel(lat=60, method='nearest')
             elif var == 'vT':
-                x = vT_level(exp[i], p1)
+                x = vT_level(vT[i], p1)
             x_sort, f, m = pdf(x)
             sub_mode.append(m)
             sub_sd.append(np.std(x))
@@ -275,8 +279,8 @@ def NH_zonal(lat, p, x, y, xlvls, ylvls, colors, lab, name):
     fig, ax = plt.subplots(figsize=(6,6))
     cs1 = ax.contourf(lat, p, x, levels=xlvls, cmap=colors)
     ax.contourf(cs1, colors='none')
-    cs2 = ax.contour(lat, p, y[0], colors='k', levels=ylvls, linewidths=1, alpha=0.4)
-    cs2.collections[int(len(ylvls)/2)].set_linewidth(1.5)
+    cs2 = ax.contour(lat, p, y, colors='k', levels=ylvls, linewidths=0.5, alpha=0.2)
+    cs2.collections[int(len(ylvls)/2)].set_linewidth(1)
     cb = plt.colorbar(cs1)
     cb.set_label(label=lab, size='x-large')
     cb.ax.tick_params(labelsize='x-large')

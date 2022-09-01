@@ -65,8 +65,8 @@ def plot_ep(uz, u, v, w, t, exp_name, heat, type, vertical):
     plt.savefig(exp_name+'_EPflux.pdf', bbox_inches = 'tight')
     return plt.close()
 
-def vT_full(exp):
-    print(datetime.now(), " - opening files")
+def vT_calc(exp):
+    print(datetime.now(), " - opening files for ", exp)
     v = xr.open_dataset(indir+exp+'_v.nc', decode_times=False).vcomp
     T = xr.open_dataset(indir+exp+'_T.nc', decode_times=False).temp
     vz = xr.open_dataset(indir+exp+'_vz.nc', decode_times=False).vcomp
@@ -75,36 +75,26 @@ def vT_full(exp):
     vp = v - vz
     Tp = T - Tz
     print(datetime.now(), " - finding v'T'")
-    vpTp_bar = (vp*Tp).mean('lon')
-    return vpTp_bar
+    vpTp = (vp*Tp)        
+    return vpTp
 
-def vT_level(exp, p):
+def vT_level(vpTp, p):
     # Meridional heat flux weighted by cos(lat) and meridionally averaged from 75 to 90 N at p hPa
     # Based on Dunn-Sigouin & Shaw (2015) but their polar cap was 60 to 90 N
-    print(datetime.now(), " - opening files for ", exp)
-    v = xr.open_dataset(indir+exp+'_v.nc', decode_times=False).vcomp.sel(pfull=p, method='nearest')
-    T = xr.open_dataset(indir+exp+'_T.nc', decode_times=False).temp.sel(pfull=p, method='nearest')
-    vz = xr.open_dataset(indir+exp+'_vz.nc', decode_times=False).vcomp.sel(pfull=p, method='nearest')
-    Tz = xr.open_dataset(indir+exp+'_Tz.nc', decode_times=False).temp.sel(pfull=p, method='nearest')
-    print(datetime.now(), " - finding anomalies")
-    vp = v - vz
-    Tp = T - Tz
-    print(datetime.now(), " - finding v'T'")
-    vpTp_w = (vp*Tp) / np.cos(np.deg2rad(vz.lat))
+    vpTp_w = vpTp.sel(pfull=p, method='nearest') / np.cos(np.deg2rad(vpTp.lat))
     vpTp_sub = vpTp_w.sel(lat=slice(75,90)).mean('lat')
     vpTp_bar = vpTp_sub.mean('lon')
     return vpTp_bar
 
-def plot_vT(u, vpTp, exp, heat, lvls, colors):
-    print(datetime.now(), " - plotting ", exp)
+def plot_vT(u, vT, exp, heat, lvls, colors):
     fig, ax = plt.subplots(figsize=(6,6))
-    cs1 = ax.contourf(lat, p, vpTp.mean('time'), levels=lvls, cmap=colors)
+    cs1 = ax.contourf(lat, p, vT, levels=lvls, cmap=colors)
     ax.contourf(cs1, colors='none')
     cb = plt.colorbar(cs1)
     cb.set_label(label=r"v'T' (K m s$^{-1}$)", size='x-large')
     cb.ax.tick_params(labelsize='x-large')
-    cs2 = ax.contour(lat, p, u[0], colors='k', levels=ulvls, linewidths=1, alpha=0.4)
-    cs2.collections[int(len(ulvls)/2)].set_linewidth(1.5)
+    cs2 = ax.contour(lat, p, u, colors='k', levels=ulvls, linewidths=0.5, alpha=0.2)
+    cs2.collections[int(len(ulvls)/2)].set_linewidth(1)
     plt.contour(lat, p, heat, colors='g', linewidths=1, alpha=0.4, levels=11)
     plt.xlabel(r'Latitude ($\degree$N)', fontsize='x-large')
     plt.xlim(0,90)
@@ -113,10 +103,10 @@ def plot_vT(u, vpTp, exp, heat, lvls, colors):
     plt.ylim(max(p), 1) #goes to ~1hPa
     plt.yscale('log')
     plt.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
-    plt.savefig(exp+'_vpTp.pdf', bbox_inches = 'tight')
+    plt.savefig(exp+'_vT.pdf', bbox_inches = 'tight')
     return plt.close()
 
-def plot_stats(stat, p, lab):
+def plot_stats(stat, p, exp, ext, lab):
         print(datetime.now(), " - plotting v'T' ", lab)
         colors = ['#B30000', '#00B300', '#0099CC', 'k']
         fig, ax = plt.subplots(figsize=(8,6))
@@ -127,13 +117,13 @@ def plot_stats(stat, p, lab):
         ax.set_ylabel("Polar Cap Average v'T' "+lab+r" (K m s$^{-1}$)", fontsize='x-large')
         ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
         plt.legend(loc='right',fancybox=False, shadow=True, ncol=1, fontsize='large')
-        plt.savefig(exp+extension+'_vpTp_'+lab+'.pdf', bbox_inches = 'tight')
+        plt.savefig(exp+ext+'_vT_'+lab+'.pdf', bbox_inches = 'tight')
         return plt.close()
 
 if __name__ == '__main__': 
     #Set-up data to be read in
     indir = '/disco/share/rm811/processed/'
-    var_type = input("Plot a) depth, b) width, c) location, or d) strength experiments?")
+    var_type = input("Plot a) depth, b) width, c) location, d) strength experiments, or e) test?")
     if var_type == 'a':
         extension = '_depth'
     elif var_type == 'b':
@@ -142,6 +132,8 @@ if __name__ == '__main__':
         extension = '_loc'
     elif var_type == 'd':
         extension = '_strength'
+    elif var_type == 'e':
+        extension = 'ctrl'
     exp, labels, xlabel = return_exp(extension)
 
     flux = input("Plot a) EP flux or b) heat flux?")
@@ -164,7 +156,8 @@ if __name__ == '__main__':
                 w = xr.open_dataset(indir+exp[i]+'_w.nc', decode_times=False).omega/100 # Pa --> hPa
                 T = xr.open_dataset(indir+exp[i]+'_T.nc', decode_times=False).temp
                 utz = xr.open_dataset(indir+exp[i]+'_utz.nc', decode_times=False).ucomp[0]
-        
+
+                print(datetime.now(), " - plotting")
                 if plot_type =='a':
                     plot_ep(utz, u, v, w, T, exp[i], heat, plot_type)
                 elif plot_type == 'b':
@@ -176,34 +169,38 @@ if __name__ == '__main__':
     
     elif flux == 'b':
         colors = ['#B30000', '#FF9900', '#FFCC00', '#00B300', '#0099CC', '#4D0099', '#CC0080', '#666666']
-        plot_option = input("Plot a) lat-p of v'T' and its s.d., \
-            or b) PDFs of polar cap average v'T'?")
+        vpTp = []
+        for i in range(len(exp)):
+            utz = xr.open_dataset(indir+exp[i]+'_utz.nc', decode_times=False).ucomp[0]
+            vT = vT_calc(exp[i])
+            vpTp.append(vT)
+            vT_iz = vpTp[i].mean('lon')
+            vT_itz = vT_iz.mean('time')
+            lat, p, sd = find_sd(vT_iz)
+            if i == 0:
+                sd_og = sd
+                vT_itz_og = vT_itz
+            #Read in data to plot polar heat contours
+            file = '/disco/share/rm811/isca_data/' + exp[i]+ '/run0100/atmos_daily_interp.nc'
+            ds = xr.open_dataset(file)
+            heat = ds.local_heating.sel(lon=180, method='nearest').mean(dim='time')
+            
+            print(datetime.now(), " - plotting vT")
+            plot_vT(utz, vT_itz, exp[i], heat, np.arange(-20, 190, 10), 'Blues')
 
-        if plot_option == 'a':
-            vpTp = []
-            for i in range(len(exp)):
-                utz = xr.open_dataset(indir+exp[i]+'_utz.nc', decode_times=False).ucomp[0]
-                vpTp_i = vT_full(exp[i])
-                vpTp.append(vpTp_i)
-                file = '/disco/share/rm811/isca_data/' + exp[i]+ '/run0100/atmos_daily_interp.nc'
-                ds = xr.open_dataset(file)
-                heat = ds.local_heating.sel(lon=180, method='nearest').mean(dim='time')
-                lat = ds.coords['lat'].data
-                p = ds.coords['pfull'].data
-                plot_vT(utz, vpTp[i], exp[i], heat, np.arange(-20, 190, 10), 'Blues')
-                plot_sd(lat, p, find_sd(vpTp_i), utz, 11, ulvls, 'RdBu_r', r"v'T' SD (K m s$^{-1}$)", exp[i]+'_vTsd.pdf')
+            print(datetime.now(), " - plotting s.d.")
+            NH_zonal(lat, p, sd, utz, np.arange(0, 240, 20), ulvls, 'Blues', r"v'T' SD (K m s$^{-1}$)", exp[i]+'_vTsd.pdf')
 
-                if i != 0:
-                    vpTp_diff = vpTp[i] - vpTp[0]
-                    vpTp_sd_diff = find_sd(vpTp[i]) - find_sd(vpTp[0])
-                    plot_vT(utz, vpTp_diff, exp[i]+'_diff', heat, np.arange(-60, 65, 5), 'RdBu_r')
-                    NH_zonal(lat, p, vpTp_sd_diff, utz, 11, ulvls, 'RdBu_r', r"v'T' SD (K m s$^{-1}$)", exp[i]+'_vTsd_diff.pdf') 
-        
-        elif plot_option == 'b':
-            p = [500, 100, 50, 10]
-            mean, mode, sd = plot_pdf('vT', indir, exp, '', p, labels, r"Polar Cap Average v'T' (K m s$^{-1}$)", colors, exp[0]+extension+'_vpTp')            
-            plot_stats(mode, p, 'mode')
-            plot_stats(sd, p, 'SD')
+            if i != 0:
+                vT_diff = vT_itz - vT_itz_og
+                vT_sd_diff = sd - sd_og
+                plot_vT(utz, vT_diff, exp[i]+'_diff', heat, 11, 'RdBu_r')
+                NH_zonal(lat, p, vT_sd_diff, utz, 11, ulvls, 'Blues', r"v'T' SD (K m s$^{-1}$)", exp[i]+'_vTsd_diff.pdf') 
+
+        p = [500, 100, 50, 10]
+        me, mo, sd, e, sk, k = plot_pdf('vT', indir, exp, '', vpTp, p, labels, r"75-90N average v'T' (K m s$^{-1}$)", colors, exp[0]+extension+'_vT')    
+        plot_stats(mo, p, exp[0], extension, 'mode')
+        plot_stats(sd, p, exp[0], extension, 'SD')
 """
 # Following commented functions/code is for checking against Neil Lewis' code
 def get_pt(t, p, Rd=287., cp=1005., p0=1000.): 

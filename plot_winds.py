@@ -216,7 +216,7 @@ if __name__ == '__main__':
         windsvexp(outdir, labels, xlabel, str(p), basis+extension)
     elif level == 'c':
         p = 100
-        me, mo, sd, e, sk, k = plot_pdf('u', indir, exp, '_uz.nc', p, labels, r"zonal-mean zonal wind (m s$^{-1}$)", colors, basis+extension)
+        me, mo, sd, e, sk, k = plot_pdf('u', indir, exp, '_uz.nc', '', p, labels, r"zonal-mean zonal wind (m s$^{-1}$)", colors, basis+extension)
         SPVvexp1(me, mo, sd, e, p, labels, xlabel, basis+extension)
         SPVvexp2(sk, k, p, labels, xlabel, basis+extension)
     elif level == 'd':
@@ -237,7 +237,7 @@ if __name__ == '__main__':
         elif plot_type == 'b':
             windsvexp(outdir, labels, xlabel, str(p), basis+extension)
         elif plot_type == 'c':
-            me, mo, sd, e, sk, k = plot_pdf('u', indir, exp, '_uz.nc', p, labels, r"zonal-mean zonal wind (m s$^{-1}$)", colors, basis+extension)
+            me, mo, sd, e, sk, k = plot_pdf('u', indir, exp, '_uz.nc', '', p, labels, r"zonal-mean zonal wind (m s$^{-1}$)", colors, basis+extension)
             SPVvexp1(me, mo, sd, e, p, labels, xlabel, basis+extension)
             SPVvexp2(sk, k, p, labels, xlabel, basis+extension)
         elif plot_type == 'd':
