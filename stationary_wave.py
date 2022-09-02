@@ -77,9 +77,30 @@ if __name__ == '__main__':
     polar = '_w15a4p800f800g50'
     exp = [basis+perturb+'l800u200']
 
+    ds, heat = find_heat(exp, 500, 'exp')
+
+p = [10]
+kn = [1, 2, 3]
+gph_t = xr.open_dataset(indir+exp+'_ht.nc', decode_times=False).height.mean('time')
+for j in range(len(p)):
+    gph_p = gph_t.sel(pfull=p[j], method='nearest')
+    waves = climate.GetWavesXr(gph_p)
+    for i in range(len(kn)):
+        ax = plt.axes(projection=ccrs.NorthPolarStereo())
+        cs = ax.contourf(ds.lon, ds.lat, waves.sel(k=kn[i]).transpose('lat', 'lon'), cmap='RdBu_r', levels=21, transform = ccrs.PlateCarree())
+        cb = plt.colorbar(cs, pad=0.1)
+        cb.set_label(label='GPH k = {:.0f}'.format(kn[i]), size='x-large')
+        cb.ax.tick_params(labelsize='x-large')
+        ln = ax.contour(ds.coords['lon'], ds.coords['lat'], heat,\
+            levels=11, colors='g', linewidths=0.5, alpha=0.4, transform = ccrs.PlateCarree())
+        ax.set_global()
+        ax.gridlines(draw_labels=True, dms=True, x_inline=False, y_inline=False)
+        ax.set_extent([-180, 180, 0, 90], crs=ccrs.PlateCarree())
+        plt.show()
+
+
 """
     lons = [0, 90, 180, 270]
-    p = [850, 200, 10]
     p_lvls_diff = [np.arange(-150, 170, 20), np.arange(-200, 220, 20), np.arange(-250, 270, 20)]
     p_lvls_diff2 = [np.arange(-20, 22, 2), np.arange(-50, 55, 5), np.arange(-120, 130, 10)]
 
