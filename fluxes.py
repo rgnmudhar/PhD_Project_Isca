@@ -20,22 +20,15 @@ def calc_ep(u, v, w, t):
     ep2 = ep2.mean(dim='time')
     return div, ep1, ep2
 
-def plot_ep(uz, u, v, w, t, exp_name, heat, type, vertical):
-    print(datetime.now(), " - calculating variables")
+def plot_ep(uz, div, ep1, ep2, exp_name, heat, type):
+    print(datetime.now(), " - plotting EP Fluxes")
     p = uz.coords['pfull']
     lat = uz.coords['lat']
     ulvls = np.arange(-200, 200, 10)
     if type == 'a':
-        div, ep1, ep2 = calc_ep(u, v, w, t)
         divlvls = np.arange(-12,13,1)
 
     elif type == 'b':
-        div1, ep1a, ep2a = calc_ep(u[0], v[0], w[0], t[0])
-        div2, ep1b, ep2b = calc_ep(u[1], v[1], w[1], t[1])
-        print(datetime.now(), " - taking differences")
-        div = div1 - div2
-        ep1 = ep1a - ep1b
-        ep2 = ep2a - ep2b
         divlvls = np.arange(-5,6,1)
         exp_name = exp_name+'_diff'
 
@@ -63,7 +56,8 @@ def plot_ep(uz, u, v, w, t, exp_name, heat, type, vertical):
     plt.ylabel('Pressure (hPa)', fontsize='xx-large')
     plt.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
     plt.savefig(exp_name+'_EPflux.pdf', bbox_inches = 'tight')
-    return plt.close()
+    plt.close()
+    return div, ep1
 
 def vT_calc(exp):
     print(datetime.now(), " - opening files for ", exp)
@@ -143,30 +137,34 @@ if __name__ == '__main__':
         plot_type = input("Plot a) individuals experiment or b) difference vs. control?")
 
         for i in range(len(exp)):
-            print(datetime.now(), " - opening files ({0:.0f}/{1:.0f})".format(i, len(exp)))
-            if i == 0:
-                print("skipping control")
-            elif i != 0:
-                # Read in data to plot polar heat contours
-                file = '/disco/share/rm811/isca_data/' + exp[i] + '/run0100/atmos_daily_interp.nc'
-                ds = xr.open_dataset(file)
-                heat = ds.local_heating.sel(lon=180, method='nearest').mean(dim='time')    
-                u = xr.open_dataset(indir+exp[i]+'_u.nc', decode_times=False).ucomp
-                v = xr.open_dataset(indir+exp[i]+'_v.nc', decode_times=False).vcomp
-                w = xr.open_dataset(indir+exp[i]+'_w.nc', decode_times=False).omega/100 # Pa --> hPa
-                T = xr.open_dataset(indir+exp[i]+'_T.nc', decode_times=False).temp
-                utz = xr.open_dataset(indir+exp[i]+'_utz.nc', decode_times=False).ucomp[0]
+            print(datetime.now(), " - opening files ({0:.0f}/{1:.0f})".format(i+1, len(exp)))
+            # Read in data to plot polar heat contours
+            file = '/disco/share/rm811/isca_data/' + exp[i] + '/run0100/atmos_daily_interp.nc'
+            ds = xr.open_dataset(file)
+            heat = ds.local_heating.sel(lon=180, method='nearest').mean(dim='time')    
+            u = xr.open_dataset(indir+exp[i]+'_u.nc', decode_times=False).ucomp
+            v = xr.open_dataset(indir+exp[i]+'_v.nc', decode_times=False).vcomp
+            w = xr.open_dataset(indir+exp[i]+'_w.nc', decode_times=False).omega/100 # Pa --> hPa
+            T = xr.open_dataset(indir+exp[i]+'_T.nc', decode_times=False).temp
+            utz = xr.open_dataset(indir+exp[i]+'_utz.nc', decode_times=False).ucomp[0]
+            div, ep1, ep2 = calc_ep(u, v, w, T)
 
-                print(datetime.now(), " - plotting")
-                if plot_type =='a':
-                    plot_ep(utz, u, v, w, T, exp[i], heat, plot_type)
-                elif plot_type == 'b':
-                    u = [u, xr.open_dataset(indir+exp[0]+'_u.nc', decode_times=False).ucomp]
-                    v = [v, xr.open_dataset(indir+exp[0]+'_v.nc', decode_times=False).vcomp]
-                    w = [w, xr.open_dataset(indir+exp[0]+'_w.nc', decode_times=False).omega/100] # Pa --> hPa
-                    T = [T, xr.open_dataset(indir+exp[0]+'_T.nc', decode_times=False).temp]
-                    plot_ep(utz, u, v, w, T, exp[i], heat, plot_type)
-    
+            print(datetime.now(), " - plotting")
+            if plot_type =='a':
+                plot_ep(utz, div, ep1, ep2, exp[i], heat, plot_type)
+            elif plot_type == 'b':
+                if i == 0:
+                    print("skipping control")
+                    div_og = div
+                    ep1_og = ep1
+                    ep2_og = ep2
+                elif i != 0:
+                    print(datetime.now(), " - taking differences")
+                    div_diff = div - div_og
+                    ep1_diff = ep1 - ep1_og
+                    ep2_diff = ep2 - ep2_og
+                    plot_ep(utz, div_diff, ep1_diff, ep2_diff, exp[i], heat, plot_type)
+        
     elif flux == 'b':
         colors = ['#B30000', '#FF9900', '#FFCC00', '#00B300', '#0099CC', '#4D0099', '#CC0080', '#666666']
         vpTp = []
