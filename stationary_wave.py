@@ -75,12 +75,14 @@ if __name__ == '__main__':
     perturb = '_q6m2y45'
     off_pole = '_a4x75y180w5v30p800'
     polar = '_w15a4p800f800g50'
-    exp = [basis+off_pole, basis+'_q6m2y45l800u200', basis+off_pole+perturb]
+    exp = [basis+perturb+'l800u200']
+
+"""
     lons = [0, 90, 180, 270]
     p = [850, 200, 10]
     p_lvls_diff = [np.arange(-150, 170, 20), np.arange(-200, 220, 20), np.arange(-250, 270, 20)]
     p_lvls_diff2 = [np.arange(-20, 22, 2), np.arange(-50, 55, 5), np.arange(-120, 130, 10)]
-"""
+
     plot_orientation = input("Plot a) horizontal plane or b) vertical cross-section?")
     plot_type = input("Plot a) single experiment, b) difference between 2 experiments?")
     
@@ -119,8 +121,8 @@ if __name__ == '__main__':
                 gph_tz = xr.open_dataset(indir+exp[i]+'_htz.nc', decode_times=False).height
                 #a = anomaly(gph_t, gph_tz).mean(dim='time').mean(dim='lon')
                 plot_v(gph_tz[0], 21, heat, exp[i]+'_gph_v.pdf', 'GPH (m)')
-"""
 
+exp = [basis+off_pole, basis+'_q6m2y45l800u200', basis+off_pole+perturb]
 for j in range(len(p)):
     print(datetime.now(), " - p = {0:.0f} hPa".format(p[j]))
     anomalies = []
@@ -144,23 +146,6 @@ for j in range(len(p)):
     lvls_polar = [np.arange(-10, 11, 1), np.arange(-16, 18, 2), np.arange(-30, 35, 5)] #np.arange(-7, 8, 1)
     lvls = [lvls_polar[j], lvls_full[j], lvls_full[j], lvls_full[j], lvls_diff[j]]
 
-#    print(datetime.now(), " - plotting")
-#    ax = plt.axes(projection=ccrs.NorthPolarStereo())
-#    cs = ax.contourf(ds.coords['lon'].data, ds.coords['lat'].data, anom_add,\
-#    cmap='RdBu_r', levels=np.arange(-250, 275, 25), transform = ccrs.PlateCarree())
-#    cb = plt.colorbar(cs, pad=0.1)
-#    cb.set_label(label='Geopotential Height Anomaly (m)', size='x-large')
-#    cb.ax.tick_params(labelsize='x-large')
-#    ln_ctrl = ax.contour(ds.coords['lon'].data, ds.coords['lat'].data, heat1,\
-#        levels=11, colors='g', linewidths=0.5, alpha=0.4, transform = ccrs.PlateCarree())
-#    ln_exp = ax.contour(ds.coords['lon'].data, ds.coords['lat'].data, heat2,\
-#        levels=11, colors='g', linewidths=0.5, alpha=0.4, transform = ccrs.PlateCarree())
-#    ax.set_global()
-#    ax.set_extent([-180, 180, 0, 90], crs=ccrs.PlateCarree())
-#    ax.gridlines(draw_labels=True, dms=True, x_inline=False, y_inline=False)
-#    plt.savefig(exp[1]+'+ctrl_'+str(p[j])+'gph.pdf', bbox_inches = 'tight')
-#    plt.close()
-
     for k in range(len(plotting)):
         print(datetime.now(), " - plotting ", names[k])
         ax = plt.axes(projection=ccrs.NorthPolarStereo())
@@ -177,5 +162,7 @@ for j in range(len(p)):
         ax.set_global()
         ax.gridlines(draw_labels=True, dms=True, x_inline=False, y_inline=False)
         ax.set_extent([-180, 180, 0, 90], crs=ccrs.PlateCarree())
+        #ax.gridlines(draw_labels=True, dms=True, x_inline=False, y_inline=False)
         plt.savefig(names[k]+'_'+str(p[j])+'gph.pdf', bbox_inches = 'tight')
         plt.close()
+"""
