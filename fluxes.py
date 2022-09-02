@@ -25,11 +25,11 @@ def plot_ep(uz, div, ep1, ep2, exp_name, heat, type):
     p = uz.coords['pfull']
     lat = uz.coords['lat']
     ulvls = np.arange(-200, 200, 10)
-    if type == 'a':
+    if type == 'single':
         divlvls = np.arange(-12,13,1)
 
-    elif type == 'b':
-        divlvls = np.arange(-5,6,1)
+    elif type == 'diff':
+        divlvls = np.arange(-5,5.5,0.5)
         exp_name = exp_name+'_diff'
 
     #Filled contour plot of time-mean EP flux divergence plus EP flux arrows and zonal wind contours
@@ -134,8 +134,6 @@ if __name__ == '__main__':
     ulvls = np.arange(-200, 200, 10)
 
     if flux == 'a':
-        plot_type = input("Plot a) individuals experiment or b) difference vs. control?")
-
         for i in range(len(exp)):
             print(datetime.now(), " - opening files ({0:.0f}/{1:.0f})".format(i+1, len(exp)))
             # Read in data to plot polar heat contours
@@ -150,20 +148,19 @@ if __name__ == '__main__':
             div, ep1, ep2 = calc_ep(u, v, w, T)
 
             print(datetime.now(), " - plotting")
-            if plot_type =='a':
-                plot_ep(utz, div, ep1, ep2, exp[i], heat, plot_type)
-            elif plot_type == 'b':
-                if i == 0:
-                    print("skipping control")
-                    div_og = div
-                    ep1_og = ep1
-                    ep2_og = ep2
-                elif i != 0:
-                    print(datetime.now(), " - taking differences")
-                    div_diff = div - div_og
-                    ep1_diff = ep1 - ep1_og
-                    ep2_diff = ep2 - ep2_og
-                    plot_ep(utz, div_diff, ep1_diff, ep2_diff, exp[i], heat, plot_type)
+            plot_ep(utz, div, ep1, ep2, exp[i], heat, 'single')
+
+            if i == 0:
+                print("skipping control")
+                div_og = div
+                ep1_og = ep1
+                ep2_og = ep2
+            elif i != 0:
+                print(datetime.now(), " - taking differences")
+                div_diff = div - div_og
+                ep1_diff = ep1 - ep1_og
+                ep2_diff = ep2 - ep2_og
+                plot_ep(utz, div_diff, ep1_diff, ep2_diff, exp[i], heat, 'diff')
         
     elif flux == 'b':
         colors = ['#B30000', '#FF9900', '#FFCC00', '#00B300', '#0099CC', '#4D0099', '#CC0080', '#666666']
@@ -187,13 +184,13 @@ if __name__ == '__main__':
             plot_vT(utz, vT_itz, exp[i], heat, np.arange(-20, 190, 10), 'Blues')
 
             print(datetime.now(), " - plotting s.d.")
-            NH_zonal(lat, p, sd, utz, np.arange(0, 240, 20), ulvls, 'Blues', r"v'T' SD (K m s$^{-1}$)", exp[i]+'_vTsd.pdf')
+            NH_zonal(lat, p, sd, utz, np.arange(0, 300, 20), ulvls, 'Blues', r"v'T' SD (K m s$^{-1}$)", exp[i]+'_vTsd.pdf')
 
             if i != 0:
                 vT_diff = vT_itz - vT_itz_og
                 vT_sd_diff = sd - sd_og
                 plot_vT(utz, vT_diff, exp[i]+'_diff', heat, np.arange(-40, 42, 2), 'RdBu_r')
-                NH_zonal(lat, p, vT_sd_diff, utz, np.arange(-40, 42, 2), ulvls, 'Blues', r"v'T' SD (K m s$^{-1}$)", exp[i]+'_vTsd_diff.pdf') 
+                NH_zonal(lat, p, vT_sd_diff, utz, np.arange(-45, 50, 5), ulvls, 'RdBu_r', r"v'T' SD (K m s$^{-1}$)", exp[i]+'_vTsd_diff.pdf') 
 
         p = [500, 100, 50, 10]
         me, mo, sd, e, sk, k = plot_pdf('vT', indir, exp, '', vpTp, p, labels, r"75-90N average v'T' (K m s$^{-1}$)", colors, exp[0]+extension+'_vT')    
