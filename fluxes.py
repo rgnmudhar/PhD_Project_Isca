@@ -192,8 +192,8 @@ if __name__ == '__main__':
             if i != 0:
                 vT_diff = vT_itz - vT_itz_og
                 vT_sd_diff = sd - sd_og
-                plot_vT(utz, vT_diff, exp[i]+'_diff', heat, 11, 'RdBu_r')
-                NH_zonal(lat, p, vT_sd_diff, utz, 11, ulvls, 'Blues', r"v'T' SD (K m s$^{-1}$)", exp[i]+'_vTsd_diff.pdf') 
+                plot_vT(utz, vT_diff, exp[i]+'_diff', heat, np.arange(-40, 42, 2), 'RdBu_r')
+                NH_zonal(lat, p, vT_sd_diff, utz, np.arange(-40, 42, 2), ulvls, 'Blues', r"v'T' SD (K m s$^{-1}$)", exp[i]+'_vTsd_diff.pdf') 
 
         p = [500, 100, 50, 10]
         me, mo, sd, e, sk, k = plot_pdf('vT', indir, exp, '', vpTp, p, labels, r"75-90N average v'T' (K m s$^{-1}$)", colors, exp[0]+extension+'_vT')    
