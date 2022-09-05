@@ -82,7 +82,7 @@ def find_TKE(dir, exp):
     plt.savefig(exp+'_spinup.pdf', bbox_inches = 'tight')
     return plt.close()
 
-def postprocess(exp):
+def remove_uninterp(exp):
     print(datetime.now(), ' - ', exp)
     # run plevel interpolation
     print(datetime.now(), ' - interpolate')
@@ -101,7 +101,13 @@ def postprocess(exp):
             os.remove(f)
         except OSError as e:
             print(e.strerror, ':', f)
-
+        
+def postprocess(exp):
+    print(datetime.now(), ' - ', exp)
+    os.chdir(indir + exp)
+    runs = sorted(glob('run*'))
+    n = len(runs) - 1
+    
     # ignore X years of spin-up
     print(datetime.now(), ' - ignore spin-up')
     X = 2
@@ -172,36 +178,9 @@ if __name__ == '__main__':
     #sys.path.append(os.path.abspath(plevdir))
     #import run_plevel 
 
-    exp = ['PK_e0v4z13_q6m2y45l800u200',\
-    'PK_e0v4z13_w15a4p900f800g50_q6m2y45l800u200',\
-    'PK_e0v4z13_w15a4p700f800g50_q6m2y45l800u200',\
-    'PK_e0v4z13_w15a4p500f800g50_q6m2y45l800u200',\
-    'PK_e0v4z13_w15a4p300f800g50_q6m2y45l800u200',\
-    'PK_e0v4z13_w10a4p800f800g50_q6m2y45l800u200',\
-    'PK_e0v4z13_w20a4p800f800g50_q6m2y45l800u200',\
-    'PK_e0v4z13_w30a4p800f800g50_q6m2y45l800u200',\
-    'PK_e0v4z13_w40a4p800f800g50_q6m2y45l800u200',\
-    'PK_e0v4z13_w15a4p800f800g50_q6m2y45l800u200',\
-    'PK_e0v4z13_w25a4p800f800g50_q6m2y45l800u200',\
-    'PK_e0v4z13_w35a4p800f800g50_q6m2y45l800u200',\
-    'PK_e0v4z13_w15a2p800f800g50_q6m2y45l800u200',\
-    'PK_e0v4z13_w15a2p400f800g50_q6m2y45l800u200',\
-    'PK_e0v4z13_w15a6p800f800g50_q6m2y45l800u200',\
-    'PK_e0v4z13_w15a8p800f800g50_q6m2y45l800u200',\
-    'PK_e0v4z13_w15a4p400f800g50_q6m2y45l800u200',\
-    'PK_e0v4z13_w15a6p400f800g50_q6m2y45l800u200',\
-    'PK_e0v4z13_w15a8p400f800g50_q6m2y45l800u200',\
-    'PK_e0v4z13_w15a2p600f800g50_q6m2y45l800u200',\
-    'PK_e0v4z13_w15a4p600f800g50_q6m2y45l800u200',\
-    'PK_e0v4z13_w15a6p600f800g50_q6m2y45l800u200',\
-    'PK_e0v4z13_w15a8p600f800g50_q6m2y45l800u200',\
-    'PK_e0v4z13_w15a4p800f800g50',\
-    'PK_e0v4z13_a4x75y180w5v30p400_q6m2y45',\
-    'PK_e0v4z13_a4x75y180w5v30p800_q6m2y45',\
-    'PK_e0v4z13_a4x75y0w5v30p800_q6m2y45',\
-    'PK_e0v4z13_a4x75y270w5v30p800_q6m2y45',\
-    'PK_e0v4z13_a4x75y90w5v30p800_q6m2y45',\
-    'PK_e0v4z13']
+    exp = ['PK_e0v4z13_w35a4p800f800g50_q6m2y45l800u200',\
+    'PK_e0v4z13_w15a0p800f800g50_q6m2y45l800u200',\
+    'PK_e0v4z13_w15a4p800f800g50_h4000m2l25u65']
     
     #take_zonal_means(indir, outdir)
 
