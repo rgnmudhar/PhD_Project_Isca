@@ -250,16 +250,15 @@ if __name__ == '__main__':
                 print(datetime.now(), " - ", exp[i])
                 u = xr.open_dataset(indir+exp[i]+'_uz.nc', decode_times=False).ucomp
                 utz = xr.open_dataset(indir+exp[i]+'_utz.nc', decode_times=False).ucomp
+                lat, p, sd = find_sd(u)
                 if plot_what == 'a':
-                    lat, p, sd = find_sd(u)
                     plot_sd(lat, p, sd, utz, np.arange(0, 42, 2), ulvls, 'Blues_r',\
                         r'zonal-mean zonal wind SD (ms$^{-1}$)', exp[i]+'_usd.pdf')
                 elif plot_what == 'b':
                     if i == 0:
+                        sd_og = sd
                         print("skipping control")
                     elif i != 0:
-                        lat, p, sd1 = find_sd(u)
-                        lat, p, sd2 = find_sd(xr.open_dataset(indir+exp[0]+'_uz.nc', decode_times=False).ucomp)
-                        sd_diff = sd1 - sd2
+                        sd_diff = sd - sd_og
                         NH_zonal(lat, p, sd_diff, utz, np.arange(-20, 22, 2), ulvls, 'RdBu_r',\
                             r'zonal-mean zonal wind SD (ms$^{-1}$)', exp[i]+'_usd_diff.pdf')
