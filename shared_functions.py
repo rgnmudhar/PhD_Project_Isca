@@ -36,7 +36,7 @@ def return_exp(extension):
         basis+'_w20a4p800f800g50'+perturb,\
         basis+'_w25a4p800f800g50'+perturb,\
         basis+'_w30a4p800f800g50'+perturb,\
-        basis+'_w35a4p800f800g50'+perturb,\
+        basis+'_w35a4p800f800g50'+perturb+'_SCALED',\
         basis+'_w40a4p800f800g50'+perturb]
         labels = ['no heat', '10', '15', '20', '25', '30', '35', '40']
         xlabel = r'Extent of Heating ($\degree$)'
