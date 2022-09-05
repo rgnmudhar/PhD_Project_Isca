@@ -197,6 +197,7 @@ if __name__ == '__main__':
     
     for i in range(len(exp)):
         postprocess(exp[i])
+        #remove_uninterp(exp[i])
         #find_TKE(outdir, exp[i])
         #calc_w(outdir, exp[i])
 
