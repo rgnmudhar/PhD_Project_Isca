@@ -92,15 +92,16 @@ colors = ['#B30000', '#FF9900', '#FFCC00', '#00B300', '#0099CC', '#4D0099', '#CC
 # For mean state, plot pressure vs. wave 1/2 magnitudes across experiments
 fig, ax = plt.subplots(figsize=(6,6))
 for i in range(len(exp)):
-    u = xr.open_dataset(indir+exp[i]+'_u.nc', decode_times=False).ucomp.sel(lat=60, method='nearest').mean('time')
-    waves = climate.GetWavesXr(u)
-    ax.plot(waves.sel(k=1).mean('lon').transpose(), u.pfull, color=colors[i], linestyle='-', label=labels[i])
-ax.set_xlabel('zonal wind mean wave-1 magnitude ', fontsize='x-large')
+    gph = xr.open_dataset(indir+exp[i]+'_ht.nc', decode_times=False).height[0].sel(lat=60, method='nearest')
+    waves = climate.GetWavesXr(gph)
+    ax.plot(waves.sel(k=1).mean('lon').transpose(), gph.pfull, color=colors[i], linestyle='-', label=labels[i])
+ax.set_xlabel('mean wave-1 magnitude ', fontsize='x-large')
 ax.set_ylabel('Pressure (hPa)', fontsize='x-large')
 ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
 plt.legend()
-plt.ylim(max(u.pfull), 1)
+plt.ylim(max(gph.pfull), 1)
 plt.yscale('log')
+plt.title(xlabel, fontsize='x-large')
 plt.show()
 
 """
