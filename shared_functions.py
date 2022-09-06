@@ -281,7 +281,7 @@ def NH_zonal(lat, p, x, y, xlvls, ylvls, colors, lab, name):
     ax.contourf(cs1, colors='none')
     cs2 = ax.contour(lat, p, y, colors='k', levels=ylvls, linewidths=0.5, alpha=0.2)
     cs2.collections[int(len(ylvls)/2)].set_linewidth(1)
-    cb = plt.colorbar(cs1)
+    cb = plt.colorbar(cs1, extend='both')
     cb.set_label(label=lab, size='x-large')
     cb.ax.tick_params(labelsize='x-large')
     #plt.scatter(lat.sel(lat=60, method='nearest'), p.sel(pfull=10, method='nearest'), marker='x', color='#B30000')

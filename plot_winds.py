@@ -249,10 +249,10 @@ if __name__ == '__main__':
             for i in range(len(exp)):
                 print(datetime.now(), " - ", exp[i])
                 u = xr.open_dataset(indir+exp[i]+'_uz.nc', decode_times=False).ucomp
-                utz = xr.open_dataset(indir+exp[i]+'_utz.nc', decode_times=False).ucomp
+                utz = xr.open_dataset(indir+exp[i]+'_utz.nc', decode_times=False).ucomp[0]
                 lat, p, sd = find_sd(u)
                 if plot_what == 'a':
-                    plot_sd(lat, p, sd, utz, np.arange(0, 42, 2), ulvls, 'Blues_r',\
+                    NH_zonal(lat, p, sd, utz, np.arange(0, 42, 2), ulvls, 'Blues',\
                         r'zonal-mean zonal wind SD (ms$^{-1}$)', exp[i]+'_usd.pdf')
                 elif plot_what == 'b':
                     if i == 0:
