@@ -14,7 +14,7 @@ from datetime import datetime
 def return_exp(extension):
     basis = 'PK_e0v4z13'
     perturb = '_q6m2y45l800u200'
-    if extension == 'ctrl':
+    if extension == '_ctrl':
         exp = [basis+perturb]
         labels = ['ctrl']
         xlabel = 'ctrl'

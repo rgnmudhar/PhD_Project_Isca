@@ -185,7 +185,7 @@ if __name__ == '__main__':
     indir = '/disco/share/rm811/processed/'
     outdir = '../Files/'
     basis = 'PK_e0v4z13'
-    var_type = input("Plot a) depth, b) width, c) location, or d) strength experiments?")
+    var_type = input("Plot a) depth, b) width, c) location, d) strength experiments, or e) the control?")
     if var_type == 'a':
         extension = '_depth'
     elif var_type == 'b':
@@ -194,6 +194,8 @@ if __name__ == '__main__':
         extension = '_loc'
     elif var_type == 'd':
         extension = '_strength'
+    elif var_type == 'e':
+        extension = '_ctrl'
     exp, labels, xlabel = return_exp(extension)
     
     #User choices for plotting - subjects
@@ -250,15 +252,16 @@ if __name__ == '__main__':
                 print(datetime.now(), " - ", exp[i])
                 u = xr.open_dataset(indir+exp[i]+'_uz.nc', decode_times=False).ucomp
                 utz = xr.open_dataset(indir+exp[i]+'_utz.nc', decode_times=False).ucomp[0]
-                lat, p, sd = find_sd(u)
                 if plot_what == 'a':
+                    lat, p, sd = find_sd(u)
                     NH_zonal(lat, p, sd, utz, np.arange(0, 42, 2), ulvls, 'Blues',\
                         r'zonal-mean zonal wind SD (ms$^{-1}$)', exp[i]+'_usd.pdf')
                 elif plot_what == 'b':
                     if i == 0:
-                        sd_og = sd
                         print("skipping control")
                     elif i != 0:
-                        sd_diff = sd - sd_og
+                        lat, p, sd1 = find_sd(u)
+                        lat, p, sd2 = find_sd(xr.open_dataset(indir+exp[0]+'_uz.nc', decode_times=False).ucomp)
+                        sd_diff = sd1 - sd2
                         NH_zonal(lat, p, sd_diff, utz, np.arange(-20, 22, 2), ulvls, 'RdBu_r',\
                             r'zonal-mean zonal wind SD (ms$^{-1}$)', exp[i]+'_usd_diff.pdf')
