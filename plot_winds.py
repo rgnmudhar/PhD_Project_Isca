@@ -7,6 +7,7 @@ import xarray as xr
 import numpy as np
 import scipy.stats as sps
 import matplotlib.pyplot as plt
+import cartopy.crs as ccrs
 from datetime import datetime
 from open_winds import *
 from shared_functions import *
@@ -31,6 +32,25 @@ def plot_winds(indir, exp, labels, colors, style, cols, name, p):
     plt.tick_params(axis='both', labelsize = 'large', which='both', direction='in')
     plt.legend(loc='upper center' , bbox_to_anchor=(0.5, -0.07),fancybox=False, shadow=True, ncol=cols, fontsize='large')
     plt.savefig(name+'_winds.pdf', bbox_inches = 'tight')
+    return plt.close()
+
+def plot_jet(u, p, lvls, name):
+    """
+    Plots time-mean zonal wind on polar stereographic lat-lon grid
+    """
+    print(datetime.now(), " - plotting winds")
+    #Following plots the data and saves as a figure
+    u_p = u.sel(pfull=p, method='nearest')
+    ax = plt.axes(projection=ccrs.NorthPolarStereo())
+    cs = ax.contourf(u.lon, u.lat, u_p,\
+        cmap='RdBu_r', levels=lvls, transform = ccrs.PlateCarree())
+    cb = plt.colorbar(cs, pad=0.1, extend='both')
+    cb.set_label(label=r'Mean Zonal Wind (m s$^{-1}$)', size='x-large')
+    cb.ax.tick_params(labelsize='x-large')
+    ax.set_global()
+    ax.gridlines(draw_labels=True, dms=True, x_inline=False, y_inline=False)
+    ax.set_extent([-180, 180, 0, 90], crs=ccrs.PlateCarree())
+    plt.savefig(name+'_jet{:.0f}'.format(p), bbox_inches = 'tight')
     return plt.close()
 
 def plot_vtx(dir, exp, labels, colors, style, cols, fig_name):
@@ -136,16 +156,16 @@ def SSWsvexp(dir, exp, x, xlabel, fig_name):
     print(datetime.now(), " - plotting SSWs vs experiment")
     fig, ax = plt.subplots(figsize=(10,6))
     ax.errorbar(x[1:], SSWs[1:], yerr=errors[1:], fmt='o', linewidth=1.25, capsize=5, color='#B30000', linestyle=':')
-    ax.set_xlim(-0.5,6.5)
-    #ax.set_ylim(0.25,0.5)
+    ax.set_xlim(-0.5,3.5)
+    ax.set_ylim(0.25,0.5)
     ax.set_xticks(x[1:])
     ax.set_xlabel(xlabel, fontsize='x-large')
     ax.set_ylabel(r'SSWs per 100 days', fontsize='x-large')
     ax.axhline(0.42, color='#4D0099', linewidth=0.5)
-    ax.text(5.3, 0.425, 'ERA-Interim', color='#4D0099', fontsize='x-large')
+    ax.text(2.85, 0.425, 'ERA-Interim', color='#4D0099', fontsize='x-large')
     ax.axhline(og, color='#666666', linewidth=0.5)
     ax.fill_between(range(-1,8), (og - og_err), (og + og_err), facecolor ='gainsboro', alpha = 0.4)
-    ax.text(5.75, 0.33, 'Control', color='#666666', fontsize='x-large')
+    ax.text(3.1, 0.33, 'Control', color='#666666', fontsize='x-large')
     ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
     plt.savefig(fig_name+'_SSWsvheat.pdf', bbox_inches = 'tight')
 
@@ -200,7 +220,7 @@ if __name__ == '__main__':
     
     #User choices for plotting - subjects
     level = input('Plot a) near-surface winds, \
-        b) tropospheric jet, \
+        b) tropospheric jet(s), \
         c) lower stratosphere, \
         or d) stratospheric polar vortex?')
 
@@ -214,8 +234,14 @@ if __name__ == '__main__':
         cols = len(exp)
         plot_winds(outdir, indir, exp, labels, colors, style, cols, exp[0], p)
     elif level == 'b':
-        p = 850 #hPa
-        windsvexp(outdir, labels, xlabel, str(p), basis+extension)
+        p = [850, 500] #hPa
+        lvls = [np.arange(-15, 17.5, 2.5), np.arange(50, 55, 5)]
+        #windsvexp(outdir, labels, xlabel, str(p), basis+extension)
+        for j in range(p):
+            for i in range(len(exp)):
+                print(datetime.now(), " - finding winds ({0:.0f}/{0:.0f})".format(i+1, len(exp)))
+                u = xr.open_dataset(indir+exp[i]+'_ut.nc', decode_times=False).ucomp[0]
+                plot_jet(u, p[j], lvls[j], exp[i])
     elif level == 'c':
         p = 100
         me, mo, sd, e, sk, k = plot_pdf('u', indir, exp, '_uz.nc', '', p, labels, r"zonal-mean zonal wind (m s$^{-1}$)", colors, basis+extension)
@@ -251,10 +277,10 @@ if __name__ == '__main__':
             for i in range(len(exp)):
                 print(datetime.now(), " - ", exp[i])
                 u = xr.open_dataset(indir+exp[i]+'_uz.nc', decode_times=False).ucomp
-                utz = xr.open_dataset(indir+exp[i]+'_utz.nc', decode_times=False).ucomp[0]
+                utz = xr.open_dataset(indir+exp[i]+'_utz.nc', decode_times=False).ucomp
                 if plot_what == 'a':
                     lat, p, sd = find_sd(u)
-                    NH_zonal(lat, p, sd, utz, np.arange(0, 42, 2), ulvls, 'Blues',\
+                    plot_sd(lat, p, sd, utz, np.arange(0, 42, 2), ulvls, 'Blues_r',\
                         r'zonal-mean zonal wind SD (ms$^{-1}$)', exp[i]+'_usd.pdf')
                 elif plot_what == 'b':
                     if i == 0:
@@ -265,3 +291,4 @@ if __name__ == '__main__':
                         sd_diff = sd1 - sd2
                         NH_zonal(lat, p, sd_diff, utz, np.arange(-20, 22, 2), ulvls, 'RdBu_r',\
                             r'zonal-mean zonal wind SD (ms$^{-1}$)', exp[i]+'_usd_diff.pdf')
+
