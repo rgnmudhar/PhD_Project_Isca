@@ -93,14 +93,14 @@ if __name__ == '__main__':
     #Set-up data to be read in
     indir = '/disco/share/rm811/processed/'
     var_type = input("Plot a) depth, b) width, c) location, or d) strength experiments?")
-        if var_type == 'a':
-            extension = '_depth'
-        elif var_type == 'b':
-            extension = '_width'
-        elif var_type == 'c':
-            extension = '_loc'
-        elif var_type == 'd':
-            extension = '_strength'
+    if var_type == 'a':
+        extension = '_depth'
+    elif var_type == 'b':
+        extension = '_width'
+    elif var_type == 'c':
+        extension = '_loc'
+    elif var_type == 'd':
+        extension = '_strength'
     exp, labels, xlabel = return_exp(extension)
     upper_p = 1 # hPa
     lvls = [np.arange(160, 330, 10), np.arange(-200, 205, 5)]
@@ -109,7 +109,7 @@ if __name__ == '__main__':
     height_type = input("Plot vs. a) log pressure or b) pseudo-altitude?")
 
     for i in range(len(exp)):
-        print(datetime.now(), " - opening files ({0:.0f}/{1:.0f})".format(i, len(exp)))
+        print(datetime.now(), " - opening files ({0:.0f}/{1:.0f})".format(i+1, len(exp)))
         #Read in data to plot polar heat contours
         if i == 0:
             heat = 0
@@ -126,7 +126,10 @@ if __name__ == '__main__':
         #MSF_xr.attrs['units']=r'kgs$^{-1}$'
 
         if plot_type =='a':
-            plot_combo(uz, Tz, lvls, heat, lat, p, exp[i], height_type)
+            if i == 0:
+                print("skipping control")
+            elif i != 0:
+                plot_combo(uz, Tz, lvls, heat, lat, p, exp[i], height_type)
         elif plot_type == 'b':
             if i == 0:
                 print("skipping control")

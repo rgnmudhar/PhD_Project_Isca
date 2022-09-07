@@ -44,10 +44,11 @@ def return_exp(extension):
         level = input("For depth a) 800, b) 600, or c) 400 hPa?")
         if level == 'a':
             exp = [basis+perturb,\
-            basis+'_w15a2p800f800g50'+perturb,\
-            basis+'_w15a4p800f800g50'+perturb,\
-            basis+'_w15a6p800f800g50'+perturb,\
-            basis+'_w15a8p800f800g50'+perturb]
+            basis+'_w15a0p800f800g50'+perturb]#,\
+            #basis+'_w15a2p800f800g50'+perturb,\
+            #basis+'_w15a4p800f800g50'+perturb,\
+            #basis+'_w15a6p800f800g50'+perturb,\
+            #basis+'_w15a8p800f800g50'+perturb]
         elif level == 'b':
             exp = [basis+perturb,\
             basis+'_w15a2p600f800g50'+perturb,\
@@ -60,7 +61,7 @@ def return_exp(extension):
             basis+'_w15a4p400f800g50'+perturb,\
             basis+'_w15a6p400f800g50'+perturb,\
             basis+'_w15a8p400f800g50'+perturb]
-        labels = ['no heat', '2', '4', '6', '8'] #['no heat', '800', '600', '400']
+        labels = ['no heat', '0.5', '2', '4', '6', '8'] #['no heat', '800', '600', '400']
         xlabel = r'Strength of Heating (K day$^{-1}$)'
     elif extension == '_loc':   
         perturb = '_q6m2y45'
@@ -247,7 +248,7 @@ def plot_pdf(var, dir, exp, input, vT, p, labels, xlabel, colors, name):
                 x_max = max(x)
             if min(x) < x_min:
                 x_min = min(x)
-                print(datetime.now(), ' - plotting')
+            print(datetime.now(), ' - plotting')
             ax.plot(x_sort, f, linewidth=1.25, color=colors[i], label=labels[i])
         mode.append(sub_mode)
         sd.append(sub_sd)
@@ -258,7 +259,7 @@ def plot_pdf(var, dir, exp, input, vT, p, labels, xlabel, colors, name):
         ax.set_xlim(x_min, x_max)
         ax.set_xlabel(xlabel, fontsize='x-large')
         ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
-        plt.legend(loc='right',fancybox=False, shadow=True, ncol=1, fontsize='large')
+        plt.legend(fancybox=False, shadow=True, ncol=1, fontsize='large')
         plt.savefig(name+'_{:.0f}pdf.pdf'.format(p1), bbox_inches = 'tight')
         plt.close()
     return mean, mode, sd, err, skew, kurt

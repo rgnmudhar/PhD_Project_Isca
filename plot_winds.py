@@ -91,6 +91,8 @@ def SPVvexp1(mean, mode, sd, err, p, labels, xlabel, name):
     ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
     ax2 = ax.twinx()
     ax2.plot(labels[1:], sd[1:], marker='o', linewidth=1.25, color='#4D0099', linestyle=':', label='S.D.')
+    ax2.axhline(sd[0], color='#4D0099', linewidth=0.5)
+    ax2.text(3.6, sd[0]-0.6, 'Control', color='#4D0099', fontsize='x-large')
     ax2.set_ylabel('{:.0f} hPa'.format(p)+r' 60 N Zonal Wind S.D. (m s$^{-1}$)', color='#4D0099', fontsize='x-large')
     #ax2.set_ylim(12,22)
     ax2.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
@@ -108,15 +110,15 @@ def SPVvexp2(skew, kurt, p, labels, xlabel, name):
     ax.set_xlabel(xlabel, fontsize='x-large')
     ax.set_ylabel('{:.0f} hPa, 60 N Zonal Wind Skewness'.format(p), fontsize='x-large', color='#B30000')
     ax.axhline(skew[0], color='#B30000', linewidth=0.5)
-    ax.text(-0.3, 0.1, 'Control', color='#B30000', fontsize='x-large')
+    ax.text(-0.25, skew[0]+0.05, 'Control', color='#B30000', fontsize='x-large')
     ax.set_ylim(-0.5, 0.5)
     ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
     ax2 = ax.twinx()
     ax2.plot(labels[1:], kurt[1:], marker='o', linewidth=1.25, color='#4D0099', linestyle=':')
     ax2.set_ylabel('{:.0f} hPa, 60 N Zonal Wind Kurtosis'.format(p), color='#4D0099', fontsize='x-large')
     ax2.axhline(kurt[0], color='#4D0099', linewidth=0.5)
-    ax2.text(2.75, -0.59, 'Control', color='#4D0099', fontsize='x-large')
-    ax2.set_xlim(-0.5, 3.5)
+    ax2.text(3.75, kurt[0]+0.05, 'Control', color='#4D0099', fontsize='x-large')
+    ax2.set_xlim(-0.5, 4.5)
     ax2.set_ylim(-0.9, 0.9)
     ax2.fill_between(range(-1,8), -1, 0, facecolor ='gainsboro', alpha = 0.4)
     ax2.text(1, -0.75, 'Negative Skew, Lighter Tails', color='#666666', fontsize='x-large')
@@ -156,16 +158,15 @@ def SSWsvexp(dir, exp, x, xlabel, fig_name):
     print(datetime.now(), " - plotting SSWs vs experiment")
     fig, ax = plt.subplots(figsize=(10,6))
     ax.errorbar(x[1:], SSWs[1:], yerr=errors[1:], fmt='o', linewidth=1.25, capsize=5, color='#B30000', linestyle=':')
-    ax.set_xlim(-0.5,3.5)
-    ax.set_ylim(0.25,0.5)
+    ax.set_xlim(-0.5,4.5)
     ax.set_xticks(x[1:])
     ax.set_xlabel(xlabel, fontsize='x-large')
     ax.set_ylabel(r'SSWs per 100 days', fontsize='x-large')
     ax.axhline(0.42, color='#4D0099', linewidth=0.5)
-    ax.text(2.85, 0.425, 'ERA-Interim', color='#4D0099', fontsize='x-large')
+    ax.text(3.5, 0.425, 'ERA-Interim', color='#4D0099', fontsize='x-large')
     ax.axhline(og, color='#666666', linewidth=0.5)
     ax.fill_between(range(-1,8), (og - og_err), (og + og_err), facecolor ='gainsboro', alpha = 0.4)
-    ax.text(3.1, 0.33, 'Control', color='#666666', fontsize='x-large')
+    ax.text(3.75, 0.33, 'Control', color='#666666', fontsize='x-large')
     ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
     plt.savefig(fig_name+'_SSWsvheat.pdf', bbox_inches = 'tight')
 
@@ -245,9 +246,9 @@ if __name__ == '__main__':
                 plot_jet(u, p[j], lvls[j], exp[i])
     elif level == 'c':
         p = 100
-        me, mo, sd, e, sk, k = plot_pdf('u', indir, exp, '_uz.nc', '', p, labels, r"zonal-mean zonal wind (m s$^{-1}$)", colors, basis+extension)
-        SPVvexp1(me, mo, sd, e, p, labels, xlabel, basis+extension)
-        SPVvexp2(sk, k, p, labels, xlabel, basis+extension)
+        me, mo, sd, e, sk, k = plot_pdf('u', indir, exp, '_uz.nc', '', [p], labels, r"zonal-mean zonal wind (m s$^{-1}$)", colors, basis+extension)
+        SPVvexp1(me[0], mo[0], sd[0], e[0], p, labels, xlabel, basis+extension)
+        SPVvexp2(sk[0], k[0], p, labels, xlabel, basis+extension)
     elif level == 'd':
         p = 10 # pressure level at which we want to find the SPV (hPa)
         #User choice for plotting - type
@@ -266,9 +267,9 @@ if __name__ == '__main__':
         elif plot_type == 'b':
             windsvexp(outdir, labels, xlabel, str(p), basis+extension)
         elif plot_type == 'c':
-            me, mo, sd, e, sk, k = plot_pdf('u', indir, exp, '_uz.nc', '', p, labels, r"zonal-mean zonal wind (m s$^{-1}$)", colors, basis+extension)
-            SPVvexp1(me, mo, sd, e, p, labels, xlabel, basis+extension)
-            SPVvexp2(sk, k, p, labels, xlabel, basis+extension)
+            me, mo, sd, e, sk, k = plot_pdf('u', indir, exp, '_uz.nc', '', [p], labels, r"zonal-mean zonal wind (m s$^{-1}$)", colors, basis+extension)
+            SPVvexp1(me[0], mo[0], sd[0], e[0], p, labels, xlabel, basis+extension)
+            SPVvexp2(sk[0], k[0], p, labels, xlabel, basis+extension)
         elif plot_type == 'd':
             SSWsvexp(outdir, exp, labels, xlabel, basis+extension)
             #SSWsvexp_multi(outdir, exp, labels, xlabel, legend, ['#B30000', '#00B300', '#0099CC', 'k'], basis+extension)
@@ -278,7 +279,7 @@ if __name__ == '__main__':
             for i in range(n):
                 print(datetime.now(), " - finding s.d. ({0:.0f}/{0:.0f})".format(i+1, n))
                 u = xr.open_dataset(indir+exp[i]+'_uz.nc', decode_times=False).ucomp
-                utz = xr.open_dataset(indir+exp[i]+'_utz.nc', decode_times=False).ucomp
+                utz = xr.open_dataset(indir+exp[i]+'_utz.nc', decode_times=False).ucomp[0]
                 if plot_what == 'a':
                     lat, p, sd = find_sd(u)
                     plot_sd(lat, p, sd, utz, np.arange(0, 42, 2), ulvls, 'Blues_r',\
