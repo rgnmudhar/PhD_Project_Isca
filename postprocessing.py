@@ -157,7 +157,6 @@ def postprocess(exp):
     os.chdir(indir + exp)
     os.remove(exp+'_all.nc')
     os.remove(exp+'_h.nc')
-    os.remove(exp+'_ut.nc')
     os.remove(exp+'_vt.nc')
     os.remove(exp+'_Tt.nc')
     newfiles = glob('*.nc', recursive=True)

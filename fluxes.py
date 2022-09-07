@@ -117,6 +117,7 @@ def plot_stats(stat, p, exp, ext, lab):
 if __name__ == '__main__': 
     #Set-up data to be read in
     indir = '/disco/share/rm811/processed/'
+    basis = 'PK_e0v4z13'
     var_type = input("Plot a) depth, b) width, c) location, d) strength experiments, or e) test?")
     if var_type == 'a':
         extension = '_depth'
@@ -196,6 +197,43 @@ if __name__ == '__main__':
         me, mo, sd, e, sk, k = plot_pdf('vT', indir, exp, '', vpTp, p, labels, r"75-90N average v'T' (K m s$^{-1}$)", colors, exp[0]+extension+'_vT')    
         plot_stats(mo, p, exp[0], extension, 'mode')
         plot_stats(sd, p, exp[0], extension, 'SD')
+
+exp = [basis+'_a4x75y180w5v30p800', basis+'_q6m2y45l800u200', basis+'_a4x75y180w5v30p800'+'_q6m2y45l800u200']
+for i in range(len(exp)):
+    vT = vT_calc(exp[i])
+    
+print(datetime.now(), " - addition")
+anom_add = anomalies[0] + anomalies[1]
+print(datetime.now(), " - combo")
+anom_combo = anomalies[2]
+print(datetime.now(), " - difference")
+anom_diff = anom_combo - anom_add
+ds, heat1 = find_heat(exp[0], 1000, type='polar')
+ds, heat2 = find_heat(exp[1], 500, type='exp')
+#anom_diff = anomalies[0] - anomalies[1]
+plotting = [anomalies[0], anomalies[1], anom_add, anomalies[2], anom_diff]
+names = [exp[0], exp[1], exp[0]+'+ctrl', exp[2], 'combo-'+exp[0]+'+ctrl']
+
+    for k in range(len(plotting)):
+        print(datetime.now(), " - plotting ", names[k])
+        ax = plt.axes(projection=ccrs.NorthPolarStereo())
+        cs = ax.contourf(ds.coords['lon'].data, ds.coords['lat'].data, plotting[k],\
+        cmap='RdBu_r', levels=lvls[k], transform = ccrs.PlateCarree())
+        cb = plt.colorbar(cs, pad=0.1)
+        cb.set_label(label='Geopotential Height Anomaly (m)', size='x-large')
+        cb.ax.tick_params(labelsize='x-large')
+        ln_ctrl = ax.contour(ds.coords['lon'].data, ds.coords['lat'].data, heat1,\
+            levels=11, colors='g', linewidths=0.5, alpha=0.4, transform = ccrs.PlateCarree())
+        if k in range(1,5):
+            ln_exp = ax.contour(ds.coords['lon'].data, ds.coords['lat'].data, heat2,\
+                levels=11, colors='g', linewidths=0.5, alpha=0.4, transform = ccrs.PlateCarree())
+        ax.set_global()
+        ax.gridlines(draw_labels=True, dms=True, x_inline=False, y_inline=False)
+        ax.set_extent([-180, 180, 0, 90], crs=ccrs.PlateCarree())
+        #ax.gridlines(draw_labels=True, dms=True, x_inline=False, y_inline=False)
+        plt.savefig(names[k]+'_'+str(p[j])+'gph.pdf', bbox_inches = 'tight')
+        plt.close()
+
 """
 # Following commented functions/code is for checking against Neil Lewis' code
 def get_pt(t, p, Rd=287., cp=1005., p0=1000.): 

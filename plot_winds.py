@@ -50,7 +50,7 @@ def plot_jet(u, p, lvls, name):
     ax.set_global()
     ax.gridlines(draw_labels=True, dms=True, x_inline=False, y_inline=False)
     ax.set_extent([-180, 180, 0, 90], crs=ccrs.PlateCarree())
-    plt.savefig(name+'_jet{:.0f}'.format(p), bbox_inches = 'tight')
+    plt.savefig(name+'_jet{:.0f}.pdf'.format(p), bbox_inches = 'tight')
     return plt.close()
 
 def plot_vtx(dir, exp, labels, colors, style, cols, fig_name):
@@ -217,7 +217,8 @@ if __name__ == '__main__':
     elif var_type == 'e':
         extension = '_ctrl'
     exp, labels, xlabel = return_exp(extension)
-    
+    n = len(exp)
+
     #User choices for plotting - subjects
     level = input('Plot a) near-surface winds, \
         b) tropospheric jet(s), \
@@ -235,11 +236,11 @@ if __name__ == '__main__':
         plot_winds(outdir, indir, exp, labels, colors, style, cols, exp[0], p)
     elif level == 'b':
         p = [850, 500] #hPa
-        lvls = [np.arange(-15, 17.5, 2.5), np.arange(50, 55, 5)]
+        lvls = [np.arange(-25, 27.5, 2.5), np.arange(50, 55, 5)]
         #windsvexp(outdir, labels, xlabel, str(p), basis+extension)
-        for j in range(p):
-            for i in range(len(exp)):
-                print(datetime.now(), " - finding winds ({0:.0f}/{0:.0f})".format(i+1, len(exp)))
+        for j in range(len(p)):
+            for i in range(n):
+                print(datetime.now(), " - finding winds ({0:.0f}/{0:.0f})".format(i+1, n))
                 u = xr.open_dataset(indir+exp[i]+'_ut.nc', decode_times=False).ucomp[0]
                 plot_jet(u, p[j], lvls[j], exp[i])
     elif level == 'c':
@@ -274,8 +275,8 @@ if __name__ == '__main__':
         elif plot_type == 'e':
             ulvls = np.arange(-200, 200, 10)
             plot_what = input('Plot a) climatology or b) difference?)')
-            for i in range(len(exp)):
-                print(datetime.now(), " - ", exp[i])
+            for i in range(n):
+                print(datetime.now(), " - finding s.d. ({0:.0f}/{0:.0f})".format(i+1, n))
                 u = xr.open_dataset(indir+exp[i]+'_uz.nc', decode_times=False).ucomp
                 utz = xr.open_dataset(indir+exp[i]+'_utz.nc', decode_times=False).ucomp
                 if plot_what == 'a':
