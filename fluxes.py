@@ -131,7 +131,7 @@ if __name__ == '__main__':
         extension = 'ctrl'
     exp, labels, xlabel = return_exp(extension)
 
-    flux = input("Plot a) EP flux or b) heat flux?")
+    flux = input("Plot a) EP flux or b) v'T'?")
     ulvls = np.arange(-200, 200, 10)
 
     if flux == 'a':
@@ -164,87 +164,72 @@ if __name__ == '__main__':
                 plot_ep(utz, div_diff, ep1_diff, ep2_diff, exp[i], heat, 'diff')
         
     elif flux == 'b':
-        colors = ['#B30000', '#FF9900', '#FFCC00', '#00B300', '#0099CC', '#4D0099', '#CC0080', '#666666']
-        vpTp = []
-        for i in range(len(exp)):
-            utz = xr.open_dataset(indir+exp[i]+'_utz.nc', decode_times=False).ucomp[0]
-            vT = vT_calc(exp[i])
-            vpTp.append(vT)
-            vT_iz = vpTp[i].mean('lon')
-            vT_itz = vT_iz.mean('time')
-            lat, p, sd = find_sd(vT_iz)
-            if i == 0:
-                sd_og = sd
-                vT_itz_og = vT_itz
-            #Read in data to plot polar heat contours
-            file = '/disco/share/rm811/isca_data/' + exp[i]+ '/run0100/atmos_daily_interp.nc'
-            ds = xr.open_dataset(file)
-            heat = ds.local_heating.sel(lon=180, method='nearest').mean(dim='time')
-            
-            print(datetime.now(), " - plotting vT")
-            plot_vT(utz, vT_itz, exp[i], heat, np.arange(-20, 190, 10), 'Blues')
+        plot_type = input("Plot a) lat-p climatology and variability or b) linear addition?")
+        if plot_type == 'a':
+            colors = ['#B30000', '#FF9900', '#FFCC00', '#00B300', '#0099CC', '#4D0099', '#CC0080', '#666666']
+            vpTp = []
+            for i in range(len(exp)):
+                utz = xr.open_dataset(indir+exp[i]+'_utz.nc', decode_times=False).ucomp[0]
+                vT = vT_calc(exp[i])
+                vpTp.append(vT)
+                vT_iz = vpTp[i].mean('lon')
+                vT_itz = vT_iz.mean('time')
+                lat, p, sd = find_sd(vT_iz)
+                if i == 0:
+                    sd_og = sd
+                    vT_itz_og = vT_itz
+                #Read in data to plot polar heat contours
+                file = '/disco/share/rm811/isca_data/' + exp[i]+ '/run0100/atmos_daily_interp.nc'
+                ds = xr.open_dataset(file)
+                heat = ds.local_heating.sel(lon=180, method='nearest').mean(dim='time')
+                
+                print(datetime.now(), " - plotting vT")
+                plot_vT(utz, vT_itz, exp[i], heat, np.arange(-20, 190, 10), 'Blues')
 
-            print(datetime.now(), " - plotting s.d.")
-            NH_zonal(lat, p, sd, utz, np.arange(0, 300, 20), ulvls, 'Blues', r"v'T' SD (K m s$^{-1}$)", exp[i]+'_vTsd.pdf')
+                print(datetime.now(), " - plotting s.d.")
+                NH_zonal(lat, p, sd, utz, np.arange(0, 300, 20), ulvls, 'Blues', r"v'T' SD (K m s$^{-1}$)", exp[i]+'_vTsd.pdf')
 
-            if i != 0:
-                vT_diff = vT_itz - vT_itz_og
-                vT_sd_diff = sd - sd_og
-                plot_vT(utz, vT_diff, exp[i]+'_diff', heat, np.arange(-40, 42, 2), 'RdBu_r')
-                NH_zonal(lat, p, vT_sd_diff, utz, np.arange(-45, 50, 5), ulvls, 'RdBu_r', r"v'T' SD (K m s$^{-1}$)", exp[i]+'_vTsd_diff.pdf') 
+                if i != 0:
+                    vT_diff = vT_itz - vT_itz_og
+                    vT_sd_diff = sd - sd_og
+                    plot_vT(utz, vT_diff, exp[i]+'_diff', heat, np.arange(-40, 42, 2), 'RdBu_r')
+                    NH_zonal(lat, p, vT_sd_diff, utz, np.arange(-45, 50, 5), ulvls, 'RdBu_r', r"v'T' SD (K m s$^{-1}$)", exp[i]+'_vTsd_diff.pdf') 
 
-        p = [500, 100, 50, 10]
-        me, mo, sd, e, sk, k = plot_pdf('vT', indir, exp, '', vpTp, p, labels, r"75-90N average v'T' (K m s$^{-1}$)", colors, exp[0]+extension+'_vT')    
-        plot_stats(mo, p, exp[0], extension, 'mode')
-        plot_stats(sd, p, exp[0], extension, 'SD')
+            p = [500, 100, 50, 10]
+            me, mo, sd, e, sk, k = plot_pdf('vT', indir, exp, '', vpTp, p, labels, r"75-90N average v'T' (K m s$^{-1}$)", colors, exp[0]+extension+'_vT')    
+            plot_stats(mo, p, exp[0], extension, 'mode')
+            plot_stats(sd, p, exp[0], extension, 'SD')
+        
+        elif plot_type == 'b':
+            print("Plotting for zonally symmetric polar heating - edit script to change to off-pole!")
+            polar = '_w15a4p800f800g50'
+            off_pole = '_a4x75y180w5v30p800'
+            exp = [basis+'_q6m2y45l800u200', basis+polar, basis+polar+'_q6m2y45l800u200']
+            vT_exp = []
+            for i in range(len(exp)):
+                vT = vT_calc(exp[i])
+                vT_exp.append(vT)
+            print(datetime.now(), " - addition")
+            comparison = [vT_exp[0].sel(lat=60, method='nearest').mean(('lon', 'time')),\
+                            vT_exp[1].sel(lat=60, method='nearest').mean(('lon', 'time')),\
+                            (vT_exp[0] + vT_exp[1]).sel(lat=60, method='nearest').mean(('lon', 'time')),\
+                            vT_exp[2].sel(lat=60, method='nearest').mean(('lon', 'time'))]
+            names = ['Control', 'Polar heat', 'Addition', 'Combo']
+            colors = ['#B30000', '#0099CC', '#4D0099', 'k']
+            lines = ['--', ':', '-.', '-']
+            fig, ax = plt.subplots(figsize=(6,6))
+            for i in range(len(comparison)):
+                ax.plot(comparison[i].transpose(), vT.pfull, color=colors[i], linestyle=lines[i], label=names[i])
+            ax.set_xlim(0, 130)
+            ax.set_xlabel(r"60$\degree$N mean v'T' magnitude", fontsize='x-large')
+            ax.set_ylabel('Pressure (hPa)', fontsize='x-large')
+            ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
+            plt.legend()
+            plt.ylim(max(vT.pfull), 1)
+            plt.yscale('log')
+            plt.savefig('addvcombo_polar.pdf', bbox_inches = 'tight')
 
 """
-
-exp = [basis+'_q6m2y45l800u200', basis+'_w15a4p800f800g50', basis+'_w15a4p800f800g50'+'_q6m2y45l800u200']
-vT_exp = []
-for i in range(len(exp)):
-    vT = vT_calc(exp[i])
-    vT_exp.append(vT)
-print(datetime.now(), " - addition")
-comparison = [vT_exp[0].sel(lat=60, method='nearest').mean(('lon', 'time')),\
-                vT_exp[1].sel(lat=60, method='nearest').mean(('lon', 'time')),\
-                (vT_exp[0] + vT_exp[1]).sel(lat=60, method='nearest').mean(('lon', 'time')),\
-                vT_exp[2].sel(lat=60, method='nearest').mean(('lon', 'time'))]
-names = ['Control', 'Polar heat', 'Addition', 'Combo']
-colors = ['#B30000', '#0099CC', '#4D0099', 'k']
-lines = ['--', ':', '-.', '-']
-fig, ax = plt.subplots(figsize=(6,6))
-for i in range(len(comparison)):
-    ax.plot(comparison[i].transpose(), vT.pfull, color=colors[i], linestyle=lines[i], label=names[i])
-ax.set_xlim(0, 130)
-ax.set_xlabel(r"60$\degree$N mean v'T' magnitude", fontsize='x-large')
-ax.set_ylabel('Pressure (hPa)', fontsize='x-large')
-ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
-plt.legend()
-plt.ylim(max(vT.pfull), 1)
-plt.yscale('log')
-plt.savefig('addvcombo_polar.pdf', bbox_inches = 'tight')
-
-for k in range(len(comaprison)):
-    print(datetime.now(), " - plotting ", names[k])
-    ax = plt.axes(projection=ccrs.NorthPolarStereo())
-    cs = ax.contourf(ds.coords['lon'].data, ds.coords['lat'].data, plotting[k],\
-    cmap='RdBu_r', levels=lvls[k], transform = ccrs.PlateCarree())
-    cb = plt.colorbar(cs, pad=0.1)
-    cb.set_label(label='Geopotential Height Anomaly (m)', size='x-large')
-    cb.ax.tick_params(labelsize='x-large')
-    ln_ctrl = ax.contour(ds.coords['lon'].data, ds.coords['lat'].data, heat1,\
-        levels=11, colors='g', linewidths=0.5, alpha=0.4, transform = ccrs.PlateCarree())
-    if k in range(1,5):
-        ln_exp = ax.contour(ds.coords['lon'].data, ds.coords['lat'].data, heat2,\
-            levels=11, colors='g', linewidths=0.5, alpha=0.4, transform = ccrs.PlateCarree())
-    ax.set_global()
-    ax.gridlines(draw_labels=True, dms=True, x_inline=False, y_inline=False)
-    ax.set_extent([-180, 180, 0, 90], crs=ccrs.PlateCarree())
-    #ax.gridlines(draw_labels=True, dms=True, x_inline=False, y_inline=False)
-    plt.savefig(names[k]+'_'+str(p[j])+'gph.pdf', bbox_inches = 'tight')
-    plt.close()
-
 # Following commented functions/code is for checking against Neil Lewis' code
 def get_pt(t, p, Rd=287., cp=1005., p0=1000.): 
     #Neil's code
