@@ -37,7 +37,7 @@ def plot_combo(u, T, lvls, heat, lat, p, exp_name, vertical):
 
     ax.contourf(csa, colors='none')
     csb.collections[int(len(lvls[1])/2)].set_linewidth(1.5)
-    cb = plt.colorbar(csa)
+    cb = plt.colorbar(csa, extend='both')
     cb.set_label(label='Temperature (K)', size='x-large')
     cb.ax.tick_params(labelsize='x-large')
     plt.xlabel(r'Latitude ($\degree$N)', fontsize='x-large')
@@ -79,7 +79,7 @@ def plot_diff(vars, units, lvls, heat, lat, p, exp_name, vertical):
 
         ax.contourf(cs1, colors='none')        
         cs2.collections[int(len(lvls[i])/2)].set_linewidth(1.5)
-        cb = plt.colorbar(cs1)
+        cb = plt.colorbar(cs1, extend='both')
         cb.set_label(label='Difference ('+units[i]+')', size='x-large')
         cb.ax.tick_params(labelsize='x-large')        
         plt.xlabel(r'Latitude ($\degree$N)', fontsize='x-large')

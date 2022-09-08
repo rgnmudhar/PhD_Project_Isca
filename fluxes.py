@@ -199,23 +199,33 @@ if __name__ == '__main__':
         plot_stats(sd, p, exp[0], extension, 'SD')
 
 """
-exp = [basis+'_a4x75y180w5v30p800', basis+'_q6m2y45l800u200', basis+'_a4x75y180w5v30p800'+'_q6m2y45l800u200']
+
+exp = [basis+'_q6m2y45l800u200', basis+'_w15a4p800f800g50', basis+'_w15a4p800f800g50'+'_q6m2y45l800u200']
+vT_exp = []
 for i in range(len(exp)):
     vT = vT_calc(exp[i])
-    
+    vT_exp.append(vT)
 print(datetime.now(), " - addition")
-anom_add = anomalies[0] + anomalies[1]
-print(datetime.now(), " - combo")
-anom_combo = anomalies[2]
-print(datetime.now(), " - difference")
-anom_diff = anom_combo - anom_add
-ds, heat1 = find_heat(exp[0], 1000, type='polar')
-ds, heat2 = find_heat(exp[1], 500, type='exp')
-#anom_diff = anomalies[0] - anomalies[1]
-plotting = [anomalies[0], anomalies[1], anom_add, anomalies[2], anom_diff]
-names = [exp[0], exp[1], exp[0]+'+ctrl', exp[2], 'combo-'+exp[0]+'+ctrl']
+comparison = [vT_exp[0].sel(lat=60, method='nearest').mean(('lon', 'time')),\
+                vT_exp[1].sel(lat=60, method='nearest').mean(('lon', 'time')),\
+                (vT_exp[0] + vT_exp[1]).sel(lat=60, method='nearest').mean(('lon', 'time')),\
+                vT_exp[2].sel(lat=60, method='nearest').mean(('lon', 'time'))]
+names = ['Control', 'Polar heat', 'Addition', 'Combo']
+colors = ['#B30000', '#0099CC', '#4D0099', 'k']
+lines = ['--', ':', '-.', '-']
+fig, ax = plt.subplots(figsize=(6,6))
+for i in range(len(comparison)):
+    ax.plot(comparison[i].transpose(), vT.pfull, color=colors[i], linestyle=lines[i], label=names[i])
+ax.set_xlim(0, 130)
+ax.set_xlabel(r"60$\degree$N mean v'T' magnitude", fontsize='x-large')
+ax.set_ylabel('Pressure (hPa)', fontsize='x-large')
+ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
+plt.legend()
+plt.ylim(max(vT.pfull), 1)
+plt.yscale('log')
+plt.savefig('addvcombo_polar.pdf', bbox_inches = 'tight')
 
-for k in range(len(plotting)):
+for k in range(len(comaprison)):
     print(datetime.now(), " - plotting ", names[k])
     ax = plt.axes(projection=ccrs.NorthPolarStereo())
     cs = ax.contourf(ds.coords['lon'].data, ds.coords['lat'].data, plotting[k],\
