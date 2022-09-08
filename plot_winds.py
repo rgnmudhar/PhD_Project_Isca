@@ -91,8 +91,8 @@ def SPVvexp1(mean, mode, sd, err, p, labels, xlabel, name):
     ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
     ax2 = ax.twinx()
     ax2.plot(labels[1:], sd[1:], marker='o', linewidth=1.25, color='#4D0099', linestyle=':', label='S.D.')
-    ax2.axhline(sd[0], color='#4D0099', linewidth=0.5)
-    ax2.text(3.6, sd[0]-0.6, 'Control', color='#4D0099', fontsize='x-large')
+    #ax2.axhline(sd[0], color='#4D0099', linewidth=0.5)
+    #ax2.text(5.6, sd[0]-0.6, 'Control', color='#4D0099', fontsize='x-large')
     ax2.set_ylabel('{:.0f} hPa'.format(p)+r' 60 N Zonal Wind S.D. (m s$^{-1}$)', color='#4D0099', fontsize='x-large')
     #ax2.set_ylim(12,22)
     ax2.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
@@ -117,8 +117,8 @@ def SPVvexp2(skew, kurt, p, labels, xlabel, name):
     ax2.plot(labels[1:], kurt[1:], marker='o', linewidth=1.25, color='#4D0099', linestyle=':')
     ax2.set_ylabel('{:.0f} hPa, 60 N Zonal Wind Kurtosis'.format(p), color='#4D0099', fontsize='x-large')
     ax2.axhline(kurt[0], color='#4D0099', linewidth=0.5)
-    ax2.text(3.75, kurt[0]+0.05, 'Control', color='#4D0099', fontsize='x-large')
-    ax2.set_xlim(-0.5, 4.5)
+    ax2.text(5.75, kurt[0]+0.05, 'Control', color='#4D0099', fontsize='x-large')
+    ax2.set_xlim(-0.5, 6.5)
     ax2.set_ylim(-0.9, 0.9)
     ax2.fill_between(range(-1,8), -1, 0, facecolor ='gainsboro', alpha = 0.4)
     ax2.text(1, -0.75, 'Negative Skew, Lighter Tails', color='#666666', fontsize='x-large')
@@ -158,15 +158,15 @@ def SSWsvexp(dir, exp, x, xlabel, fig_name):
     print(datetime.now(), " - plotting SSWs vs experiment")
     fig, ax = plt.subplots(figsize=(10,6))
     ax.errorbar(x[1:], SSWs[1:], yerr=errors[1:], fmt='o', linewidth=1.25, capsize=5, color='#B30000', linestyle=':')
-    ax.set_xlim(-0.5,4.5)
+    ax.set_xlim(-0.5,6.5)
     ax.set_xticks(x[1:])
     ax.set_xlabel(xlabel, fontsize='x-large')
     ax.set_ylabel(r'SSWs per 100 days', fontsize='x-large')
     ax.axhline(0.42, color='#4D0099', linewidth=0.5)
-    ax.text(3.5, 0.425, 'ERA-Interim', color='#4D0099', fontsize='x-large')
+    ax.text(5.4, 0.42+0.01, 'ERA-Interim', color='#4D0099', fontsize='x-large')
     ax.axhline(og, color='#666666', linewidth=0.5)
     ax.fill_between(range(-1,8), (og - og_err), (og + og_err), facecolor ='gainsboro', alpha = 0.4)
-    ax.text(3.75, 0.33, 'Control', color='#666666', fontsize='x-large')
+    ax.text(5.75, og+0.01, 'Control', color='#666666', fontsize='x-large')
     ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
     plt.savefig(fig_name+'_SSWsvheat.pdf', bbox_inches = 'tight')
 
@@ -282,7 +282,7 @@ if __name__ == '__main__':
                 utz = xr.open_dataset(indir+exp[i]+'_utz.nc', decode_times=False).ucomp[0]
                 if plot_what == 'a':
                     lat, p, sd = find_sd(u)
-                    plot_sd(lat, p, sd, utz, np.arange(0, 42, 2), ulvls, 'Blues_r',\
+                    NH_zonal(lat, p, sd, utz, np.arange(0, 42, 2), ulvls, 'Blues',\
                         r'zonal-mean zonal wind SD (ms$^{-1}$)', exp[i]+'_usd.pdf')
                 elif plot_what == 'b':
                     if i == 0:
@@ -293,4 +293,3 @@ if __name__ == '__main__':
                         sd_diff = sd1 - sd2
                         NH_zonal(lat, p, sd_diff, utz, np.arange(-20, 22, 2), ulvls, 'RdBu_r',\
                             r'zonal-mean zonal wind SD (ms$^{-1}$)', exp[i]+'_usd_diff.pdf')
-
