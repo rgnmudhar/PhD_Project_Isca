@@ -8,13 +8,24 @@ import sys
 from shared_functions import *
 from datetime import datetime
 
-def take_zonal_means(indir, outdir):
+def retrospective_calcs(indir, outdir):
     os.chdir(indir)
     exp = sorted(glob('*'))
     os.chdir(outdir)
     for i in range(len(exp)):
-        print(datetime.now(), ' - ' + exp[i] + ' zonal means')
-        nco.ncwa(input = exp[i]+'_T.nc', output = exp[i]+'_Tz.nc', options = ['-a lon'])
+        print(datetime.now(), ' - {0:.0f}/{1:.0f}'.format(i, len(exp)))
+        #nco.ncwa(input = exp[i]+'_T.nc', output = exp[i]+'_Tz.nc', options = ['-a lon']) #zonal mean
+
+        print(datetime.now(), ' - concatenate')
+        os.chdir(indir + exp[i])
+        nco.ncrcat(input = 'run*/*interp.nc', output = exp[i]+'_all.nc', use_shell = True)
+        # extract variables
+        print(datetime.now(), ' - extract variable')
+        nco.ncks(input = exp[i]+'_all.nc', output = exp[i]+'_h.nc', options = ['-v height'])
+        print(datetime.now(), ' - (re)move files')
+        os.remove(exp+'_all.nc')
+        os.rename(exp[i]+'_h.nc', outdir+exp[i]+'_h.nc')
+
 
 def calc_w(dir, exp):
     print(datetime.now(), ' - ', exp)
@@ -145,8 +156,8 @@ def postprocess(exp):
     nco.ncwa(input = exp+'_Tt.nc', output = exp+'_Ttz.nc', options = ['-a lon'])
 
     # zonal means
-    # NOTE THAT THE FOLLOWING ONLY SEEMS TO WORK ON GV3 OR GV4
-    #print(datetime.now(), ' - zonal means')
+    # NOTE THAT THE FOLLOWING ONLY SEEMS TO WORK ON GV3 OR GV4?
+    print(datetime.now(), ' - zonal means')
     nco.ncwa(input = exp+'_u.nc', output = exp+'_uz.nc', options = ['-a lon'])
     nco.ncwa(input = exp+'_v.nc', output = exp+'_vz.nc', options = ['-a lon'])
     nco.ncwa(input = exp+'_T.nc', output = exp+'_Tz.nc', options = ['-a lon'])
@@ -157,7 +168,6 @@ def postprocess(exp):
     os.chdir(indir + exp)
     os.remove(exp+'_all.nc')
     os.remove(exp+'_h.nc')
-    os.remove(exp+'_ut.nc')
     os.remove(exp+'_vt.nc')
     os.remove(exp+'_Tt.nc')
     newfiles = glob('*.nc', recursive=True)
@@ -178,11 +188,10 @@ if __name__ == '__main__':
     #sys.path.append(os.path.abspath(plevdir))
     #import run_plevel 
 
-    exp = ['PK_e0v4z13_w35a4p800f800g50_q6m2y45l800u200',\
-    'PK_e0v4z13_w15a0p800f800g50_q6m2y45l800u200',\
-    'PK_e0v4z13_w15a4p800f800g50_h4000m2l25u65']
+    exp = ['PK_e0v4z13_h4000m2l25u65',\
+    'PK_e0v4z13_w15a4p300f800g50_h4000m2l25u65']
     
-    #take_zonal_means(indir, outdir)
+    #retrospective_calcs(indir, outdir)
 
     #print(datetime.now(), ' - calculating constants')
     #ds = xr.open_dataset('../atmos_daily_T42_p40.nc', decode_times=False)

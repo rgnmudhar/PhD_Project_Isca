@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 from aostools import climate
+from shared_functions import *
 from datetime import datetime
 
 def anomaly(a, az):
@@ -75,29 +76,38 @@ if __name__ == '__main__':
     perturb = '_q6m2y45'
     off_pole = '_a4x75y180w5v30p800'
     polar = '_w15a4p800f800g50'
-    exp = [basis+perturb+'l800u200']
+    var_type = input("Plot a) depth, b) width, c) location, or d) strength experiments?")
+    if var_type == 'a':
+        extension = '_depth'
+    elif var_type == 'b':
+        extension = '_width'
+    elif var_type == 'c':
+        extension = '_loc'
+    elif var_type == 'd':
+        extension = '_strength'
+    exp, labels, xlabel = return_exp(extension)
 
-    ds, heat = find_heat(exp, 500, 'exp')
+colors = ['k', '#B30000', '#FF9900', '#FFCC00', '#00B300', '#0099CC', '#4D0099', '#CC0080']
 
-p = [10]
-kn = [1, 2, 3]
-gph_t = xr.open_dataset(indir+exp+'_ht.nc', decode_times=False).height.mean('time')
-for j in range(len(p)):
-    gph_p = gph_t.sel(pfull=p[j], method='nearest')
-    waves = climate.GetWavesXr(gph_p)
-    for i in range(len(kn)):
-        ax = plt.axes(projection=ccrs.NorthPolarStereo())
-        cs = ax.contourf(ds.lon, ds.lat, waves.sel(k=kn[i]).transpose('lat', 'lon'), cmap='RdBu_r', levels=21, transform = ccrs.PlateCarree())
-        cb = plt.colorbar(cs, pad=0.1)
-        cb.set_label(label='GPH k = {:.0f}'.format(kn[i]), size='x-large')
-        cb.ax.tick_params(labelsize='x-large')
-        ln = ax.contour(ds.coords['lon'], ds.coords['lat'], heat,\
-            levels=11, colors='g', linewidths=0.5, alpha=0.4, transform = ccrs.PlateCarree())
-        ax.set_global()
-        ax.gridlines(draw_labels=True, dms=True, x_inline=False, y_inline=False)
-        ax.set_extent([-180, 180, 0, 90], crs=ccrs.PlateCarree())
-        plt.show()
+# For mean state, plot pressure vs. wave 1/2 magnitudes across experiments
+mags = []
+fig, ax = plt.subplots(figsize=(6,6))
+for i in range(len(exp)):
+    gph = xr.open_dataset(indir+exp[i]+'_ht.nc', decode_times=False).height[0].sel(lat=60, method='nearest')
+    waves = climate.GetWavesXr(gph)
+    wav = np.abs(waves.sel(k=2)).mean('lon')
+    ax.plot(wav.transpose(), gph.pfull, color=colors[i], linestyle='-', label=labels[i])
+    mags.append(wav.sel(pfull=10, method='nearest'))
+ax.set_xlabel('mean wave-2 absolute magnitude', fontsize='x-large')
+ax.set_ylabel('Pressure (hPa)', fontsize='x-large')
+ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
+plt.legend()
+plt.ylim(max(gph.pfull), 1)
+plt.yscale('log')
+plt.title(xlabel, fontsize='x-large')
+plt.savefig(basis+extension+'_k2mag.pdf', bbox_inches = 'tight')
 
+#plot_pdf('gph', indir, exp, '', mags, [10], labels, r'zonal-mean 10 hPa 60$\degree$N wave-2 absolute magnitude', colors, exp[0]+extension+'_k2mag')
 
 """
     lons = [0, 90, 180, 270]

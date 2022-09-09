@@ -14,7 +14,7 @@ from datetime import datetime
 def return_exp(extension):
     basis = 'PK_e0v4z13'
     perturb = '_q6m2y45l800u200'
-    if extension == 'ctrl':
+    if extension == '_ctrl':
         exp = [basis+perturb]
         labels = ['ctrl']
         xlabel = 'ctrl'
@@ -36,6 +36,7 @@ def return_exp(extension):
         basis+'_w20a4p800f800g50'+perturb,\
         basis+'_w25a4p800f800g50'+perturb,\
         basis+'_w30a4p800f800g50'+perturb,\
+        #basis+'_w35a4p800f800g50'+perturb,\
         basis+'_w35a4p800f800g50'+perturb+'_SCALED',\
         basis+'_w40a4p800f800g50'+perturb]
         labels = ['no heat', '10', '15', '20', '25', '30', '35', '40']
@@ -44,6 +45,7 @@ def return_exp(extension):
         level = input("For depth a) 800, b) 600, or c) 400 hPa?")
         if level == 'a':
             exp = [basis+perturb,\
+            basis+'_w15a0p800f800g50'+perturb,\
             basis+'_w15a2p800f800g50'+perturb,\
             basis+'_w15a4p800f800g50'+perturb,\
             basis+'_w15a6p800f800g50'+perturb,\
@@ -60,7 +62,7 @@ def return_exp(extension):
             basis+'_w15a4p400f800g50'+perturb,\
             basis+'_w15a6p400f800g50'+perturb,\
             basis+'_w15a8p400f800g50'+perturb]
-        labels = ['no heat', '2', '4', '6', '8'] #['no heat', '800', '600', '400']
+        labels = ['no heat', '0.5', '2', '4', '6', '8'] #['no heat', '800', '600', '400']
         xlabel = r'Strength of Heating (K day$^{-1}$)'
     elif extension == '_loc':   
         perturb = '_q6m2y45'
@@ -210,7 +212,7 @@ def pdf(x, plot=False):
     mode = x[int(np.argmax(p))]
     return x, p, mode
 
-def plot_pdf(var, dir, exp, input, vT, p, labels, xlabel, colors, name):
+def plot_pdf(var, dir, exp, input, z, p, labels, xlabel, colors, name):
     mode = []
     mean = []
     sd = []
@@ -235,7 +237,9 @@ def plot_pdf(var, dir, exp, input, vT, p, labels, xlabel, colors, name):
             if var == 'u':
                 x = xr.open_dataset(dir+exp[i]+input, decode_times=False).ucomp.sel(pfull=p1, method='nearest').sel(lat=60, method='nearest')
             elif var == 'vT':
-                x = vT_level(vT[i], p1)
+                x = vT_level(z[i], p1)
+            elif var == 'gph':
+                x = z[i]
             x_sort, f, m = pdf(x)
             sub_mode.append(m)
             sub_sd.append(np.std(x))
@@ -247,7 +251,7 @@ def plot_pdf(var, dir, exp, input, vT, p, labels, xlabel, colors, name):
                 x_max = max(x)
             if min(x) < x_min:
                 x_min = min(x)
-                print(datetime.now(), ' - plotting')
+            print(datetime.now(), ' - plotting')
             ax.plot(x_sort, f, linewidth=1.25, color=colors[i], label=labels[i])
         mode.append(sub_mode)
         sd.append(sub_sd)
@@ -258,7 +262,7 @@ def plot_pdf(var, dir, exp, input, vT, p, labels, xlabel, colors, name):
         ax.set_xlim(x_min, x_max)
         ax.set_xlabel(xlabel, fontsize='x-large')
         ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
-        plt.legend(loc='right',fancybox=False, shadow=True, ncol=1, fontsize='large')
+        plt.legend(fancybox=False, shadow=True, ncol=1, fontsize='large')
         plt.savefig(name+'_{:.0f}pdf.pdf'.format(p1), bbox_inches = 'tight')
         plt.close()
     return mean, mode, sd, err, skew, kurt
@@ -281,7 +285,7 @@ def NH_zonal(lat, p, x, y, xlvls, ylvls, colors, lab, name):
     ax.contourf(cs1, colors='none')
     cs2 = ax.contour(lat, p, y, colors='k', levels=ylvls, linewidths=0.5, alpha=0.2)
     cs2.collections[int(len(ylvls)/2)].set_linewidth(1)
-    cb = plt.colorbar(cs1)
+    cb = plt.colorbar(cs1, extend='both')
     cb.set_label(label=lab, size='x-large')
     cb.ax.tick_params(labelsize='x-large')
     #plt.scatter(lat.sel(lat=60, method='nearest'), p.sel(pfull=10, method='nearest'), marker='x', color='#B30000')

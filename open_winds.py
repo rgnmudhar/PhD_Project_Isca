@@ -170,14 +170,10 @@ if __name__ == '__main__':
     #exp = [basis+'_a4x75y180w5v30p400_q6m2y45']
     
     #Ro = []
-    for i in range(len(exp)):
-        find_SPV(indir, outdir, exp[i])
-
-        #p = 10
-        #p = 850
-        #winds_errs(indir, outdir, exp[i], p, basis+extension)
+    #for i in range(len(exp)):
         #Ro.append(calc_Ro(indir, exp[i], p))
-    
     #print(Ro)
-    
-    
+
+    find_SPV(indir, outdir, exp)
+    #p = 10 #850
+    #winds_errs(indir, outdir, exp, p, basis+extension)
