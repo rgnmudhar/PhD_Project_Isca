@@ -201,7 +201,7 @@ if __name__ == '__main__':
             plot_stats(sd, p, exp[0], extension, 'SD')
         
         elif plot_type == 'b':
-            print("Plotting for zonally symmetric polar heating - edit script to change to off-pole!")
+            print("Plotting for off-pole polar heating - edit script to change to zonally symmetric!")
             polar = '_w15a4p800f800g50'
             off_pole = '_a4x75y180w5v30p800'
             exp = [basis+'_q6m2y45l800u200', basis+off_pole, basis+off_pole+'_q6m2y45']
