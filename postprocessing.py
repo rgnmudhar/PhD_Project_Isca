@@ -26,7 +26,6 @@ def retrospective_calcs(indir, outdir):
         os.remove(exp[i]+'_all.nc')
         os.rename(exp[i]+'_h.nc', outdir+exp[i]+'_h.nc')
 
-
 def calc_w(dir, exp):
     print(datetime.now(), ' - ', exp)
     print(datetime.now(), ' - opening u and v')
@@ -94,25 +93,36 @@ def find_TKE(dir, exp):
     return plt.close()
 
 def remove_uninterp(exp):
-    print(datetime.now(), ' - ', exp)
-    # run plevel interpolation
-    print(datetime.now(), ' - interpolate')
-    os.chdir(indir + exp)
-    runs = sorted(glob('run*'))
-    n = len(runs) - 1
+    print(datetime.now(), ' - interpolation processing')
+    #os.chdir(indir + exp)
+    #runs = sorted(glob('run*'))
+    #n = len(runs) - 1
     # PLEASE NOTE WITH THE FOLLOWING EXCLUDED, RUN_PLEVEL.PY MUST BE RUN BEFORE THIS SCRIPT
     #os.chdir(plevdir)
     #run_plevel.main(indir, exp, n)
 
-    # delete pre-interpolation files
-    os.chdir(indir + exp)
-    files = glob('*/atmos_daily.nc', recursive=True)
-    for f in files:
+    os.chdir(indir)
+    for i in range(len(exp)):
+        # delete pre-interpolation files
+        print(datetime.now(), ' - {0:.0f}/{1:.0f} - '.format(i+1, len(exp)), exp[i])
+        os.chdir(indir + exp[i])
+        files = glob('*/atmos_daily.nc', recursive=True)
+        for f in files:
+            try:
+                os.remove(f)
+            except OSError as e:
+                print(e.strerror, ':', f)
+
+def delete_spinup(exp):
+    print(datetime.now(), ' - delete spin-up data')
+    os.chdir(indir)
+    folders = glob('*/spin*', recursive=True)
+    for f in folders:
         try:
             os.remove(f)
         except OSError as e:
             print(e.strerror, ':', f)
-        
+
 def postprocess(exp):
     print(datetime.now(), ' - ', exp)
     os.chdir(indir + exp)
@@ -188,8 +198,9 @@ if __name__ == '__main__':
     #sys.path.append(os.path.abspath(plevdir))
     #import run_plevel 
 
-    exp = 'PK_e0v4z13_h4000m2l25u65'
-    #'PK_e0v4z13_w15a4p300f800g50_h4000m2l25u65']
+    exp = ['PK_e0v4z13_h4000m2l25u65',\
+            'PK_e0v4z13_w15a4p300f800g50_h4000m2l25u65',\
+            'PK_e0v4z13_w15a4p800f800g50_h4000m2l25u65']
     
     #retrospective_calcs(indir, outdir)
 
@@ -205,8 +216,8 @@ if __name__ == '__main__':
     ##dp = np.gradient(p)
     
     #for i in range(len(exp)):
-    postprocess(exp)
-        #remove_uninterp(exp[i])
+    #postprocess(exp)
+    remove_uninterp(exp)
         #find_TKE(outdir, exp[i])
         #calc_w(outdir, exp[i])
 
