@@ -23,7 +23,7 @@ def retrospective_calcs(indir, outdir):
         print(datetime.now(), ' - extract variable')
         nco.ncks(input = exp[i]+'_all.nc', output = exp[i]+'_h.nc', options = ['-v height'])
         print(datetime.now(), ' - (re)move files')
-        os.remove(exp+'_all.nc')
+        os.remove(exp[i]+'_all.nc')
         os.rename(exp[i]+'_h.nc', outdir+exp[i]+'_h.nc')
 
 
