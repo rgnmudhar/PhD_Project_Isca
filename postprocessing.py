@@ -116,6 +116,7 @@ def remove_uninterp(exp):
 def postprocess(exp):
     print(datetime.now(), ' - ', exp)
     os.chdir(indir + exp)
+    """
     runs = sorted(glob('run*'))
     n = len(runs) - 1
     
@@ -154,7 +155,7 @@ def postprocess(exp):
     nco.ncwa(input = exp+'_ut.nc', output = exp+'_utz.nc', options = ['-a lon'])
     nco.ncwa(input = exp+'_vt.nc', output = exp+'_vtz.nc', options = ['-a lon'])
     nco.ncwa(input = exp+'_Tt.nc', output = exp+'_Ttz.nc', options = ['-a lon'])
-
+    """
     # zonal means
     # NOTE THAT THE FOLLOWING ONLY SEEMS TO WORK ON GV3 OR GV4?
     print(datetime.now(), ' - zonal means')
@@ -167,7 +168,6 @@ def postprocess(exp):
     print(datetime.now(), ' - re-arrange files')
     os.chdir(indir + exp)
     os.remove(exp+'_all.nc')
-    os.remove(exp+'_h.nc')
     os.remove(exp+'_vt.nc')
     os.remove(exp+'_Tt.nc')
     newfiles = glob('*.nc', recursive=True)
@@ -188,10 +188,10 @@ if __name__ == '__main__':
     #sys.path.append(os.path.abspath(plevdir))
     #import run_plevel 
 
-    #exp = ['PK_e0v4z13_h4000m2l25u65',\
+    exp = 'PK_e0v4z13_h4000m2l25u65'
     #'PK_e0v4z13_w15a4p300f800g50_h4000m2l25u65']
     
-    retrospective_calcs(indir, outdir)
+    #retrospective_calcs(indir, outdir)
 
     #print(datetime.now(), ' - calculating constants')
     #ds = xr.open_dataset('../atmos_daily_T42_p40.nc', decode_times=False)
@@ -205,7 +205,7 @@ if __name__ == '__main__':
     ##dp = np.gradient(p)
     
     #for i in range(len(exp)):
-        #postprocess(exp[i])
+    postprocess(exp)
         #remove_uninterp(exp[i])
         #find_TKE(outdir, exp[i])
         #calc_w(outdir, exp[i])
