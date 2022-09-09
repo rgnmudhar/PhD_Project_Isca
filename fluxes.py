@@ -118,7 +118,8 @@ if __name__ == '__main__':
     #Set-up data to be read in
     indir = '/disco/share/rm811/processed/'
     basis = 'PK_e0v4z13'
-    var_type = input("Plot a) depth, b) width, c) location, d) strength experiments, or e) test?")
+    flux = input("Plot a) EP flux or b) v'T'?")
+    var_type = input("Plot a) depth, b) width, c) location, d) strength experiments, or e) control?")
     if var_type == 'a':
         extension = '_depth'
     elif var_type == 'b':
@@ -128,10 +129,9 @@ if __name__ == '__main__':
     elif var_type == 'd':
         extension = '_strength'
     elif var_type == 'e':
-        extension = 'ctrl'
+        extension = '_ctrl'
     exp, labels, xlabel = return_exp(extension)
 
-    flux = input("Plot a) EP flux or b) v'T'?")
     ulvls = np.arange(-200, 200, 10)
 
     if flux == 'a':
@@ -166,7 +166,7 @@ if __name__ == '__main__':
     elif flux == 'b':
         plot_type = input("Plot a) lat-p climatology and variability or b) linear addition?")
         if plot_type == 'a':
-            colors = ['#B30000', '#FF9900', '#FFCC00', '#00B300', '#0099CC', '#4D0099', '#CC0080', '#666666']
+            colors = ['k', '#B30000', '#FF9900', '#FFCC00', '#00B300', '#0099CC', '#4D0099', '#CC0080']
             vpTp = []
             for i in range(len(exp)):
                 utz = xr.open_dataset(indir+exp[i]+'_utz.nc', decode_times=False).ucomp[0]
@@ -204,17 +204,17 @@ if __name__ == '__main__':
             print("Plotting for zonally symmetric polar heating - edit script to change to off-pole!")
             polar = '_w15a4p800f800g50'
             off_pole = '_a4x75y180w5v30p800'
-            exp = [basis+'_q6m2y45l800u200', basis+polar, basis+polar+'_q6m2y45l800u200']
+            exp = [basis+'_q6m2y45l800u200', basis+off_pole, basis+off_pole+'_q6m2y45']
             vT_exp = []
             for i in range(len(exp)):
                 vT = vT_calc(exp[i])
                 vT_exp.append(vT)
             print(datetime.now(), " - addition")
             comparison = [vT_exp[0].sel(lat=60, method='nearest').mean(('lon', 'time')),\
-                            vT_exp[1].sel(lat=60, method='nearest').mean(('lon', 'time')),\
-                            (vT_exp[0] + vT_exp[1]).sel(lat=60, method='nearest').mean(('lon', 'time')),\
-                            vT_exp[2].sel(lat=60, method='nearest').mean(('lon', 'time'))]
-            names = ['Control', 'Polar heat', 'Addition', 'Combo']
+                            vT_exp[1].sel(lat=60, method='nearest').mean(('lon', 'time'))]
+            comparison.append(comparison[0]+comparison[1]) # addition after taking means
+            comparison.append(vT_exp[2].sel(lat=60, method='nearest').mean(('lon', 'time')))
+            names = ['Control', 'Off-pole heat', 'Addition', 'Combo']
             colors = ['#B30000', '#0099CC', '#4D0099', 'k']
             lines = ['--', ':', '-.', '-']
             fig, ax = plt.subplots(figsize=(6,6))
@@ -227,7 +227,7 @@ if __name__ == '__main__':
             plt.legend()
             plt.ylim(max(vT.pfull), 1)
             plt.yscale('log')
-            plt.savefig('addvcombo_polar.pdf', bbox_inches = 'tight')
+            plt.savefig('addvcombo_offpole.pdf', bbox_inches = 'tight')
 
 """
 # Following commented functions/code is for checking against Neil Lewis' code

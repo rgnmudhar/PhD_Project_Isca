@@ -31,14 +31,14 @@ def return_exp(extension):
         xlabel = 'Depth of Heating (hPa)'
     elif extension == '_width':
         exp = [basis+perturb,\
-        #basis+'_w10a4p800f800g50'+perturb,\
-        #basis+'_w15a4p800f800g50'+perturb,\
-        #basis+'_w20a4p800f800g50'+perturb,\
-        #basis+'_w25a4p800f800g50'+perturb,\
-        #basis+'_w30a4p800f800g50'+perturb,\
-        basis+'_w35a4p800f800g50'+perturb] #,\
-        #basis+'_w35a4p800f800g50'+perturb+'_SCALED'] #,\
-        #basis+'_w40a4p800f800g50'+perturb]
+        basis+'_w10a4p800f800g50'+perturb,\
+        basis+'_w15a4p800f800g50'+perturb,\
+        basis+'_w20a4p800f800g50'+perturb,\
+        basis+'_w25a4p800f800g50'+perturb,\
+        basis+'_w30a4p800f800g50'+perturb,\
+        #basis+'_w35a4p800f800g50'+perturb,\
+        basis+'_w35a4p800f800g50'+perturb+'_SCALED',\
+        basis+'_w40a4p800f800g50'+perturb]
         labels = ['no heat', '10', '15', '20', '25', '30', '35', '40']
         xlabel = r'Extent of Heating ($\degree$)'
     elif extension == '_strength':
@@ -212,7 +212,7 @@ def pdf(x, plot=False):
     mode = x[int(np.argmax(p))]
     return x, p, mode
 
-def plot_pdf(var, dir, exp, input, vT, p, labels, xlabel, colors, name):
+def plot_pdf(var, dir, exp, input, z, p, labels, xlabel, colors, name):
     mode = []
     mean = []
     sd = []
@@ -237,7 +237,9 @@ def plot_pdf(var, dir, exp, input, vT, p, labels, xlabel, colors, name):
             if var == 'u':
                 x = xr.open_dataset(dir+exp[i]+input, decode_times=False).ucomp.sel(pfull=p1, method='nearest').sel(lat=60, method='nearest')
             elif var == 'vT':
-                x = vT_level(vT[i], p1)
+                x = vT_level(z[i], p1)
+            elif var == 'gph':
+                x = z[i]
             x_sort, f, m = pdf(x)
             sub_mode.append(m)
             sub_sd.append(np.std(x))

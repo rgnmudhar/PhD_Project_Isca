@@ -87,22 +87,27 @@ if __name__ == '__main__':
         extension = '_strength'
     exp, labels, xlabel = return_exp(extension)
 
-colors = ['#B30000', '#FF9900', '#FFCC00', '#00B300', '#0099CC', '#4D0099', '#CC0080', '#666666']
+colors = ['k', '#B30000', '#FF9900', '#FFCC00', '#00B300', '#0099CC', '#4D0099', '#CC0080']
 
 # For mean state, plot pressure vs. wave 1/2 magnitudes across experiments
+mags = []
 fig, ax = plt.subplots(figsize=(6,6))
 for i in range(len(exp)):
     gph = xr.open_dataset(indir+exp[i]+'_ht.nc', decode_times=False).height[0].sel(lat=60, method='nearest')
     waves = climate.GetWavesXr(gph)
-    ax.plot(np.abs(waves.sel(k=2)).mean('lon').transpose(), gph.pfull, color=colors[i], linestyle='-', label=labels[i])
-ax.set_xlabel(r'mean wave-2 absolute magnitude', fontsize='x-large')
+    wav = np.abs(waves.sel(k=2)).mean('lon')
+    ax.plot(wav.transpose(), gph.pfull, color=colors[i], linestyle='-', label=labels[i])
+    mags.append(wav.sel(pfull=10, method='nearest'))
+ax.set_xlabel('mean wave-2 absolute magnitude', fontsize='x-large')
 ax.set_ylabel('Pressure (hPa)', fontsize='x-large')
 ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
 plt.legend()
 plt.ylim(max(gph.pfull), 1)
 plt.yscale('log')
 plt.title(xlabel, fontsize='x-large')
-plt.show()
+plt.savefig(basis+extension+'_k2mag.pdf', bbox_inches = 'tight')
+
+#plot_pdf('gph', indir, exp, '', mags, [10], labels, r'zonal-mean 10 hPa 60$\degree$N wave-2 absolute magnitude', colors, exp[0]+extension+'_k2mag')
 
 """
     lons = [0, 90, 180, 270]
