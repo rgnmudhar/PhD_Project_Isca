@@ -13,7 +13,7 @@ def retrospective_calcs(indir, outdir):
     exp = sorted(glob('*'))
     os.chdir(outdir)
     for i in range(len(exp)):
-        print(datetime.now(), ' - {0:.0f}/{1:.0f}'.format(i, len(exp)))
+        print(datetime.now(), ' - {0:.0f}/{1:.0f} - '.format(i+1, len(exp)), exp[i])
         #nco.ncwa(input = exp[i]+'_T.nc', output = exp[i]+'_Tz.nc', options = ['-a lon']) #zonal mean
 
         print(datetime.now(), ' - concatenate')
@@ -188,10 +188,10 @@ if __name__ == '__main__':
     #sys.path.append(os.path.abspath(plevdir))
     #import run_plevel 
 
-    exp = ['PK_e0v4z13_h4000m2l25u65',\
-    'PK_e0v4z13_w15a4p300f800g50_h4000m2l25u65']
+    #exp = ['PK_e0v4z13_h4000m2l25u65',\
+    #'PK_e0v4z13_w15a4p300f800g50_h4000m2l25u65']
     
-    #retrospective_calcs(indir, outdir)
+    retrospective_calcs(indir, outdir)
 
     #print(datetime.now(), ' - calculating constants')
     #ds = xr.open_dataset('../atmos_daily_T42_p40.nc', decode_times=False)
@@ -204,8 +204,8 @@ if __name__ == '__main__':
     ##p = ds.pfull
     ##dp = np.gradient(p)
     
-    for i in range(len(exp)):
-        postprocess(exp[i])
+    #for i in range(len(exp)):
+        #postprocess(exp[i])
         #remove_uninterp(exp[i])
         #find_TKE(outdir, exp[i])
         #calc_w(outdir, exp[i])
