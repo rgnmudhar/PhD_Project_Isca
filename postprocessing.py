@@ -1,3 +1,4 @@
+from re import U
 from nco import Nco
 from glob import glob
 import xarray as xr
@@ -68,32 +69,37 @@ def find_TKE(indir, outdir):
     Based on script by Penelope Maher and discussions with William Seviour.
     """
     os.chdir(indir)
-    exp = sorted(glob('*')
+    exp = sorted(glob('*'))
     for i in range(len(exp)):
+        os.chdir(indir+exp[i])
         print(datetime.now(), ' - finding KE for {0:.0f}/{1:.0f} - '.format(i+1, len(exp)), exp[i])
         KE = []
-        uz = xr.open_dataset(dir+exp+'_uz.nc', decode_times=False).ucomp[0]
-        vz = xr.open_dataset(dir+exp+'_vz.nc', decode_times=False).vcomp[0]
-        coslat = np.cos(np.deg2rad(uz.coords['lat'].values)).clip(0., 1.) # need to weight due to different box sizes over grid
+        files1 = glob('spin*/*.nc')
+        files2 = sorted(glob('run*/*.nc'))
+        files = files1 + files2
+        ds = xr.open_mfdataset(files, decode_times=False)
+        uz = ds.ucomp.mean('lon')
+        vz = ds.vcomp.mean('lon')
+        coslat = np.cos(np.deg2rad(ds.coords['lat'].values)).clip(0., 1.) # need to weight due to different box sizes over grid
         lat_wgts = np.sqrt(coslat)
         for j in range(len(uz)):
             TKE_box = np.empty_like(uz[j])
-            for q in range(len(uz.coords['pfull'].data)):
-                for k in range(len(uz.coords['lat'].data)):
+            for q in range(len(ds.coords['pfull'].data)):
+                for k in range(len(ds.coords['lat'].data)):
                     TKE_box[q,k] = calc_TKE(uz[j][q,k], vz[j][q,k])
             TKE_box = np.average(TKE_box, axis=1, weights=lat_wgts)
             TKE_avg = np.nanmean(TKE_box) # should I weight pressures too? How?
             KE.append(TKE_avg)
-        save_file(exp, KE, 'KE')
+        save_file(outdir, exp[i], KE, 'KE')
 
-        print("plotting")
-        KE = open_file(exp, 'KE')
+        print(datetime.now(), " - plotting")
+        KE = open_file(outdir, exp[i], 'KE')
         fig, ax = plt.subplots(figsize=(10,6))
         ax.plot(len(KE), KE, color='k')
         ax.set_xlim(1,len(KE))
         ax.set_xlabel("Days Simulated")       
         ax.set_ylabel('total KE', color='k')
-        plt.savefig(outdir+exp+'_spinup.pdf', bbox_inches = 'tight')
+        plt.savefig(outdir+exp[i]+'_spinup.pdf', bbox_inches = 'tight')
         plt.close()
 
 def remove_uninterp(exp):
@@ -208,7 +214,7 @@ if __name__ == '__main__':
     if func == 'b':
         remove_uninterp(exp)    
     elif func == 'c':
-        find_TKE(outdir, analysisdir)  
+        find_TKE(indir, analysisdir)  
     elif func == 'e':
         retrospective_calcs(indir, outdir)
     elif func == 'f':
