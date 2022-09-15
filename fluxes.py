@@ -137,10 +137,6 @@ if __name__ == '__main__':
     if flux == 'a':
         for i in range(len(exp)):
             print(datetime.now(), " - opening files ({0:.0f}/{1:.0f})".format(i+1, len(exp)))
-            # Read in data to plot polar heat contours
-            file = '/disco/share/rm811/isca_data/' + exp[i] + '/run0100/atmos_daily_interp.nc'
-            ds = xr.open_dataset(file)
-            heat = ds.local_heating.sel(lon=180, method='nearest').mean(dim='time')    
             u = xr.open_dataset(indir+exp[i]+'_u.nc', decode_times=False).ucomp
             v = xr.open_dataset(indir+exp[i]+'_v.nc', decode_times=False).vcomp
             w = xr.open_dataset(indir+exp[i]+'_w.nc', decode_times=False).omega/100 # Pa --> hPa
@@ -148,15 +144,19 @@ if __name__ == '__main__':
             utz = xr.open_dataset(indir+exp[i]+'_utz.nc', decode_times=False).ucomp[0]
             div, ep1, ep2 = calc_ep(u, v, w, T)
 
-            print(datetime.now(), " - plotting")
-            plot_ep(utz, div, ep1, ep2, exp[i], heat, 'single')
-
             if i == 0:
                 print("skipping control")
                 div_og = div
                 ep1_og = ep1
                 ep2_og = ep2
             elif i != 0:
+                # Read in data to plot polar heat contours
+                file = '/disco/share/rm811/isca_data/' + exp[i] + '/run0100/atmos_daily_interp.nc'
+                ds = xr.open_dataset(file)
+                heat = ds.local_heating.sel(lon=180, method='nearest').mean(dim='time')  
+                print(datetime.now(), " - plotting")
+                plot_ep(utz, div, ep1, ep2, exp[i], heat, 'single')
+
                 print(datetime.now(), " - taking differences")
                 div_diff = div - div_og
                 ep1_diff = ep1 - ep1_og
@@ -178,18 +178,20 @@ if __name__ == '__main__':
                 if i == 0:
                     sd_og = sd
                     vT_itz_og = vT_itz
-                #Read in data to plot polar heat contours
-                file = '/disco/share/rm811/isca_data/' + exp[i]+ '/run0100/atmos_daily_interp.nc'
-                ds = xr.open_dataset(file)
-                heat = ds.local_heating.sel(lon=180, method='nearest').mean(dim='time')
-                
-                print(datetime.now(), " - plotting vT")
-                plot_vT(utz, vT_itz, exp[i], heat, np.arange(-20, 190, 10), 'Blues')
+                    print("skipping control")
 
-                print(datetime.now(), " - plotting s.d.")
-                NH_zonal(lat, p, sd, utz, np.arange(0, 300, 20), ulvls, 'Blues', r"v'T' SD (K m s$^{-1}$)", exp[i]+'_vTsd.pdf')
+                elif i != 0:
+                    #Read in data to plot polar heat contours
+                    file = '/disco/share/rm811/isca_data/' + exp[i]+ '/run0100/atmos_daily_interp.nc'
+                    ds = xr.open_dataset(file)
+                    heat = ds.local_heating.sel(lon=180, method='nearest').mean(dim='time')
 
-                if i != 0:
+                    print(datetime.now(), " - plotting vT")
+                    plot_vT(utz, vT_itz, exp[i], heat, np.arange(-20, 190, 10), 'Blues')
+
+                    print(datetime.now(), " - plotting s.d.")
+                    NH_zonal(lat, p, sd, utz, np.arange(0, 300, 20), ulvls, 'Blues', r"v'T' SD (K m s$^{-1}$)", exp[i]+'_vTsd.pdf')
+
                     vT_diff = vT_itz - vT_itz_og
                     vT_sd_diff = sd - sd_og
                     plot_vT(utz, vT_diff, exp[i]+'_diff', heat, np.arange(-40, 42, 2), 'RdBu_r')
