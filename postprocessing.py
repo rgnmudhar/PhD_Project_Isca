@@ -128,6 +128,7 @@ def delete_spinup(indir):
     os.chdir(indir)
     folders = glob('*/spin*', recursive=True)
     for f in folders:
+        print(datetime.now(), ' - ', f)
         try:
             shutil.rmtree(f)
         except OSError as e:
