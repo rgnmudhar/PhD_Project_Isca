@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from shared_functions import *
 from datetime import datetime
 
-def plot_combo(u, T, lvls, heat, lat, p, exp_name, vertical):
+def plot_combo(u, T, lvls, perturb, lat, p, exp_name, vertical):
     print(datetime.now(), " - plotting")
     # Plots time and zonal-mean Zonal Wind Speed and Temperature
     fig, ax = plt.subplots(figsize=(6,6))
@@ -17,7 +17,7 @@ def plot_combo(u, T, lvls, heat, lat, p, exp_name, vertical):
     if vertical == "a":
         csa = ax.contourf(lat, p, T, levels=lvls[0], cmap='Blues_r')
         csb = ax.contour(lat, p, u, colors='k', levels=lvls[1], linewidths=1)
-        plt.contour(lat, p, heat, colors='g', linewidths=1, alpha=0.4, levels=11)
+        plt.contour(lat, p, perturb, colors='g', linewidths=1, alpha=0.4, levels=11)
         plt.ylabel('Pressure (hPa)', fontsize='x-large')
         plt.ylim(max(p), upper_p) #goes to ~1hPa
         plt.yscale('log')
@@ -48,7 +48,7 @@ def plot_combo(u, T, lvls, heat, lat, p, exp_name, vertical):
 
     return plt.close()
 
-def plot_diff(vars, units, lvls, heat, lat, p, exp_name, vertical):
+def plot_diff(vars, units, lvls, perturb, lat, p, exp_name, vertical):
     # Plots differences in time and zonal-mean of variables (vars)
     lvls_diff = np.arange(-20, 22.5, 2.5)
     for i in range(len(vars)):
@@ -60,7 +60,7 @@ def plot_diff(vars, units, lvls, heat, lat, p, exp_name, vertical):
         if vertical == "a":
             cs1 = ax.contourf(lat, p, x, levels=lvls_diff, cmap='RdBu_r')
             cs2 = ax.contour(lat, p, vars[i][0], colors='k', levels=lvls[i], linewidths=1, alpha=0.4)
-            plt.contour(lat, p, heat, colors='g', linewidths=1, alpha=0.4, levels=11)
+            plt.contour(lat, p, perturb, colors='g', linewidths=1, alpha=0.4, levels=11)
             plt.ylabel('Pressure (hPa)', fontsize='x-large')
             plt.ylim(max(p), upper_p) #goes to ~1hPa
             plt.yscale('log')
@@ -70,7 +70,7 @@ def plot_diff(vars, units, lvls, heat, lat, p, exp_name, vertical):
             z = altitude(p)
             upper_z = -7*np.log(upper_p/1000)
             var_z = use_altitude(vars[i][0], z, lat, 'pfull', 'lat', units[i])
-            H = use_altitude(heat, z, lat, 'pfull', 'lat', r'Ks$^{-1}$')
+            H = use_altitude(perturb, z, lat, 'pfull', 'lat', r'Ks$^{-1}$')
             cs1 = x.plot.contourf(levels=lvls_diff, cmap='RdBu_r', add_colorbar=False)
             cs2 = ax.contour(lat, z, var_z, colors='k', levels=lvls[i], linewidths=1)
             plt.contour(lat, z, H, colors='g', linewidths=1, alpha=0.4, levels=11)
@@ -92,7 +92,7 @@ def plot_diff(vars, units, lvls, heat, lat, p, exp_name, vertical):
 if __name__ == '__main__': 
     #Set-up data to be read in
     indir = '/disco/share/rm811/processed/'
-    var_type = input("Plot a) depth, b) width, c) location, or d) strength experiments?")
+    var_type = input("Plot a) depth, b) width, c) location, d) strength or e) topography experiments?")
     if var_type == 'a':
         extension = '_depth'
     elif var_type == 'b':
@@ -101,6 +101,8 @@ if __name__ == '__main__':
         extension = '_loc'
     elif var_type == 'd':
         extension = '_strength'
+    elif var_type == 'e':
+        extension = '_topo'
     exp, labels, xlabel = return_exp(extension)
     upper_p = 1 # hPa
     lvls = [np.arange(160, 330, 10), np.arange(-200, 205, 5)]
@@ -110,13 +112,6 @@ if __name__ == '__main__':
 
     for i in range(len(exp)):
         print(datetime.now(), " - opening files ({0:.0f}/{1:.0f})".format(i+1, len(exp)))
-        #Read in data to plot polar heat contours
-        if i == 0:
-            heat = 0
-        elif i != 0:
-            file = '/disco/share/rm811/isca_data/' + exp[i] + '/run0100/atmos_daily_interp.nc'
-            ds = xr.open_dataset(file)
-            heat = ds.local_heating.sel(lon=180, method='nearest').mean(dim='time')    
         uz = xr.open_dataset(indir+exp[i]+'_utz.nc', decode_times=False).ucomp[0]
         Tz = xr.open_dataset(indir+exp[i]+'_Ttz.nc', decode_times=False).temp[0]
         lat = uz.coords['lat'].data
@@ -125,16 +120,17 @@ if __name__ == '__main__':
         #MSF_xr = xr.DataArray(MSF, coords=[p,lat], dims=['pfull','lat'])  # Make into an xarray DataArray
         #MSF_xr.attrs['units']=r'kgs$^{-1}$'
 
-        if plot_type =='a':
-            if i == 0:
-                print("skipping control")
-            elif i != 0:
-                plot_combo(uz, Tz, lvls, heat, lat, p, exp[i], height_type)
-        elif plot_type == 'b':
-            if i == 0:
-                print("skipping control")
-            elif i != 0:
-                u = [uz, xr.open_dataset(indir+exp[0]+'_utz.nc', decode_times=False).ucomp[0]]
-                T = [Tz, xr.open_dataset(indir+exp[0]+'_Ttz.nc', decode_times=False).temp[0]]
-                plot_diff([T, u], ['K', r'ms$^{-1}$'], [np.arange(160, 330, 10), np.arange(-200, 210, 10)],\
-                    heat, lat, p, exp[i], height_type)
+        if i == 0:
+            print("skipping control")
+        elif i != 0:
+            #Read in data to plot polar heat contours
+            file = '/disco/share/rm811/isca_data/' + exp[i] + '/run0100/atmos_daily_interp.nc'
+            ds = xr.open_dataset(file)
+            perturb = ds.local_heating.sel(lon=180, method='nearest').mean(dim='time')  
+            if plot_type =='a':
+                plot_combo(uz, Tz, lvls, perturb, lat, p, exp[i], height_type)
+            elif plot_type == 'b':
+                    u = [uz, xr.open_dataset(indir+exp[0]+'_utz.nc', decode_times=False).ucomp[0]]
+                    T = [Tz, xr.open_dataset(indir+exp[0]+'_Ttz.nc', decode_times=False).temp[0]]
+                    plot_diff([T, u], ['K', r'ms$^{-1}$'], [np.arange(160, 330, 10), np.arange(-200, 210, 10)],\
+                        perturb, lat, p, exp[i], height_type)

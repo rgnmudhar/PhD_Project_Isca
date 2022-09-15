@@ -206,7 +206,7 @@ if __name__ == '__main__':
     indir = '/disco/share/rm811/processed/'
     outdir = '../Files/'
     basis = 'PK_e0v4z13'
-    var_type = input("Plot a) depth, b) width, c) location, d) strength experiments, or e) the control?")
+    var_type = input("Plot a) depth, b) width, c) location, d) strength, or e) topography experiments?")
     if var_type == 'a':
         extension = '_depth'
     elif var_type == 'b':
@@ -216,7 +216,7 @@ if __name__ == '__main__':
     elif var_type == 'd':
         extension = '_strength'
     elif var_type == 'e':
-        extension = '_ctrl'
+        extension = '_topo'
     exp, labels, xlabel = return_exp(extension)
     n = len(exp)
 
@@ -277,7 +277,7 @@ if __name__ == '__main__':
             ulvls = np.arange(-200, 200, 10)
             plot_what = input('Plot a) climatology or b) difference?)')
             for i in range(n):
-                print(datetime.now(), " - finding s.d. ({0:.0f}/{0:.0f})".format(i+1, n))
+                print(datetime.now(), " - finding s.d. ({0:.0f}/{1:.0f})".format(i+1, n))
                 u = xr.open_dataset(indir+exp[i]+'_uz.nc', decode_times=False).ucomp
                 utz = xr.open_dataset(indir+exp[i]+'_utz.nc', decode_times=False).ucomp[0]
                 if plot_what == 'a':

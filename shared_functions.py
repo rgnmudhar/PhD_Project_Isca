@@ -50,19 +50,21 @@ def return_exp(extension):
             basis+'_w15a4p800f800g50'+perturb,\
             basis+'_w15a6p800f800g50'+perturb,\
             basis+'_w15a8p800f800g50'+perturb]
+            labels = ['no heat', '0.5', '2', '4', '6', '8']
         elif level == 'b':
             exp = [basis+perturb,\
             basis+'_w15a2p600f800g50'+perturb,\
             basis+'_w15a4p600f800g50'+perturb,\
             basis+'_w15a6p600f800g50'+perturb,\
             basis+'_w15a8p600f800g50'+perturb]
+            labels = ['no heat', '2', '4', '6', '8']
         elif level == 'c':
             exp = [basis+perturb,\
             basis+'_w15a2p400f800g50'+perturb,\
             basis+'_w15a4p400f800g50'+perturb,\
             basis+'_w15a6p400f800g50'+perturb,\
             basis+'_w15a8p400f800g50'+perturb]
-        labels = ['no heat', '0.5', '2', '4', '6', '8'] #['no heat', '800', '600', '400']
+            labels = ['no heat', '2', '4', '6', '8']
         xlabel = r'Strength of Heating (K day$^{-1}$)'
     elif extension == '_loc':   
         perturb = '_q6m2y45'
@@ -71,8 +73,18 @@ def return_exp(extension):
             basis+'_a4x75y90w5v30p800'+perturb,\
             basis+'_a4x75y180w5v30p800'+perturb,\
             basis+'_a4x75y270w5v30p800'+perturb]
-        labels = [r'no heat', '0', '90', '180', '270']
+        labels = ['no heat', '0', '90', '180', '270']
         xlabel = r'Longitude of Heating ($\degree$E)'
+    elif extension == '_topo':
+        topo = '_h4000m2l25u65'
+        exp = [basis+topo,\
+        basis+'_w15a4p800f800g50'+topo,\
+        basis+'_w15a4p300f800g50'+topo]
+        #basis+perturb,\
+        #basis+'_w15a4p800f800g50'+perturb,\
+        #basis+'_w15a4p300f800g50'+perturb,\
+        labels = ['no heat', '800', '300']
+        xlabel = 'Depth of Heating (hPa)'
     return exp, labels, xlabel
 
 def add_phalf(exp_name, file_name):

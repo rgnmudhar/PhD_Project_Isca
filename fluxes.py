@@ -119,7 +119,7 @@ if __name__ == '__main__':
     indir = '/disco/share/rm811/processed/'
     basis = 'PK_e0v4z13'
     flux = input("Plot a) EP flux or b) v'T'?")
-    var_type = input("Plot a) depth, b) width, c) location, d) strength experiments, or e) control?")
+    var_type = input("Plot a) depth, b) width, c) location, d) strength, or e) topography experiments?")
     if var_type == 'a':
         extension = '_depth'
     elif var_type == 'b':
@@ -129,7 +129,7 @@ if __name__ == '__main__':
     elif var_type == 'd':
         extension = '_strength'
     elif var_type == 'e':
-        extension = '_ctrl'
+        extension = '_topo'
     exp, labels, xlabel = return_exp(extension)
 
     ulvls = np.arange(-200, 200, 10)

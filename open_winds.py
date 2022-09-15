@@ -157,7 +157,7 @@ if __name__ == '__main__':
     indir = '/disco/share/rm811/processed/'
     outdir = '../Files/'
     basis = 'PK_e0v4z13'
-    var_type = input("Plot a) depth, b) width, c) location, or d) strength experiments?")
+    var_type = input("Plot a) depth, b) width, c) location, d) strength or e) topography experiments?")
     if var_type == 'a':
         extension = '_depth'
     elif var_type == 'b':
@@ -166,6 +166,8 @@ if __name__ == '__main__':
         extension = '_loc'
     elif var_type == 'd':
         extension = '_strength'
+    elif var_type == 'e':
+        extension = '_topo'
     exp = return_exp(extension)[0]
     #exp = [basis+'_a4x75y180w5v30p400_q6m2y45']
     
@@ -174,6 +176,6 @@ if __name__ == '__main__':
         #Ro.append(calc_Ro(indir, exp[i], p))
     #print(Ro)
 
-    find_SPV(indir, outdir, exp)
-    #p = 10 #850
-    #winds_errs(indir, outdir, exp, p, basis+extension)
+    #find_SPV(indir, outdir, exp)
+    p = 10 #850
+    winds_errs(indir, outdir, exp, p, basis+extension)
