@@ -203,10 +203,11 @@ if __name__ == '__main__':
             plot_stats(sd, p, exp[0], extension, 'SD')
         
         elif plot_type == 'b':
-            print("Plotting for off-pole polar heating - edit script to change to zonally symmetric!")
+            print("Plotting for zonally symmetric polar heating - edit script to change to off-pole!")
             polar = '_w15a4p800f800g50'
             off_pole = '_a4x75y180w5v30p800'
-            exp = [basis+'_q6m2y45l800u200', basis+off_pole, basis+off_pole+'_q6m2y45']
+            heat_perturb = '_q6m2y45l800u200'
+            exp = [basis+heat_perturb, basis+polar, basis+polar+heat_perturb]
             vT_exp = []
             for i in range(len(exp)):
                 vT = vT_calc(exp[i])
@@ -216,20 +217,20 @@ if __name__ == '__main__':
                             vT_exp[1].sel(lat=60, method='nearest').mean(('lon', 'time'))]
             comparison.append(comparison[0]+comparison[1]) # addition after taking means
             comparison.append(vT_exp[2].sel(lat=60, method='nearest').mean(('lon', 'time')))
-            names = ['Control', 'Off-pole heat', 'Addition', 'Combo']
+            names = ['control', 'polar heat', 'addition', 'combo']
             colors = ['#B30000', '#0099CC', '#4D0099', 'k']
             lines = ['--', ':', '-.', '-']
             fig, ax = plt.subplots(figsize=(6,6))
             for i in range(len(comparison)):
                 ax.plot(comparison[i].transpose(), vT.pfull, color=colors[i], linestyle=lines[i], label=names[i])
             ax.set_xlim(0, 130)
-            ax.set_xlabel(r"60$\degree$N mean v'T' magnitude", fontsize='x-large')
+            ax.set_xlabel(r"mean v'T' magnitude at 60$\degree$N (K m s$^{-1}$)", fontsize='x-large')
             ax.set_ylabel('Pressure (hPa)', fontsize='x-large')
             ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
-            plt.legend()
+            plt.legend(fancybox=False, shadow=True, ncol=1, fontsize='large')
             plt.ylim(max(vT.pfull), 1)
             plt.yscale('log')
-            plt.savefig('addvcombo_offpole.pdf', bbox_inches = 'tight')
+            plt.savefig('addvcombo_polar.pdf', bbox_inches = 'tight')
 
 """
 # Following commented functions/code is for checking against Neil Lewis' code

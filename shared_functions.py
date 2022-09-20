@@ -27,7 +27,7 @@ def return_exp(extension):
         basis+'_w15a4p500f800g50'+perturb,\
         basis+'_w15a4p400f800g50'+perturb,\
         basis+'_w15a4p300f800g50'+perturb]
-        labels = ['no heat', '900', '800', '700', '600', '500', '400', '300']
+        labels = ['control', '900 hPa', '800 hPa', '700 hPa', '600 hPa', '500 hPa', '400 hPa', '300 hPa']
         xlabel = 'Depth of Heating (hPa)'
     elif extension == '_width':
         exp = [basis+perturb,\
@@ -39,7 +39,7 @@ def return_exp(extension):
         #basis+'_w35a4p800f800g50'+perturb,\
         basis+'_w35a4p800f800g50'+perturb+'_SCALED',\
         basis+'_w40a4p800f800g50'+perturb]
-        labels = ['no heat', '10', '15', '20', '25', '30', '35', '40']
+        labels = ['control', r'10$\degree$', r'15$\degree$', r'20$\degree$', r'25$\degree$', r'30$\degree$', r'35$\degree$', r'40$\degree$']
         xlabel = r'Extent of Heating ($\degree$)'
     elif extension == '_strength':
         level = input("For depth a) 800, b) 600, or c) 400 hPa?")
@@ -50,21 +50,21 @@ def return_exp(extension):
             basis+'_w15a4p800f800g50'+perturb,\
             basis+'_w15a6p800f800g50'+perturb,\
             basis+'_w15a8p800f800g50'+perturb]
-            labels = ['no heat', '0.5', '2', '4', '6', '8']
+            labels = ['control', r'0.5 K day$^{-1}$', r'2 K day$^{-1}$', r'4 K day$^{-1}$', r'6 K day$^{-1}$', r'8 K day$^{-1}$']
         elif level == 'b':
             exp = [basis+perturb,\
             basis+'_w15a2p600f800g50'+perturb,\
             basis+'_w15a4p600f800g50'+perturb,\
             basis+'_w15a6p600f800g50'+perturb,\
             basis+'_w15a8p600f800g50'+perturb]
-            labels = ['no heat', '2', '4', '6', '8']
+            labels = ['control', r'2 K day$^{-1}$', r'4 K day$^{-1}$', r'6 K day$^{-1}$', r'8 K day$^{-1}$']
         elif level == 'c':
             exp = [basis+perturb,\
             basis+'_w15a2p400f800g50'+perturb,\
             basis+'_w15a4p400f800g50'+perturb,\
             basis+'_w15a6p400f800g50'+perturb,\
             basis+'_w15a8p400f800g50'+perturb]
-            labels = ['no heat', '2', '4', '6', '8']
+            labels = ['control', r'2 K day$^{-1}$', r'4 K day$^{-1}$', r'6 K day$^{-1}$', r'8 K day$^{-1}$']
         xlabel = r'Strength of Heating (K day$^{-1}$)'
     elif extension == '_loc':   
         perturb = '_q6m2y45'
@@ -73,7 +73,7 @@ def return_exp(extension):
             basis+'_a4x75y90w5v30p800'+perturb,\
             basis+'_a4x75y180w5v30p800'+perturb,\
             basis+'_a4x75y270w5v30p800'+perturb]
-        labels = ['no heat', '0', '90', '180', '270']
+        labels = ['control', r'0$\degree$', r'90$\degree$', r'180$\degree$', r'270$\degree$']
         xlabel = r'Longitude of Heating ($\degree$E)'
     elif extension == '_topo':
         topo = '_h4000m2l25u65'
@@ -83,8 +83,15 @@ def return_exp(extension):
         #basis+perturb,\
         #basis+'_w15a4p800f800g50'+perturb,\
         #basis+'_w15a4p300f800g50'+perturb,\
-        labels = ['no heat', '800', '300']
+        labels = ['control', '800 hPa', '300 hPa']
         xlabel = 'Depth of Heating (hPa)'
+    elif extension == '_poster':
+        exp = [basis+perturb,\
+            basis+'_w15a0p800f800g50'+perturb,\
+            basis+'_w15a4p900f800g50'+perturb,\
+            basis+'_w10a4p800f800g50'+perturb]
+        labels = ['control', 'weak', 'shallow', 'narrow']
+        xlabel = ''
     return exp, labels, xlabel
 
 def add_phalf(exp_name, file_name):
@@ -271,7 +278,9 @@ def plot_pdf(var, dir, exp, input, z, p, labels, xlabel, colors, name):
         err.append(sub_err)
         skew.append(sub_skew)
         kurt.append(sub_kurt)
+        ax.axvline(0, color='k', linewidth=0.5)
         ax.set_xlim(x_min, x_max)
+        ax.set_ylim(bottom=0)
         ax.set_xlabel(xlabel, fontsize='x-large')
         ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
         plt.legend(fancybox=False, shadow=True, ncol=1, fontsize='large')

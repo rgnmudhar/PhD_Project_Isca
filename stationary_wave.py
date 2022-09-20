@@ -76,7 +76,7 @@ if __name__ == '__main__':
     perturb = '_q6m2y45'
     off_pole = '_a4x75y180w5v30p800'
     polar = '_w15a4p800f800g50'
-    var_type = input("Plot a) depth, b) width, c) location, d) strength or e) topography experiments?")
+    var_type = input("Plot a) depth, b) width, c) location, d) strength or e) topography experiments? or f) poster plot?")
     if var_type == 'a':
         extension = '_depth'
     elif var_type == 'b':
@@ -87,6 +87,8 @@ if __name__ == '__main__':
         extension = '_strength'
     elif var_type == 'e':
         extension = '_topo'
+    elif var_type == 'f':
+        extension = '_poster'
     exp, labels, xlabel = return_exp(extension)
 
     colors = ['k', '#B30000', '#FF9900', '#FFCC00', '#00B300', '#0099CC', '#4D0099', '#CC0080']
@@ -108,10 +110,10 @@ if __name__ == '__main__':
     ax.set_xlabel('mean wave-2 absolute magnitude', fontsize='x-large')
     ax.set_ylabel('Pressure (hPa)', fontsize='x-large')
     ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
-    plt.legend()
+    plt.legend(fancybox=False, shadow=True, ncol=1, fontsize='large')
     plt.ylim(max(gph.pfull), 1)
     plt.yscale('log')
-    plt.title(xlabel, fontsize='x-large')
+    #plt.title(xlabel, fontsize='x-large')
     plt.savefig(basis+extension+'_k2mag.pdf', bbox_inches = 'tight')
 
     print(datetime.now(), ' - plotting PDFs')
