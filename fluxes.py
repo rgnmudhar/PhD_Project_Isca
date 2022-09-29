@@ -165,8 +165,9 @@ if __name__ == '__main__':
         
     elif flux == 'b':
         plot_type = input("Plot a) lat-p climatology and variability or b) linear addition?")
+        colors = ['k', '#B30000', '#FF9900', '#FFCC00', '#00B300', '#0099CC', '#4D0099', '#CC0080']
+        blues = ['k', '#dbe9f6', '#bbd6eb', '#88bedc', '#549ecd',  '#2a7aba', '#0c56a0', '#08306b']
         if plot_type == 'a':
-            colors = ['k', '#B30000', '#FF9900', '#FFCC00', '#00B300', '#0099CC', '#4D0099', '#CC0080']
             vpTp = []
             for i in range(len(exp)):
                 utz = xr.open_dataset(indir+exp[i]+'_utz.nc', decode_times=False).ucomp[0]
@@ -217,20 +218,40 @@ if __name__ == '__main__':
                             vT_exp[1].sel(lat=60, method='nearest').mean(('lon', 'time'))]
             comparison.append(comparison[0]+comparison[1]) # addition after taking means
             comparison.append(vT_exp[2].sel(lat=60, method='nearest').mean(('lon', 'time')))
-            names = ['control', 'polar heat', 'addition', 'combo']
+            names = ['mid-lat only (a)', 'polar only (b)', 'linear addition (a+b)', 'combined run']
             colors = ['#B30000', '#0099CC', '#4D0099', 'k']
             lines = ['--', ':', '-.', '-']
-            fig, ax = plt.subplots(figsize=(6,6))
+            fig, ax = plt.subplots(figsize=(5,6))
             for i in range(len(comparison)):
                 ax.plot(comparison[i].transpose(), vT.pfull, color=colors[i], linestyle=lines[i], label=names[i])
             ax.set_xlim(0, 130)
-            ax.set_xlabel(r"mean v'T' magnitude at 60$\degree$N (K m s$^{-1}$)", fontsize='x-large')
-            ax.set_ylabel('Pressure (hPa)', fontsize='x-large')
-            ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
-            plt.legend(fancybox=False, shadow=True, ncol=1, fontsize='large')
+            ax.set_xlabel(r"mean v'T' magnitude (K m s$^{-1}$)", fontsize='xx-large')
+            ax.set_ylabel('Pressure (hPa)', fontsize='xx-large')
+            ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
+            plt.legend(fancybox=False, ncol=1, fontsize='x-large')
             plt.ylim(max(vT.pfull), 1)
             plt.yscale('log')
             plt.savefig('addvcombo_polar.pdf', bbox_inches = 'tight')
+
+            diffs = [(comparison[3] - comparison[0]),\
+                (comparison[2] - comparison[0]),\
+                (comparison[3] - comparison[2])]
+            n = len(diffs)
+            names = ['combined run', 'linear component', 'non-linear component']
+            colors = ['k', '#4D0099', '#0099CC']
+            lines = ['-', '-.', ':']
+            fig, ax = plt.subplots(figsize=(5,6))
+            for i in range(n):
+                ax.plot(diffs[i].transpose(), vT.pfull, color=colors[i], linestyle=lines[i], label=names[i])
+            ax.axvline(0, color='k', linewidth=0.25)
+            ax.set_xlim(-25, 125)
+            ax.set_xlabel(r"$\Delta$v'T' magnitude (K m s$^{-1}$)", fontsize='xx-large')
+            ax.set_ylabel('Pressure (hPa)', fontsize='xx-large')
+            ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
+            plt.legend(fancybox=False, ncol=1, fontsize='x-large', loc='center right')
+            plt.ylim(max(vT.pfull), 1)
+            plt.yscale('log')
+            plt.savefig('addvcombo_diff_polar.pdf', bbox_inches = 'tight')
 
 """
 # Following commented functions/code is for checking against Neil Lewis' code

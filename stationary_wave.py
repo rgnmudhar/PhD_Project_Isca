@@ -92,6 +92,7 @@ if __name__ == '__main__':
     exp, labels, xlabel = return_exp(extension)
 
     colors = ['k', '#B30000', '#FF9900', '#FFCC00', '#00B300', '#0099CC', '#4D0099', '#CC0080']
+    blues = ['k', '#dbe9f6', '#bbd6eb', '#88bedc', '#549ecd',  '#2a7aba', '#0c56a0', '#08306b']
 
     # For mean state, plot pressure vs. wave 1/2 magnitudes across experiments
     mags10 = []
@@ -104,21 +105,21 @@ if __name__ == '__main__':
         waves = climate.GetWavesXr(gph)
         wav = np.abs(waves.sel(k=2)).mean('lon')
         print(datetime.now(), ' - plotting')
-        ax.plot(wav.mean('time').transpose(), gph.pfull, color=colors[i], linestyle='-', label=labels[i])
+        ax.plot(wav.mean('time').transpose(), gph.pfull, color=blues[i], linestyle='-', label=labels[i])
         mags10.append(wav.sel(pfull=10, method='nearest'))
         mags100.append(wav.sel(pfull=100, method='nearest'))
-    ax.set_xlabel('mean wave-2 absolute magnitude', fontsize='x-large')
-    ax.set_ylabel('Pressure (hPa)', fontsize='x-large')
-    ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
-    plt.legend(fancybox=False, shadow=True, ncol=1, fontsize='large')
+    ax.set_xlabel('absolute wave magnitude (m)', fontsize='xx-large')
+    ax.set_ylabel('Pressure (hPa)', fontsize='xx-large')
+    ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
+    plt.legend(fancybox=False, ncol=1, fontsize='x-large', loc='lower right')
     plt.ylim(max(gph.pfull), 1)
     plt.yscale('log')
     #plt.title(xlabel, fontsize='x-large')
     plt.savefig(basis+extension+'_k2mag.pdf', bbox_inches = 'tight')
 
     print(datetime.now(), ' - plotting PDFs')
-    plot_pdf('gph', indir, exp, '', mags10, [10], labels, r'zonal-mean 10 hPa 60$\degree$N wave-2 absolute magnitude', colors, exp[0]+extension+'_k2mag')
-    plot_pdf('gph', indir, exp, '', mags100, [100], labels, r'zonal-mean 100 hPa 60$\degree$N wave-2 absolute magnitude', colors, exp[0]+extension+'_k2mag')
+    plot_pdf('gph', indir, exp, '', mags10, [10], labels, r'zonal-mean 10 hPa 60$\degree$N wave-2 absolute magnitude', blues, exp[0]+extension+'_k2mag')
+    plot_pdf('gph', indir, exp, '', mags100, [100], labels, r'zonal-mean 100 hPa 60$\degree$N wave-2 absolute magnitude', blues, exp[0]+extension+'_k2mag')
 
 """
     lons = [0, 90, 180, 270]

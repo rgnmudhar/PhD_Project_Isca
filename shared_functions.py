@@ -28,6 +28,7 @@ def return_exp(extension):
         basis+'_w15a4p400f800g50'+perturb,\
         basis+'_w15a4p300f800g50'+perturb]
         labels = ['control', '900 hPa', '800 hPa', '700 hPa', '600 hPa', '500 hPa', '400 hPa', '300 hPa']
+        #labels = ['control', '900', '800', '700', '600', '500', '400', '300']
         xlabel = 'Depth of Heating (hPa)'
     elif extension == '_width':
         exp = [basis+perturb,\
@@ -278,12 +279,12 @@ def plot_pdf(var, dir, exp, input, z, p, labels, xlabel, colors, name):
         err.append(sub_err)
         skew.append(sub_skew)
         kurt.append(sub_kurt)
-        ax.axvline(0, color='k', linewidth=0.5)
+        ax.axvline(0, color='k', linewidth=0.25)
         ax.set_xlim(x_min, x_max)
         ax.set_ylim(bottom=0)
-        ax.set_xlabel(xlabel, fontsize='x-large')
-        ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
-        plt.legend(fancybox=False, shadow=True, ncol=1, fontsize='large')
+        ax.set_xlabel(xlabel, fontsize='xx-large')
+        ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
+        plt.legend(fancybox=False, ncol=1, fontsize='x-large')
         plt.savefig(name+'_{:.0f}pdf.pdf'.format(p1), bbox_inches = 'tight')
         plt.close()
     return mean, mode, sd, err, skew, kurt

@@ -81,21 +81,21 @@ def SPVvexp1(mean, mode, sd, err, p, labels, xlabel, name):
     """
     print(datetime.now(), " - plotting average and s.d. vs experiment at {:.0f} hPa".format(p))
     fig, ax = plt.subplots(figsize=(10,6))
-    ax.errorbar(labels[1:], mean[1:], yerr=err[1:], fmt='o', linewidth=1.25, capsize=5, color='#B30000', linestyle=':', label='Mean')
-    ax.plot(labels[1:], mode[1:], marker='o', linewidth=1.25, color='#B30000', linestyle='-.', label='Mode')
-    plt.legend(loc='upper center' , bbox_to_anchor=(0.5, 1), fancybox=False, shadow=False, ncol=2, fontsize='x-large')
+    ax.errorbar(labels[1:], mean[1:], yerr=err[1:], fmt='o', linewidth=1.25, capsize=5, color='#B30000', linestyle=':', label='mean')
+    ax.plot(labels[1:], mode[1:], marker='o', linewidth=1.25, color='#B30000', linestyle='-.', label='mode')
+    plt.legend(loc='upper center' , bbox_to_anchor=(0.5, 1), fancybox=False, shadow=False, ncol=2, fontsize='xx-large')
     ax.set_xticks(labels)
-    ax.set_xlabel(xlabel, fontsize='x-large')
-    ax.set_ylabel('{:.0f} hPa'.format(p)+r' 60 N Zonal Wind Average (m s$^{-1}$)', fontsize='x-large', color='#B30000')
+    ax.set_xlabel(xlabel, fontsize='xx-large')
+    ax.set_ylabel(r'zonal wind average (m s$^{-1}$)', fontsize='xx-large', color='#B30000')
     #ax.set_ylim(36,42)
-    ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
+    ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
     ax2 = ax.twinx()
     ax2.plot(labels[1:], sd[1:], marker='o', linewidth=1.25, color='#4D0099', linestyle=':', label='S.D.')
     #ax2.axhline(sd[0], color='#4D0099', linewidth=0.5)
     #ax2.text(5.6, sd[0]-0.6, 'Control', color='#4D0099', fontsize='x-large')
-    ax2.set_ylabel('{:.0f} hPa'.format(p)+r' 60 N Zonal Wind S.D. (m s$^{-1}$)', color='#4D0099', fontsize='x-large')
+    ax2.set_ylabel(r'zonal wind standard deviation (m s$^{-1}$)', color='#4D0099', fontsize='xx-large')
     #ax2.set_ylim(12,22)
-    ax2.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
+    ax2.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
     plt.savefig(name+'_{:.0f}stats1.pdf'.format(p), bbox_inches = 'tight')
     return plt.close()
 
@@ -108,21 +108,21 @@ def SPVvexp2(skew, kurt, p, labels, xlabel, name):
     ax.plot(labels[1:], skew[1:], marker='o', linewidth=1.25, color='#B30000', linestyle=':')
     ax.set_xticks(labels)
     ax.set_xlabel(xlabel, fontsize='x-large')
-    ax.set_ylabel('{:.0f} hPa, 60 N Zonal Wind Skewness'.format(p), fontsize='x-large', color='#B30000')
+    ax.set_ylabel('{:.0f} hPa,'.format(p)+r' 60$\degree$N zonal wind skewness', fontsize='xx-large', color='#B30000')
     ax.axhline(skew[0], color='#B30000', linewidth=0.5)
-    ax.text(-0.25, skew[0]+0.05, 'Control', color='#B30000', fontsize='x-large')
+    ax.text(-0.25, skew[0]+0.05, 'control', color='#B30000', fontsize='xx-large')
     ax.set_ylim(-0.5, 0.5)
-    ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
+    ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
     ax2 = ax.twinx()
     ax2.plot(labels[1:], kurt[1:], marker='o', linewidth=1.25, color='#4D0099', linestyle=':')
-    ax2.set_ylabel('{:.0f} hPa, 60 N Zonal Wind Kurtosis'.format(p), color='#4D0099', fontsize='x-large')
+    ax2.set_ylabel('{:.0f} hPa,'.format(p)+r' 60$\degree$N zonal wind kurtosis', color='#4D0099', fontsize='xx-large')
     ax2.axhline(kurt[0], color='#4D0099', linewidth=0.5)
-    ax2.text(5.75, kurt[0]+0.05, 'Control', color='#4D0099', fontsize='x-large')
+    ax2.text(5.75, kurt[0]+0.05, 'control', color='#4D0099', fontsize='xx-large')
     ax2.set_xlim(-0.5, 6.5)
     ax2.set_ylim(-0.9, 0.9)
     ax2.fill_between(range(-1,8), -1, 0, facecolor ='gainsboro', alpha = 0.4)
-    ax2.text(1, -0.75, 'Negative Skew, Lighter Tails', color='#666666', fontsize='x-large')
-    ax2.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
+    ax2.text(1, -0.75, 'Negative Skew, Lighter Tails', color='#666666', fontsize='xx-large')
+    ax2.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
     plt.savefig(name+'_{:.0f}stats2.pdf'.format(p), bbox_inches = 'tight')
     return plt.close()
 
@@ -160,14 +160,14 @@ def SSWsvexp(dir, exp, x, xlabel, fig_name):
     ax.errorbar(x[1:], SSWs[1:], yerr=errors[1:], fmt='o', linewidth=1.25, capsize=5, color='#B30000', linestyle=':')
     ax.set_xlim(-0.5,6.5)
     ax.set_xticks(x[1:])
-    ax.set_xlabel(xlabel, fontsize='x-large')
-    ax.set_ylabel(r'SSWs per 100 days', fontsize='x-large')
+    ax.set_xlabel(xlabel, fontsize='xx-large')
+    ax.set_ylabel(r'SSWs per 100 days', fontsize='xx-large')
     ax.axhline(0.42, color='#4D0099', linewidth=0.5)
-    ax.text(5.4, 0.42+0.01, 'ERA-Interim', color='#4D0099', fontsize='x-large')
+    ax.text(5.35, 0.42+0.01, 'reanalysis', color='#4D0099', fontsize='xx-large')
     ax.axhline(og, color='#666666', linewidth=0.5)
     ax.fill_between(range(-1,8), (og - og_err), (og + og_err), facecolor ='gainsboro', alpha = 0.4)
-    ax.text(5.75, og+0.01, 'Control', color='#666666', fontsize='x-large')
-    ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
+    ax.text(5.7, og+0.01, 'control', color='#666666', fontsize='xx-large')
+    ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
     plt.savefig(fig_name+'_SSWsvheat.pdf', bbox_inches = 'tight')
 
     return plt.close()
@@ -227,6 +227,8 @@ if __name__ == '__main__':
         or d) stratospheric polar vortex?')
 
     colors = ['k', '#B30000', '#FF9900', '#FFCC00', '#00B300', '#0099CC', '#4D0099', '#CC0080']
+    reds = ['k', '#fedbcb', '#fcaf94', '#fc8161', '#f44f39', '#d52221', '#aa1016', '#67000d']
+    blues = ['k', '#dbe9f6', '#bbd6eb', '#88bedc', '#549ecd',  '#2a7aba', '#0c56a0', '#08306b']
     legend = [r'A = 2 K day$^{-1}$', r'A = 4 K day$^{-1}$', r'A = 6 K day$^{-1}$', r'A = 8 K day$^{-1}$'] 
     #legend = [r'$p_{top} = 800$ hPa', r'$p_{top} = 600$ hPa', r'$p_{top} = 400$ hPa']
 
@@ -246,7 +248,7 @@ if __name__ == '__main__':
                 plot_jet(u, p[j], lvls[j], exp[i])
     elif level == 'c':
         p = 100
-        me, mo, sd, e, sk, k = plot_pdf('u', indir, exp, '_uz.nc', '', [p], labels, r"zonal-mean zonal wind (m s$^{-1}$)", colors, basis+extension)
+        me, mo, sd, e, sk, k = plot_pdf('u', indir, exp, '_uz.nc', '', [p], labels, r"zonal-mean zonal wind (m s$^{-1}$)", blues, basis+extension)
         SPVvexp1(me[0], mo[0], sd[0], e[0], p, labels, xlabel, basis+extension)
         SPVvexp2(sk[0], k[0], p, labels, xlabel, basis+extension)
     elif level == 'd':
@@ -267,7 +269,7 @@ if __name__ == '__main__':
         elif plot_type == 'b':
             windsvexp(outdir, labels, xlabel, str(p), basis+extension)
         elif plot_type == 'c':
-            me, mo, sd, e, sk, k = plot_pdf('u', indir, exp, '_uz.nc', '', [p], labels, r"zonal-mean zonal wind (m s$^{-1}$)", colors, basis+extension)
+            me, mo, sd, e, sk, k = plot_pdf('u', indir, exp, '_uz.nc', '', [p], labels, r"zonal-mean zonal wind (m s$^{-1}$)", blues, basis+extension)
             SPVvexp1(me[0], mo[0], sd[0], e[0], p, labels, xlabel, basis+extension)
             SPVvexp2(sk[0], k[0], p, labels, xlabel, basis+extension)
         elif plot_type == 'd':
