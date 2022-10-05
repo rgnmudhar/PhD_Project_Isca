@@ -219,7 +219,7 @@ if __name__ == '__main__':
             comparison.append(vT_exp[2].sel(lat=60, method='nearest').mean(('lon', 'time')))
             comparison.append(comparison[0]+comparison[1]) # addition after taking means
             comparison.append(comparison[3]-comparison[2])
-            names = ['mid-lat heat only (a)', 'polar heat only (b)', 'combined simulation (c)', 'linear component (d=a+b)', 'non-linear component (d-c)']
+            names = ['mid-lat heat only (a)', 'polar heat only (b)', 'combined simulation (c)', 'linear component (d=a+b)', '-1 x non-linear component -(c-d)']
             colors = ['#B30000', '#0099CC', 'k', '#4D0099', '#CC0080']
             lines = ['--', ':', '-', '-.', ':']
             fig, ax = plt.subplots(figsize=(8,5.5))
