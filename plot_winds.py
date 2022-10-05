@@ -154,7 +154,8 @@ def SSWsvexp(dir, exp, x, xlabel, fig_name):
     SSWs, errors = find_SSWs(dir, exp)
     og = SSWs[0]
     og_err = errors[0]
-    print(SSWs, errors)
+    for i in range(SSWs):
+        print(x[i]+': {0:.3f} ± {1:.3f}'.format(SSWs[i], errors[i]))
     print(datetime.now(), " - plotting SSWs vs experiment")
     fig, ax = plt.subplots(figsize=(10,6))
     ax.errorbar(x[1:], SSWs[1:], yerr=errors[1:], fmt='o', linewidth=1.25, capsize=5, color='#B30000', linestyle=':')
