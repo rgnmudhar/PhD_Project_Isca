@@ -154,8 +154,6 @@ def SSWsvexp(dir, exp, x, xlabel, fig_name):
     SSWs, errors = find_SSWs(dir, exp)
     og = SSWs[0]
     og_err = errors[0]
-    for i in range(SSWs):
-        print(x[i]+': {0:.3f} ± {1:.3f}'.format(SSWs[i], errors[i]))
     print(datetime.now(), " - plotting SSWs vs experiment")
     fig, ax = plt.subplots(figsize=(10,6))
     ax.errorbar(x[1:], SSWs[1:], yerr=errors[1:], fmt='o', linewidth=1.25, capsize=5, color='#B30000', linestyle=':')
@@ -172,6 +170,18 @@ def SSWsvexp(dir, exp, x, xlabel, fig_name):
     plt.savefig(fig_name+'_SSWsvheat.pdf', bbox_inches = 'tight')
 
     return plt.close()
+
+def report_vals(dir, exp, x):
+    n = len(exp)
+    print(datetime.now(), " - finding mean SPV strength")
+    for i in range(n):
+        SPV = open_file(dir, exp[i], 'SPV')
+        print(x[i]+': {0:.2f} ± {1:.2f}'.format(np.mean(SPV), np.std(SPV)))
+
+    print(datetime.now(), " - finding SSWs")
+    SSWs, errors = find_SSWs(dir, exp)
+    for i in range(n):
+        print(x[i]+': {0:.2f} ± {1:.2f}'.format(SSWs[i], errors[i]))
 
 def SSWsvexp_multi(dir, exp, x, xlabel, legend, colors, fig_name):
     """
@@ -225,7 +235,8 @@ if __name__ == '__main__':
     level = input('Plot a) near-surface winds, \
         b) tropospheric jet(s), \
         c) lower stratosphere, \
-        or d) stratospheric polar vortex?')
+        d) stratospheric polar vortex, \
+        or e) SPV and SSW values?')
 
     colors = ['k', '#B30000', '#FF9900', '#FFCC00', '#00B300', '#0099CC', '#4D0099', '#CC0080']
     reds = ['k', '#fedbcb', '#fcaf94', '#fc8161', '#f44f39', '#d52221', '#aa1016', '#67000d']
@@ -296,3 +307,5 @@ if __name__ == '__main__':
                         sd_diff = sd1 - sd2
                         NH_zonal(lat, p, sd_diff, utz, np.arange(-20, 22, 2), ulvls, 'RdBu_r',\
                             r'zonal-mean zonal wind SD (ms$^{-1}$)', exp[i]+'_usd_diff.pdf')
+    elif level == 'e':
+        report_vals(outdir, exp, labels)

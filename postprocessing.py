@@ -207,10 +207,8 @@ if __name__ == '__main__':
 
     func = input('Do you want to a) postprocess, b) remove uninterpolated files, c) find TKE, d) back-calculate w, e) retrospectively extract variables, or f) delete spin-up data?')
 
-    exp = 'PK_e0v4z13_w15a4p300f800g50_h4000m2l25u65'
-            #['PK_e0v4z13_h4000m2l25u65',\
-            #'PK_e0v4z13_w15a4p300f800g50_h4000m2l25u65',\
-            #'PK_e0v4z13_w15a4p800f800g50_h4000m2l25u65']
+    exp = ['PK_e0v4z13_a11x75y180w5v45p800',\
+            'PK_e0v4z13_a11x75y180w5v45p800_q6m2y45'] 
 
     if func == 'b':
         remove_uninterp(exp)    
