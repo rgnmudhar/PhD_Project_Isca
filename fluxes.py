@@ -204,11 +204,17 @@ if __name__ == '__main__':
             plot_stats(sd, p, exp[0], extension, 'SD')
         
         elif plot_type == 'b':
-            print("Plotting for zonally symmetric polar heating - edit script to change to off-pole!")
-            polar = '_w15a4p800f800g50'
-            off_pole = '_a4x75y180w5v30p800'
-            heat_perturb = '_q6m2y45l800u200'
-            exp = [basis+heat_perturb, basis+polar, basis+polar+heat_perturb]
+            heat_type = input('Plot a) zonally symmetric pole-centred or b) off-pole heat?')
+            if heat_type == 'a':
+                polar_heat = '_w15a4p800f800g50'
+                midlat_heat = '_q6m2y45l800u200'
+                exp = [basis+midlat_heat, basis+polar_heat, basis+polar_heat+midlat_heat]
+                label = 'polar'
+            elif heat_type == 'b':
+                polar_heat = '_a11x75y180w5v45p800'
+                midlat_heat = '_q6m2y45'
+                exp = [basis+midlat_heat+'l800u200', basis+polar_heat, basis+polar_heat+midlat_heat]
+                label = 'offpole'
             vT_exp = []
             for i in range(len(exp)):
                 vT = vT_calc(exp[i])
@@ -233,7 +239,7 @@ if __name__ == '__main__':
             plt.legend(fancybox=False, ncol=1, loc='lower right', fontsize='large', labelcolor = colors)
             plt.ylim(max(vT.pfull), 1)
             plt.yscale('log')
-            plt.savefig('addvcombo_polar.pdf', bbox_inches = 'tight')
+            plt.savefig('vT_addvcombo_'+label+'.pdf', bbox_inches = 'tight')
 
 """
 # Following commented functions/code is for checking against Neil Lewis' code

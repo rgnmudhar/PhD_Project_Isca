@@ -70,12 +70,11 @@ def return_exp(extension):
     elif extension == '_loc':   
         perturb = '_q6m2y45'
         exp = [basis+perturb+'l800u200',\
-            basis+'_a4x75y0w5v30p800'+perturb,\
-            basis+'_a4x75y90w5v30p800'+perturb,\
-            basis+'_a4x75y180w5v30p800'+perturb,\
-            basis+'_a4x75y270w5v30p800'+perturb]
-        labels = ['control', r'0$\degree$', r'90$\degree$', r'180$\degree$', r'270$\degree$']
-        xlabel = r'Longitude of Heating ($\degree$E)'
+            basis+'_a11x75y180w5v45p800',\
+            basis+'_a11x75y180w5v45p800'+perturb]
+        labels = ['pole-centred control',\
+            r'$A=11$ K day$^{-1}$, $\lamba_w=45\degree$, no mid-lat', r'$A=11$ K day$^{-1}$, $\lamba_w=45\degree$, w/ mid-lat']
+        xlabel = r'Strength of Heating (K day$^{-1}$), Longitudinal width of heating ($\degree$)'
     elif extension == '_topo':
         topo = '_h4000m2l25u65'
         exp = [basis+topo,\

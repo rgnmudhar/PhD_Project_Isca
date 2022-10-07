@@ -3,7 +3,6 @@ Script for functions involving winds - near-surface, tropospheric jet and strato
 """
 
 from glob import glob
-from re import L
 import xarray as xr
 import numpy as np
 from datetime import datetime
@@ -176,6 +175,6 @@ if __name__ == '__main__':
         #Ro.append(calc_Ro(indir, exp[i], p))
     #print(Ro)
 
-    #find_SPV(indir, outdir, exp)
+    find_SPV(indir, outdir, exp)
     p = 10 #850
     winds_errs(indir, outdir, exp, p, basis+extension)
