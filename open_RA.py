@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 from open_winds import *
 from shared_functions import *
 
-"""
 def EOF_finder():
     from EOFs import *
     folder = '/disco/share/rg419/ERA_5/daily_means_1979_to_2020/'
@@ -14,19 +13,19 @@ def EOF_finder():
     ds = xr.open_mfdataset(files, decode_times=True)
     ds = ds.assign_coords({'month': ds.time.dt.month})
     ds_DJF = ds.where((ds.month <= 2)|(ds.month == 12), drop=True)
-    uz = ds_DJF.u.mean('lon')
+    uz = ds_DJF.u.mean('longitude')
     #EOFs
     # For EOFs follow Sheshadri & Plumb 2017, use p>100hPa, lat>20degN
     p_min = 100  # hPa
     lat_min = 20  # degrees
-    u_new = uz.sel(level=slice(p_min,1000)).sel(lat=slice(lat_min,90))
+    u_new = uz.sel(level=slice(p_min,1000)).sel(latitude=slice(90, lat_min))
     # Calculate anomalies
     u_anom = u_new - u_new.mean(dim='time')
     # sqrt(cos(lat)) weights due to different box sizes over grid
-    sqrtcoslat = np.sqrt(np.cos(np.deg2rad(u_anom.coords['lat'].values))) 
+    sqrtcoslat = np.sqrt(np.cos(np.deg2rad(u_anom.coords['latitude'].values))) 
     # sqrt(dp) weights, select correct number of levels
-    nplevs = u_anom.coords['pfull'].shape[0]
-    sqrtdp = np.sqrt(np.diff(ds.coords['phalf'].values[-nplevs-2:-1]))
+    nplevs = u_anom.coords['level'].shape[0]
+    sqrtdp = np.sqrt(np.diff(ds.coords['level'].values[-nplevs-2:]))
     # Calculate gridpoint weights
     wgts = np.outer(sqrtdp,sqrtcoslat)
     # Create an EOF solver to do the EOF analysis.
@@ -35,8 +34,8 @@ def EOF_finder():
     variance_fractions = variance(solver)
     lags = 50 
     tau1, tau2 = AM_times(pcs, lags)
-    return print(tau1+' days', variance_fractions[0]+' %', tau2+' days', variance_fractions[1]+' %')
-"""
+    print('EOF1 t = {0:.0f} days, {1:.0f}%'.format(tau1,variance_fractions[0]*100))
+    print('EOF2 t = {0:.0f} days, {1:.0f}%'.format(tau2,variance_fractions[1]*100))
 
 def SPV_finder():
     folder = "../Files/"
