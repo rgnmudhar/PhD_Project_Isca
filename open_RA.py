@@ -53,8 +53,8 @@ def EOF_finder():
     files = sorted(glob(folder+var+'*.nc'))
     ds = xr.open_mfdataset(files, decode_times=True)
     ds = ds.assign_coords({'month': ds.time.dt.month})
-    ds_DJF = ds.where((ds.month <= 2)|(ds.month == 12), drop=True)
-    uz = ds_DJF.u.mean('longitude')
+    ds_NDJF = ds.where((ds.month <= 2)|(ds.month == 11), drop=True)
+    uz = ds_NDJF.u.drop_vars('month').mean('longitude')
     #EOFs
     # For EOFs follow Sheshadri & Plumb 2017, use p>100hPa, lat>20degN
     p_min = 100  # hPa
@@ -75,8 +75,7 @@ def EOF_finder():
     variance_fractions = variance(solver)
     lags = 50 
     tau1, tau2 = AM_times(pcs, lags)
-    print('EOF1 t = {0:.0f} days, {1:.0f}%'.format(tau1,variance_fractions[0]*100))
-    print('EOF2 t = {0:.0f} days, {1:.0f}%'.format(tau2,variance_fractions[1]*100))
+    return tau1, tau2, variance_fractions[0]*100, variance_fractions[1]*100
 
 def SPV_finder():
     folder = "../Files/"
@@ -91,5 +90,5 @@ def SPV_finder():
         print('{0:.2f} ± {1:.2f} m/s'.format(SPV_mean, SPV_sd))
         print('{0:.2f} ± {1:.2f} / 100 days'.format(SSWs, err))
 
-#SPV_finder()
-EOF_finder()
+SPV_finder()
+#t1, t2, v1, v2 = EOF_finder()

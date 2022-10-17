@@ -80,6 +80,40 @@ def vT_level(vpTp, p):
     vpTp_bar = vpTp_sub.mean('lon')
     return vpTp_bar
 
+def comparison(var, lats):
+    print(datetime.now(), " - addition")
+    if lats == 60:
+        compare = [var[0].sel(lat=lats, method='nearest').mean(('lon', 'time')),\
+            var[1].sel(lat=lats, method='nearest').mean(('lon', 'time')),\
+            var[2].sel(lat=lats, method='nearest').mean(('lon', 'time'))]
+    else:
+        compare = [var[0].sel(lat=lats).mean(('lat', 'lon', 'time')),\
+            var[1].sel(lat=lats).mean(('lat', 'lon', 'time')),\
+            var[2].sel(lat=lats).mean(('lat', 'lon', 'time'))]
+    compare.append(compare[0]+compare[1]) # addition after taking means
+    compare.append(compare[3]-compare[2])
+    return compare
+
+def linear_add(compare, p, label, lats_label):
+    xlabel = lats_label+r" mean v'T' magnitude (K m s$^{-1}$)"
+    names = ['mid-lat heat only (a)', 'polar heat only (b)', 'combined simulation (c)', 'linear component (d=a+b)', '-1 x non-linear component -(c-d)']
+    colors = ['#B30000', '#0099CC', 'k', '#4D0099', '#CC0080']
+    lines = ['--', ':', '-', '-.', ':']   
+    print(datetime.now(), " - plotting")
+    fig, ax = plt.subplots(figsize=(8,5.5))
+    for i in range(len(compare)):
+        ax.plot(compare[i].transpose(), p, color=colors[i], linestyle=lines[i], label=names[i], linewidth=1.75)
+    ax.set_xlim(-5, 125)
+    ax.axvline(0, color='k', linewidth=0.25)
+    ax.set_xlabel(xlabel, fontsize='large')
+    ax.set_ylabel('Pressure (hPa)', fontsize='large')
+    ax.tick_params(axis='both', labelsize = 'large', which='both', direction='in')
+    plt.legend(fancybox=False, ncol=1, loc='lower right', fontsize='large', labelcolor = colors)
+    plt.ylim(max(p), 1)
+    plt.yscale('log')
+    plt.savefig('vT_addvcombo_'+label+lats_label+'.pdf', bbox_inches = 'tight')
+    return plt.close()
+
 def plot_vT(u, vT, exp, heat, lvls, colors):
     fig, ax = plt.subplots(figsize=(6,6))
     cs1 = ax.contourf(lat, p, vT, levels=lvls, cmap=colors)
@@ -215,31 +249,21 @@ if __name__ == '__main__':
                 midlat_heat = '_q6m2y45'
                 exp = [basis+midlat_heat+'l800u200', basis+polar_heat, basis+polar_heat+midlat_heat]
                 label = 'offpole'
+           
+            print(datetime.now(), " - opening files")
             vT_exp = []
             for i in range(len(exp)):
                 vT = vT_calc(exp[i])
                 vT_exp.append(vT)
-            print(datetime.now(), " - addition")
-            comparison = [vT_exp[0].sel(lat=60, method='nearest').mean(('lon', 'time')),\
-                            vT_exp[1].sel(lat=60, method='nearest').mean(('lon', 'time'))]
-            comparison.append(vT_exp[2].sel(lat=60, method='nearest').mean(('lon', 'time')))
-            comparison.append(comparison[0]+comparison[1]) # addition after taking means
-            comparison.append(comparison[3]-comparison[2])
-            names = ['mid-lat heat only (a)', 'polar heat only (b)', 'combined simulation (c)', 'linear component (d=a+b)', '-1 x non-linear component -(c-d)']
-            colors = ['#B30000', '#0099CC', 'k', '#4D0099', '#CC0080']
-            lines = ['--', ':', '-', '-.', ':']
-            fig, ax = plt.subplots(figsize=(8,5.5))
-            for i in range(len(comparison)):
-                ax.plot(comparison[i].transpose(), vT.pfull, color=colors[i], linestyle=lines[i], label=names[i], linewidth=1.75)
-            ax.set_xlim(-5, 125)
-            ax.axvline(0, color='k', linewidth=0.25)
-            ax.set_xlabel(r"mean v'T' magnitude (K m s$^{-1}$)", fontsize='large')
-            ax.set_ylabel('Pressure (hPa)', fontsize='large')
-            ax.tick_params(axis='both', labelsize = 'large', which='both', direction='in')
-            plt.legend(fancybox=False, ncol=1, loc='lower right', fontsize='large', labelcolor = colors)
-            plt.ylim(max(vT.pfull), 1)
-            plt.yscale('log')
-            plt.savefig('vT_addvcombo_'+label+'.pdf', bbox_inches = 'tight')
+            p = vT.pfull
+
+            # polar cap average following Dunn-Sigouin and Shaw (2015) for meridional heat flux
+            # mid-latitude average following NASA Ozone watch vT 
+            lats = [60, slice(60, 90), slice(45, 75)]
+            lats_labels = [r'$60\degree$N', 'polar cap', r'$45-75\degree$N']
+            for i in range(len(lats)):
+                compare = comparison(vT_exp, lats[i])
+                linear_add(compare, p, label, lats_labels[i]) 
 
 """
 # Following commented functions/code is for checking against Neil Lewis' code

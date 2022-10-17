@@ -91,16 +91,19 @@ def plot_diff(vars, units, lvls, perturb, lat, p, exp_name):
         plt.savefig(exp_name+'_diff{:.0f}.pdf'.format(i), bbox_inches = 'tight')
         plt.close()
 
-def comparison(var):
+def comparison(var, lats):
     print(datetime.now(), " - addition")
-    compare = [var[0].sel(lat=60, method='nearest'), var[1].sel(lat=60, method='nearest'), var[2].sel(lat=60, method='nearest')]
+    if lats == 60:
+        compare = [var[0].sel(lat=lats, method='nearest'), var[1].sel(lat=lats, method='nearest'), var[2].sel(lat=lats, method='nearest')]
+    else:
+        compare = [var[0].sel(lat=lats).mean('lat'), var[1].sel(lat=lats).mean('lat'), var[2].sel(lat=lats).mean('lat')]
     compare.append(compare[0]+compare[1])
     compare.append(compare[3]-compare[2])
     return compare
 
-def linear_add(indir, exp, label):
+def linear_add(indir, exp, label, lats, lats_label):
     vars = ['u', 'T']
-    xlabels = [r'$60\degree$N mean zonal wind (ms$^{-1}$)', r'$60\degree$N mean temperature (K)']
+    xlabels = [lats_label+r' mean zonal wind (ms$^{-1}$)', lats_label+' mean temperature (K)']
     names = ['mid-lat heat only (a)', 'polar heat only (b)', 'combined simulation (c)', 'linear component (d=a+b)', '-1 x non-linear component -(c-d)']
     colors = ['#B30000', '#0099CC', 'k', '#4D0099', '#CC0080']
     lines = ['--', ':', '-', '-.', ':']
@@ -112,7 +115,7 @@ def linear_add(indir, exp, label):
         u.append(xr.open_dataset(indir+exp[i]+'_utz.nc', decode_times=False).ucomp[0])
         T.append(xr.open_dataset(indir+exp[i]+'_Ttz.nc', decode_times=False).temp[0])
     p = u[0].pfull
-    compare = [comparison(u), comparison(T)]
+    compare = [comparison(u, lats), comparison(T, lats)]
     
     print(datetime.now(), " - plotting")
     for j in range(len(vars)):      
@@ -188,4 +191,14 @@ if __name__ == '__main__':
             midlat_heat = '_q6m2y45'
             exp = [basis+midlat_heat+'l800u200', basis+polar_heat, basis+polar_heat+midlat_heat]
             label = 'offpole'
-        linear_add(indir, exp, label)
+        lat_slice = input('Plot a) 60N, b) polar cap, or c) 45-75N average?')
+        if lat_slice == 'a':
+            lats = 60
+            lats_label = r'$60\degree$N'
+        elif lat_slice == 'b':
+            lats = slice(60, 90) # following Dunn-Sigouin and Shaw (2015) for meridional heat flux
+            lats_label = 'polar cap'
+        elif lat_slice == 'c':
+            lats = slice(45, 75)
+            lats_label = r'$45-75\degree$N'
+        linear_add(indir, exp, label, lats, lats_label)
