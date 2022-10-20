@@ -1,6 +1,7 @@
 """
     This script plots (time and zonal) averages of various output variables averaged over X years'-worth of data from Isca
     Also plots differences between 2 datasets - important that they are of the same resolution (e.g. both T21 or both T42)
+    TEST
 """
 
 import xarray as xr
