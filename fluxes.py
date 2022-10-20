@@ -72,6 +72,19 @@ def vT_calc(exp):
     vpTp = (vp*Tp)        
     return vpTp
 
+def uv_calc(exp):
+    print(datetime.now(), " - opening files for ", exp)
+    u = xr.open_dataset(indir+exp+'_u.nc', decode_times=False).ucomp
+    v = xr.open_dataset(indir+exp+'_v.nc', decode_times=False).vcomp
+    uz = xr.open_dataset(indir+exp+'_uz.nc', decode_times=False).ucomp
+    vz = xr.open_dataset(indir+exp+'_vz.nc', decode_times=False).vcomp
+    print(datetime.now(), " - finding anomalies")
+    up = u - uz
+    vp = v - vz
+    print(datetime.now(), " - finding v'T'")
+    upvp = (up*vp)        
+    return upvp
+
 def vT_level(vpTp, p):
     # Meridional heat flux weighted by cos(lat) and meridionally averaged from 75 to 90 N at p hPa
     # Based on Dunn-Sigouin & Shaw (2015) but their polar cap was 60 to 90 N
@@ -135,18 +148,61 @@ def plot_vT(u, vT, exp, heat, lvls, colors):
     return plt.close()
 
 def plot_stats(stat, p, exp, ext, lab):
-        print(datetime.now(), " - plotting v'T' ", lab)
-        colors = ['#B30000', '#00B300', '#0099CC', 'k']
-        fig, ax = plt.subplots(figsize=(8,6))
-        for j in range(len(stat)):
-            ax.plot(labels, stat[j], marker='o', linewidth=1.25, color=colors[j], linestyle=':', label='{:.0f} hPa'.format(p[j]))
-        ax.set_xticks(labels)
-        ax.set_xlabel(xlabel, fontsize='x-large')
-        ax.set_ylabel("Polar Cap Average v'T' "+lab+r" (K m s$^{-1}$)", fontsize='x-large')
-        ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
-        plt.legend(loc='right',fancybox=False, shadow=True, ncol=1, fontsize='large')
-        plt.savefig(exp+ext+'_vT_'+lab+'.pdf', bbox_inches = 'tight')
-        return plt.close()
+    print(datetime.now(), " - plotting v'T' ", lab)
+    colors = ['#B30000', '#00B300', '#0099CC', 'k']
+    fig, ax = plt.subplots(figsize=(8,6))
+    for j in range(len(stat)):
+        ax.plot(labels, stat[j], marker='o', linewidth=1.25, color=colors[j], linestyle=':', label='{:.0f} hPa'.format(p[j]))
+    ax.set_xticks(labels)
+    ax.set_xlabel(xlabel, fontsize='x-large')
+    ax.set_ylabel("Polar Cap Average v'T' "+lab+r" (K m s$^{-1}$)", fontsize='x-large')
+    ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
+    plt.legend(loc='right',fancybox=False, shadow=True, ncol=1, fontsize='large')
+    plt.savefig(exp+ext+'_vT_'+lab+'.pdf', bbox_inches = 'tight')
+    return plt.close()
+
+def check_vs_MERRA(exp):
+    print(datetime.now(), " - setting up MERRA2 data")
+    vars = ['uv', 'vT', 'z1']
+    merra2_p = [100, 70, 50, 30, 10]
+    merra2_uv_4575mean = [-3.64865774378585, -2.9196845124283, 1.50874952198854, 17.1705812619504, 92.7788451242831]
+    merra2_vT_4575mean = [17.2502638623327, 21.3728413001912, 26.7985621414914, 38.4797055449332, 75.6868871892927]
+    merra1_z1_60mean = [198.617317399618, 251.389999999999, 319.728965583174, 451.971359464627, 781.923244741875]
+    merra2_uv_4575sd = [18.622067598426, 20.5531656863889, 25.1494305485741, 37.5029171205106, 86.9587997758016]
+    merra2_vT_4575sd = [11.756538354396, 15.1474702772449, 19.7676915762039, 30.2586902501783, 70.0534319324615]
+    merra1_z1_60sd = [96.9030853954761, 125.266337610638, 158.865054753343, 218.504235655414, 357.295161771025]
+    merra2_data = [merra2_uv_4575mean, merra2_vT_4575mean, merra1_z1_60mean]
+    merra2_sd = [merra2_uv_4575sd, merra2_vT_4575sd, merra1_z1_60sd]
+
+    print(datetime.now(), ' - opening Isca data')
+    uv = uv_calc(exp)
+    vT = vT_calc(exp)
+    print(datetime.now(), ' - wave decomposition')
+    z_60 = xr.open_dataset(indir+exp+'_h.nc', decode_times=False).height.sel(lat=60, method='nearest')
+    waves = climate.GetWavesXr(z_60)
+    z1_60mean = np.abs(waves.sel(k=1)).mean(('lon', 'time'))
+    p = uv.pfull
+    uv_4575mean = uv.sel(lat=slice(45,75)).mean(('lat', 'lon', 'time'))
+    vT_4575mean = vT.sel(lat=slice(45,75)).mean(('lat', 'lon', 'time'))
+    isca_data = [uv_4575mean, vT_4575mean, z1_60mean]
+
+    print(datetime.now(), " - plotting")
+    colors = ['k', '#B30000']
+    lines = ['--', '-']
+    labels = ['MERRA2 data', 'control simulation']
+    units = [r"v'T' (K m s$^{-1}$)", r"u'v' (m$^{2}$ s$^{-2}$)", 'Wave-1 GPH (m)']
+    for i in range(len(vars)):
+        fig, ax = plt.subplots(figsize=(6,6))
+        ax.errorbar(merra2_data[i], merra2_p, xerr=merra2_sd[i], fmt='.', linewidth=1.25, capsize=5, color=colors[0], linestyle=lines[0], label=labels[0])
+        ax.plot(isca_data[i], p, linewidth=1.25, color=colors[1], linestyle=lines[1], label=labels[1])
+        plt.xlabel(r"$45-75\degree$N mean "+units[i], fontsize='x-large')
+        plt.ylabel('Pressure (hPa)', fontsize='x-large')
+        plt.ylim(max(p), 1)
+        plt.yscale('log')
+        plt.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
+        plt.legend(fancybox=False, ncol=1, fontsize='x-large')
+        plt.savefig(exp+'_'+vars[i]+'_vsMERRA2.pdf', bbox_inches = 'tight')
+        plt.show()
 
 if __name__ == '__main__': 
     #Set-up data to be read in
