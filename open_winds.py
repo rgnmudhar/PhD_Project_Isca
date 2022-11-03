@@ -76,13 +76,12 @@ def find_SPV(indir, outdir, exp):
     Uses 60N and 10hPa as per SSW definiton.
     Saves as a file.
     """
-    print(datetime.now(), " - finding wind speeds at 60N, 10hPa")
+    print(datetime.now(), " - finding wind speeds at 60N, 10 and 100 hPa")
     for i in range(len(exp)):
         print(datetime.now(), " - ", exp[i])
-        SPV = xr.open_dataset(indir+exp[i]+'_uz.nc', decode_times=False).ucomp\
-            .sel(pfull=10, method='nearest')\
-            .sel(lat=60, method='nearest')
-        save_file(outdir, exp[i], SPV, 'SPV')
+        u = xr.open_dataset(indir+exp[i]+'_uz.nc', decode_times=False).ucomp.sel(lat=60, method='nearest')
+        save_file(outdir, exp[i], u.sel(pfull=10, method='nearest'), 'u10')
+        save_file(outdir, exp[i], u.sel(pfull=100, method='nearest'), 'u100')
 
 def calc_error(nevents, nyears):
     """
@@ -117,14 +116,14 @@ def find_SSWs(dir, exp):
     h_list = []
     h_err_list = []
     for i in range(len(exp)):
-        SPV = open_file(dir, exp[i], 'SPV')
+        SPV = open_file(dir, exp[i], 'u10')
         h, h_err = find_SSW(SPV)
         h_list.append(h)
         h_err_list.append(h_err)
     return h_list, h_err_list
 
 def SSWsperrun(dir, exp):
-    SPV = open_file(dir, exp, 'SPV')
+    SPV = open_file(dir, exp, 'u10')
     years = np.arange(5, int(len(SPV)/360)+5, 5)
     SSWs = []
     errors = []
@@ -176,5 +175,5 @@ if __name__ == '__main__':
     #print(Ro)
 
     find_SPV(indir, outdir, exp)
-    p = 10 #850
-    winds_errs(indir, outdir, exp, p, basis+extension)
+    #p = 10 #850
+    #winds_errs(indir, outdir, exp, p, basis+extension)

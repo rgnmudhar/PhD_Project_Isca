@@ -171,18 +171,6 @@ def SSWsvexp(dir, exp, x, xlabel, fig_name):
 
     return plt.close()
 
-def report_vals(dir, exp, x):
-    n = len(exp)
-    print(datetime.now(), " - finding mean SPV strength")
-    for i in range(n):
-        SPV = open_file(dir, exp[i], 'SPV')
-        print(x[i]+': {0:.2f} ± {1:.2f}'.format(np.mean(SPV), np.std(SPV)))
-
-    print(datetime.now(), " - finding SSWs")
-    SSWs, errors = find_SSWs(dir, exp)
-    for i in range(n):
-        print(x[i]+': {0:.2f} ± {1:.2f}'.format(SSWs[i], errors[i]))
-
 def SSWsvexp_multi(dir, exp, x, xlabel, legend, colors, fig_name):
     """
     Plots SSW frequency against (heating) experiment for 3 sets of experiments
@@ -212,12 +200,26 @@ def SSWsvexp_multi(dir, exp, x, xlabel, legend, colors, fig_name):
 
     return plt.close()
 
+def report_vals(exp, label, u, SSW_flag=True):
+    print(datetime.now(), " - finding stats")
+    print(label+' mean: {0:.2f}'.format(np.mean(u)))
+    x, p, mode = pdf(u)
+    print(label+' mode: {0:.2f}'.format(mode))
+    print(label+' s.d.: {0:.2f}'.format(np.std(u)))
+    print(label+' min: {0:.2f}'.format(np.min(u)))
+    print(label+' max: {0:.2f}'.format(np.max(u)))
+
+    if SSW_flag == True:
+        print(datetime.now(), " - finding SSWs")
+        SSWs, SSWs_err = find_SSW(u)
+        print(label+' SSWs: {0:.2f} ± {1:.2f}'.format(SSWs, SSWs_err))
+
 if __name__ == '__main__': 
     #Set-up data to be read in
     indir = '/disco/share/rm811/processed/'
     outdir = '../Files/'
     basis = 'PK_e0v4z13'
-    var_type = input("Plot a) depth, b) width, c) location, d) strength, or e) topography experiments?")
+    var_type = input("Plot a) depth, b) width, c) location, d) strength, or e) topography experiments? or f) test?")
     if var_type == 'a':
         extension = '_depth'
     elif var_type == 'b':
@@ -228,6 +230,8 @@ if __name__ == '__main__':
         extension = '_strength'
     elif var_type == 'e':
         extension = '_topo'
+    elif var_type == 'f':
+        extension = '_test'
     exp, labels, xlabel = return_exp(extension)
     n = len(exp)
 
@@ -308,4 +312,72 @@ if __name__ == '__main__':
                         NH_zonal(lat, p, sd_diff, utz, np.arange(-20, 22, 2), ulvls, 'RdBu_r',\
                             r'zonal-mean zonal wind SD (ms$^{-1}$)', exp[i]+'_usd_diff.pdf')
     elif level == 'e':
-        report_vals(outdir, exp, labels)
+        n = len(exp)
+        for i in range(n):
+            u10 = open_file(outdir, exp[i], 'u10')
+            u100 = open_file(outdir, exp[i], 'u100')
+            report_vals(exp[i], labels[i], u10)
+            report_vals(exp[i], labels[i], u100, SSW_flag=False)
+            if i == 0:
+                u10_ctrl = u10
+                u100_ctrl = u100
+            count = 0
+            for j in u100:
+                if j < 0:
+                    count += 1
+            print(labels[i]+' days w/ westward winds (100 hPa): {0:.2f} %'.format(100*count/len(u100)))
+
+        obs = input('Plot MERRA2 data? Y/N')
+        if obs == 'y' or 'Y':
+            exp = ['obs_u1060', 'obs_u10060']
+            labels = ['MERRA2 @ 10 hPa', 'MERRA2 @ 100 hPa']
+            u10 = open_file(outdir, exp[0], 'NDJFM')
+            u100 = open_file(outdir, exp[1], 'NDJFM')
+            report_vals(exp[0], labels[0], u10)
+            report_vals(exp[1], labels[1], u100, SSW_flag=False)
+            count = 0
+            for j in u100:
+                if j < 0:
+                    count += 1
+            print(labels[i]+' days w/ westward winds (100 hPa): {0:.2f} %'.format(100*count/len(u100)))
+
+            plot1 = [u100, u100_ctrl] 
+            plot2 = [u10, u10_ctrl]
+            labels = ['MERRA2', 'control']
+            lines = ['-', '--']
+            x_min = x_max = 0
+            fig, ax = plt.subplots(figsize=(6,6))
+            for i in range(len(plot1)):
+                x = plot1[i]
+                x_sort, f, m = pdf(x)
+                if max(x) > x_max:
+                    x_max = max(x)
+                if min(x) < x_min:
+                    x_min = min(x)
+                ax.plot(x_sort, f, linewidth=1.25, color='#4D0099', linestyle=lines[i])
+            ax.set_ylim(bottom=0)
+            ax.set_ylabel('100 hPa', color='#4D0099', fontsize='x-large')
+            ax.tick_params(axis='y', colors='#4D0099')  
+            ax2 = ax.twinx()
+            for i in range(len(plot2)):
+                x = plot2[i]
+                x_sort, f, m = pdf(x)
+                if max(x) > x_max:
+                    x_max = max(x)
+                if min(x) < x_min:
+                    x_min = min(x)
+                ax2.plot(x_sort, f, linewidth=1.25, color='#B30000', label=labels[i], linestyle=lines[i])
+            ax2.set_ylim(bottom=0)
+            ax2.set_ylabel('10 hPa', color='#B30000', fontsize='x-large')
+            ax2.tick_params(axis='y', colors='#B30000')  
+            ax.axvline(0, color='k', linewidth=0.25)
+            ax.set_xlim(x_min, x_max)
+            ax.set_xlabel(r'$60\degree$N zonal wind', fontsize='x-large')
+            ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
+            ax2.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
+            plt.legend(fancybox=False, ncol=1, fontsize='x-large')
+            plt.savefig('MERRA2vCtrl_uwindpdf.pdf', bbox_inches = 'tight')
+            plt.show()
+            plt.close()
+        else:
+            print('done')

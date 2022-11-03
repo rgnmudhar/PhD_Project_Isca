@@ -108,7 +108,7 @@ def return_tau(uz):
     eofs = leading_eofs(solver)
     pcs = leading_pcs(solver)
     variance_fractions = variance(solver)
-    lags = 50 
+    lags = 200 
     tau1, tau2 = AM_times(pcs, lags)
 
     return tau1
@@ -118,7 +118,6 @@ def plot_single(uz, utz, p_min, lat_min, exp_name):
     Plots equivalent to Fig 4a-c from Sheshadri & Plumb.
     """
     # First generate all necessary information for EOF analysis
-    u = eof_u(uz, p_min, lat_min)
     solver = eof_solver(uz, p_min, lat_min)
     eofs = leading_eofs(solver)
     pcs = leading_pcs(solver)
@@ -238,7 +237,17 @@ if __name__ == '__main__':
     elif plot_type =='c':
         # For creating a plot that shows SPV speed and AM timescale for various experiments
         exp = ['PK_e0v1z13', 'PK_e0v2z13', 'PK_e0v3z13', 'PK_e0v4z13',\
-        'PK_e0v1z18', 'PK_e0v2z18', 'PK_e0v3z18', 'PK_e0v4z18']
+        'PK_e0v1z18', 'PK_e0v2z18', 'PK_e0v3z18', 'PK_e0v4z18',\
+        'PK_e0v4z13_q6m2y45l800u200']
+        symbols =  ['o', 'o', 'o', 'o',\
+            's', 's', 's', 's',\
+            '*']
+        colors = ['k', '#00B300', '#0099CC', '#B30000',\
+            'k', '#00B300', '#0099CC', '#B30000',\
+            '#B30000']
+        labels = [r'$p_{oz} \sim 200$ hPa', r'$p_{oz} \sim 100$ hPa', 'with asymmetry',\
+            r'$\gamma = 1$ K km$^{-1}$', r'$\gamma = 2$ K km$^{-1}$',r'$\gamma = 3$ K km$^{-1}$', r'$\gamma = 4$ K km$^{-1}$']
+        key
 
         print(datetime.now(), " - finding SPV and tau values")
         tau = []
@@ -247,7 +256,7 @@ if __name__ == '__main__':
             ds = add_phalf(indir+exp[i], '_uz.nc')
             uz = ds.ucomp
             tau.append(return_tau(uz))
-            SPV = open_file(exp[i], 'SPV')
+            SPV = open_file('../Files/', exp[i], 'u10')
             vtx.append(np.mean(SPV))
         
         print(datetime.now(), " - plotting")

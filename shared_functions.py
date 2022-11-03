@@ -92,6 +92,10 @@ def return_exp(extension):
             basis+'_w10a4p800f800g50'+perturb]
         labels = ['control', 'weak', 'shallow', 'narrow']
         xlabel = ''
+    elif extension == '_test':
+        exp = [basis+perturb]
+        labels = ['control']
+        xlabel = ''
     return exp, labels, xlabel
 
 def add_phalf(exp_name, file_name):
