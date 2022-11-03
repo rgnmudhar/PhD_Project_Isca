@@ -93,8 +93,8 @@ def return_exp(extension):
         labels = ['control', 'weak', 'shallow', 'narrow']
         xlabel = ''
     elif extension == '_test':
-        exp = [basis+perturb, 'PK_e0v3z13'+perturb]
-        labels = [r'\gamma = 4', r'\gamma = 3']
+        exp = ['PK_e0v3z13'+perturb, basis+perturb]
+        labels = [r'$\gamma = 3$', r'$\gamma = 4$']
         xlabel = ''
     return exp, labels, xlabel
 

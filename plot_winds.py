@@ -311,21 +311,23 @@ if __name__ == '__main__':
                         sd_diff = sd1 - sd2
                         NH_zonal(lat, p, sd_diff, utz, np.arange(-20, 22, 2), ulvls, 'RdBu_r',\
                             r'zonal-mean zonal wind SD (ms$^{-1}$)', exp[i]+'_usd_diff.pdf')
+    
     elif level == 'e':
         n = len(exp)
+        u10_full = []
+        u100_full = []
         for i in range(n):
             u10 = open_file(outdir, exp[i], 'u10')
             u100 = open_file(outdir, exp[i], 'u100')
             report_vals(exp[i], labels[i], u10)
             report_vals(exp[i], labels[i], u100, SSW_flag=False)
-            if i == 0:
-                u10_ctrl = u10
-                u100_ctrl = u100
             count = 0
             for j in u100:
                 if j < 0:
                     count += 1
             print(labels[i]+' days w/ westward winds (100 hPa): {0:.2f} %'.format(100*count/len(u100)))
+            u10_full.append(u10)
+            u100_full.append(u100)
 
         obs = input('Plot MERRA2 data? Y/N')
         if obs == 'y' or 'Y':
@@ -341,10 +343,10 @@ if __name__ == '__main__':
                     count += 1
             print(labels[i]+' days w/ westward winds (100 hPa): {0:.2f} %'.format(100*count/len(u100)))
 
-            plot1 = [u100, u100_ctrl] 
-            plot2 = [u10, u10_ctrl]
-            labels = ['MERRA2', 'control']
-            lines = ['-', '--']
+            plot1 = [u100, u100_full[0], u100_full[1]] 
+            plot2 = [u10, u10_full[0], u10_full[1]]
+            labels = ['MERRA2', r'$\gamma = 3$', r'$\gamma = 4$']
+            lines = ['-', '--', ':']
             x_min = x_max = 0
             fig, ax = plt.subplots(figsize=(6,6))
             for i in range(len(plot1)):
@@ -357,7 +359,8 @@ if __name__ == '__main__':
                 ax.plot(x_sort, f, linewidth=1.25, color='#4D0099', linestyle=lines[i])
             ax.set_ylim(bottom=0)
             ax.set_ylabel('100 hPa', color='#4D0099', fontsize='x-large')
-            ax.tick_params(axis='y', colors='#4D0099')  
+            ax.tick_params(axis='y', colors='#4D0099')
+
             ax2 = ax.twinx()
             for i in range(len(plot2)):
                 x = plot2[i]
@@ -370,6 +373,7 @@ if __name__ == '__main__':
             ax2.set_ylim(bottom=0)
             ax2.set_ylabel('10 hPa', color='#B30000', fontsize='x-large')
             ax2.tick_params(axis='y', colors='#B30000')  
+
             ax.axvline(0, color='k', linewidth=0.25)
             ax.set_xlim(x_min, x_max)
             ax.set_xlabel(r'$60\degree$N zonal wind', fontsize='x-large')
