@@ -154,6 +154,8 @@ def SSWsvexp(dir, exp, x, xlabel, fig_name):
     SSWs, errors = find_SSWs(dir, exp)
     og = SSWs[0]
     og_err = errors[0]
+    obs = 0.48
+    obs_err = 0.19
     print(datetime.now(), " - plotting SSWs vs experiment")
     fig, ax = plt.subplots(figsize=(10,6))
     ax.errorbar(x[1:], SSWs[1:], yerr=errors[1:], fmt='o', linewidth=1.25, capsize=5, color='#B30000', linestyle=':')
@@ -161,8 +163,8 @@ def SSWsvexp(dir, exp, x, xlabel, fig_name):
     ax.set_xticks(x[1:])
     ax.set_xlabel(xlabel, fontsize='xx-large')
     ax.set_ylabel(r'SSWs per 100 days', fontsize='xx-large')
-    ax.axhline(0.42, color='#4D0099', linewidth=0.5)
-    ax.text(5.35, 0.42+0.01, 'reanalysis', color='#4D0099', fontsize='xx-large')
+    ax.axhline(obs, color='#4D0099', linewidth=0.5)
+    ax.text(5, obs+0.01, 'observations', color='#4D0099', fontsize='xx-large')
     ax.axhline(og, color='#666666', linewidth=0.5)
     ax.fill_between(range(-1,8), (og - og_err), (og + og_err), facecolor ='gainsboro', alpha = 0.4)
     ax.text(5.7, og+0.01, 'control', color='#666666', fontsize='xx-large')
@@ -316,6 +318,7 @@ if __name__ == '__main__':
         n = len(exp)
         u10_full = []
         u100_full = []
+        SSWs = []
         for i in range(n):
             u10 = open_file(outdir, exp[i], 'u10')
             u100 = open_file(outdir, exp[i], 'u100')
@@ -333,8 +336,9 @@ if __name__ == '__main__':
         if obs == 'y' or 'Y':
             exp = ['obs_u1060', 'obs_u10060']
             labels = ['MERRA2 @ 10 hPa', 'MERRA2 @ 100 hPa']
-            u10 = open_file(outdir, exp[0], 'NDJFM')
-            u100 = open_file(outdir, exp[1], 'NDJFM')
+            months = 'NDJFM' #'NDJFM'
+            u10 = open_file(outdir, exp[0], months)
+            u100 = open_file(outdir, exp[1], months)
             report_vals(exp[0], labels[0], u10)
             report_vals(exp[1], labels[1], u100, SSW_flag=False)
             count = 0
@@ -345,7 +349,7 @@ if __name__ == '__main__':
 
             plot1 = [u100, u100_full[0], u100_full[1]] 
             plot2 = [u10, u10_full[0], u10_full[1]]
-            labels = ['MERRA2', r'$\gamma = 3$', r'$\gamma = 4$']
+            labels = ['a) MERRA2', r'b) $\gamma = 3$ K km$^{-1}$', r'c) $\gamma = 4$ K km$^{-1}$']
             lines = ['-', '--', ':']
             x_min = x_max = 0
             fig, ax = plt.subplots(figsize=(6,6))
@@ -380,7 +384,7 @@ if __name__ == '__main__':
             ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
             ax2.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
             plt.legend(fancybox=False, ncol=1, fontsize='x-large')
-            plt.savefig('MERRA2vCtrl_uwindpdf.pdf', bbox_inches = 'tight')
+            plt.savefig('MERRA2vCtrl_'+months+'_uwindpdf.pdf', bbox_inches = 'tight')
             plt.show()
             plt.close()
         else:

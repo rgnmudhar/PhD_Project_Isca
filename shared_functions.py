@@ -27,8 +27,8 @@ def return_exp(extension):
         basis+'_w15a4p500f800g50'+perturb,\
         basis+'_w15a4p400f800g50'+perturb,\
         basis+'_w15a4p300f800g50'+perturb]
-        labels = ['control', '900 hPa', '800 hPa', '700 hPa', '600 hPa', '500 hPa', '400 hPa', '300 hPa']
-        #labels = ['control', '900', '800', '700', '600', '500', '400', '300']
+        #labels = ['control', '900 hPa', '800 hPa', '700 hPa', '600 hPa', '500 hPa', '400 hPa', '300 hPa']
+        labels = ['control', '900', '800', '700', '600', '500', '400', '300']
         xlabel = 'Depth of Heating (hPa)'
     elif extension == '_width':
         exp = [basis+perturb,\
@@ -40,7 +40,8 @@ def return_exp(extension):
         #basis+'_w35a4p800f800g50'+perturb,\
         basis+'_w35a4p800f800g50'+perturb+'_SCALED',\
         basis+'_w40a4p800f800g50'+perturb]
-        labels = ['control', r'10$\degree$', r'15$\degree$', r'20$\degree$', r'25$\degree$', r'30$\degree$', r'35$\degree$', r'40$\degree$']
+        #labels = ['control', r'10$\degree$', r'15$\degree$', r'20$\degree$', r'25$\degree$', r'30$\degree$', r'35$\degree$', r'40$\degree$']
+        labels = ['control', '10', '15', '20', '25', '30', '35', '40']
         xlabel = r'Extent of Heating ($\degree$)'
     elif extension == '_strength':
         level = input("For depth a) 800, b) 600, or c) 400 hPa?")
@@ -260,6 +261,8 @@ def plot_pdf(var, dir, exp, input, z, p, labels, xlabel, colors, name):
             if var == 'u':
                 x = xr.open_dataset(dir+exp[i]+input, decode_times=False).ucomp.sel(pfull=p1, method='nearest').sel(lat=60, method='nearest')
             elif var == 'vT':
+                x = vT_level(z[i], p1)
+            elif var == 'ep2':
                 x = vT_level(z[i], p1)
             elif var == 'gph':
                 x = z[i]

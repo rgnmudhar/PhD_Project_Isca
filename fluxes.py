@@ -9,6 +9,14 @@ from aostools import climate
 from shared_functions import *
 from datetime import datetime
 
+def open_data(dir, exp):
+    u = xr.open_dataset(dir+exp+'_u.nc', decode_times=False).ucomp
+    v = xr.open_dataset(dir+exp+'_v.nc', decode_times=False).vcomp
+    w = xr.open_dataset(dir+exp+'_w.nc', decode_times=False).omega/100 # Pa --> hPa
+    T = xr.open_dataset(dir+exp+'_T.nc', decode_times=False).temp
+    utz = xr.open_dataset(dir+exp+'_utz.nc', decode_times=False).ucomp[0]
+    return utz, u, v, w, T
+
 def calc_ep(u, v, w, t):
     print(datetime.now(), ' - finding EP Fluxes')
     ep1, ep2, div1, div2 = climate.ComputeEPfluxDivXr(u, v, t, 'lon', 'lat', 'pfull', 'time', w=w, do_ubar=True) # default w=None and do_ubar=False for QG approx.
@@ -208,7 +216,7 @@ if __name__ == '__main__':
     #Set-up data to be read in
     indir = '/disco/share/rm811/processed/'
     basis = 'PK_e0v4z13'
-    flux = input("Plot a) EP flux or b) v'T'?")
+    flux = input("Plot a) EP flux divergence, b) upward EP Flux or c) v'T'?")
     var_type = input("Plot a) depth, b) width, c) location, d) strength, or e) topography experiments?")
     if var_type == 'a':
         extension = '_depth'
@@ -221,17 +229,15 @@ if __name__ == '__main__':
     elif var_type == 'e':
         extension = '_topo'
     exp, labels, xlabel = return_exp(extension)
+    colors = ['k', '#B30000', '#FF9900', '#FFCC00', '#00B300', '#0099CC', '#4D0099', '#CC0080']
+    blues = ['k', '#dbe9f6', '#bbd6eb', '#88bedc', '#549ecd',  '#2a7aba', '#0c56a0', '#08306b']
 
     ulvls = np.arange(-200, 200, 10)
 
     if flux == 'a':
         for i in range(len(exp)):
             print(datetime.now(), " - opening files ({0:.0f}/{1:.0f})".format(i+1, len(exp)))
-            u = xr.open_dataset(indir+exp[i]+'_u.nc', decode_times=False).ucomp
-            v = xr.open_dataset(indir+exp[i]+'_v.nc', decode_times=False).vcomp
-            w = xr.open_dataset(indir+exp[i]+'_w.nc', decode_times=False).omega/100 # Pa --> hPa
-            T = xr.open_dataset(indir+exp[i]+'_T.nc', decode_times=False).temp
-            utz = xr.open_dataset(indir+exp[i]+'_utz.nc', decode_times=False).ucomp[0]
+            utz, u, v, w, T = open_data(indir, exp[i])
             div, ep1, ep2 = calc_ep(u, v, w, T)
 
             if i == 0:
@@ -252,11 +258,35 @@ if __name__ == '__main__':
                 ep1_diff = ep1 - ep1_og
                 ep2_diff = ep2 - ep2_og
                 plot_ep(utz, div_diff, ep1_diff, ep2_diff, exp[i], heat, 'diff')
-        
+
     elif flux == 'b':
+        p = int(input('At which pressure level? (i.e. 10 or 100 hPa)'))
+        print(datetime.now(), " - plotting PDFs at {:.0f} hPa".format(p))
+        x_min = x_max = 0
+        fig, ax = plt.subplots(figsize=(6,6))
+        for i in range(len(exp)):
+            print(datetime.now(), " - opening files ({0:.0f}/{1:.0f})".format(i+1, len(exp)))
+            u, v, w, t = open_data(indir, exp[i])[1:]
+            ep1, ep2, div1, div2 = climate.ComputeEPfluxDivXr(u, v, t, 'lon', 'lat', 'pfull', 'time', w=w, do_ubar=True)
+            x = ep2
+            x_sort, f, m = pdf(x)
+            if max(x) > x_max:
+                x_max = max(x)
+            if min(x) < x_min:
+                x_min = min(x)
+            print(datetime.now(), ' - plotting')
+            ax.plot(x_sort, f, linewidth=1.25, color=blues[i], label=labels[i])
+            ax.axvline(0, color='k', linewidth=0.25)
+            ax.set_xlim(x_min, x_max)
+            ax.set_ylim(bottom=0)
+            ax.set_xlabel(xlabel, fontsize='xx-large')
+            ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
+            plt.legend(fancybox=False, ncol=1, fontsize='x-large')
+            plt.savefig(name+'_{:.0f}pdf.pdf'.format(p1), bbox_inches = 'tight')
+            plt.close()
+            
+    elif flux == 'c':
         plot_type = input("Plot a) lat-p climatology and variability or b) linear addition?")
-        colors = ['k', '#B30000', '#FF9900', '#FFCC00', '#00B300', '#0099CC', '#4D0099', '#CC0080']
-        blues = ['k', '#dbe9f6', '#bbd6eb', '#88bedc', '#549ecd',  '#2a7aba', '#0c56a0', '#08306b']
         if plot_type == 'a':
             vpTp = []
             for i in range(len(exp)):
