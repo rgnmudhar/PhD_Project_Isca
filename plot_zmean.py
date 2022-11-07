@@ -133,12 +133,28 @@ def linear_add(indir, exp, label, lats, lats_label):
         plt.savefig(vars[j]+'_addvcombo_'+label+'.pdf', bbox_inches = 'tight')
         plt.close()
 
+def tropopause(T):
+    # Finds tropopause
+    return print(":)")
+
+def merid_Tgrad(exp, lat_min):
+    lat_max = 90
+    T = xr.open_dataset(indir+exp+'_Ttz.nc', decode_times=False).temp[0].sel(pfull=slice(1,1000))
+    p = T.pfull
+    T1 = T.sel(lat=lat_min, method='nearest')
+    T2 = T.sel(lat=lat_max, method='nearest')
+
+    grads = []
+    for i in range(len(p)):
+        grads.append(T1[i] - T2[i])
+    return p, grads
+
 if __name__ == '__main__': 
     #Set-up data to be read in
     indir = '/disco/share/rm811/processed/'
-    plot_type = input("Plot a) individual experiments, b) difference vs. control, or c) linear additions?")
+    plot_type = input("Plot a) individual experiments, b) difference vs. control, c) linear additions, or d) meridional T gradients?")
     
-    if plot_type == 'a' or plot_type == 'b':
+    if plot_type == 'a' or plot_type == 'b' or plot_type == 'd':
         var_type = input("Plot a) depth, b) width, c) location, d) strength or e) topography experiments?")
         if var_type == 'a':
             extension = '_depth'
@@ -154,30 +170,51 @@ if __name__ == '__main__':
         upper_p = 1 # hPa
         lvls = [np.arange(160, 330, 10), np.arange(-200, 205, 5)]
 
-        for i in range(len(exp)):
-            print(datetime.now(), " - opening files ({0:.0f}/{1:.0f})".format(i+1, len(exp)))
-            uz = xr.open_dataset(indir+exp[i]+'_utz.nc', decode_times=False).ucomp[0]
-            Tz = xr.open_dataset(indir+exp[i]+'_Ttz.nc', decode_times=False).temp[0]
-            lat = uz.coords['lat'].data
-            p = uz.coords['pfull'].data
-            #MSF = calc_streamfn(xr.open_dataset(indir+exp[0]+'_vtz.nc', decode_times=False).vcomp[0], p, lat)  # Meridional Stream Function
-            #MSF_xr = xr.DataArray(MSF, coords=[p,lat], dims=['pfull','lat'])  # Make into an xarray DataArray
-            #MSF_xr.attrs['units']=r'kgs$^{-1}$'
+        if plot_type =='d':
+            lat_min = 30
+            blues = ['k', '#dbe9f6', '#bbd6eb', '#88bedc', '#549ecd',  '#2a7aba', '#0c56a0', '#08306b', '#B30000']
+            fig, ax = plt.subplots(figsize=(6,6))
+            for i in range(len(exp)):
+                p, grads = merid_Tgrad(exp[i], lat_min)
+                ax.plot(grads, p, linewidth=1.25, color=blues[i], label=labels[i])
+            ax.axvline(0, color='k', linewidth=0.25)
+            ax.fill_between(range(-20,70), 200, 800, facecolor ='gainsboro', alpha = 0.8)
+            ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
+            plt.xlim(-15,35)
+            plt.xlabel(str(lat_min)+r'$-90\degree$N $\Delta T_{y}$ (K)', fontsize='xx-large')
+            plt.ylim(max(p), 50)
+            plt.yscale('log')
+            plt.ylabel('pressure (hPa)', fontsize='xx-large')
+            plt.legend(fancybox=False, ncol=1, fontsize='x-large')
+            plt.savefig('Tgradv{:.0f}N'.format(lat_min)+extension+'.pdf', bbox_inches = 'tight')
+            plt.show()
+            plt.close()
 
-            if i == 0:
-                print("skipping control")
-            elif i != 0:
-                #Read in data to plot polar heat contours
-                file = '/disco/share/rm811/isca_data/' + exp[i] + '/run0100/atmos_daily_interp.nc'
-                ds = xr.open_dataset(file)
-                perturb = ds.local_heating.sel(lon=180, method='nearest').mean(dim='time')  
-                if plot_type =='a':
-                    plot_combo(uz, Tz, lvls, perturb, lat, p, exp[i])
-                elif plot_type == 'b':
-                        u = [uz, xr.open_dataset(indir+exp[0]+'_utz.nc', decode_times=False).ucomp[0]]
-                        T = [Tz, xr.open_dataset(indir+exp[0]+'_Ttz.nc', decode_times=False).temp[0]]
-                        plot_diff([T, u], ['K', r'ms$^{-1}$'], [np.arange(160, 330, 10), np.arange(-200, 210, 10)],\
-                            perturb, lat, p, exp[i])
+        else:
+            for i in range(len(exp)):
+                print(datetime.now(), " - opening files ({0:.0f}/{1:.0f})".format(i+1, len(exp)))
+                uz = xr.open_dataset(indir+exp[i]+'_utz.nc', decode_times=False).ucomp[0]
+                Tz = xr.open_dataset(indir+exp[i]+'_Ttz.nc', decode_times=False).temp[0]
+                lat = uz.coords['lat'].data
+                p = uz.coords['pfull'].data
+                #MSF = calc_streamfn(xr.open_dataset(indir+exp[0]+'_vtz.nc', decode_times=False).vcomp[0], p, lat)  # Meridional Stream Function
+                #MSF_xr = xr.DataArray(MSF, coords=[p,lat], dims=['pfull','lat'])  # Make into an xarray DataArray
+                #MSF_xr.attrs['units']=r'kgs$^{-1}$'
+
+                if i == 0:
+                    print("skipping control")
+                elif i != 0:
+                    #Read in data to plot polar heat contours
+                    file = '/disco/share/rm811/isca_data/' + exp[i] + '/run0100/atmos_daily_interp.nc'
+                    ds = xr.open_dataset(file)
+                    perturb = ds.local_heating.sel(lon=180, method='nearest').mean(dim='time')  
+                    if plot_type =='a':
+                        plot_combo(uz, Tz, lvls, perturb, lat, p, exp[i])
+                    elif plot_type == 'b':
+                            u = [uz, xr.open_dataset(indir+exp[0]+'_utz.nc', decode_times=False).ucomp[0]]
+                            T = [Tz, xr.open_dataset(indir+exp[0]+'_Ttz.nc', decode_times=False).temp[0]]
+                            plot_diff([T, u], ['K', r'ms$^{-1}$'], [np.arange(160, 330, 10), np.arange(-200, 210, 10)],\
+                                perturb, lat, p, exp[i])
    
     elif plot_type == 'c':
         basis = 'PK_e0v4z13'
