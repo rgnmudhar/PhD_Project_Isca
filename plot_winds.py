@@ -336,7 +336,7 @@ if __name__ == '__main__':
         if obs == 'y' or 'Y':
             exp = ['obs_u1060', 'obs_u10060']
             labels = ['MERRA2 @ 10 hPa', 'MERRA2 @ 100 hPa']
-            months = 'NDJFM' #'NDJFM'
+            months = 'NDJF' #'NDJFM'
             u10 = open_file(outdir, exp[0], months)
             u100 = open_file(outdir, exp[1], months)
             report_vals(exp[0], labels[0], u10)

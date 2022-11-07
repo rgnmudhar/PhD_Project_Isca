@@ -239,13 +239,13 @@ if __name__ == '__main__':
         # For creating a plot that shows SPV speed and AM timescale for various experiments
         exp = ['PK_e0v1z13', 'PK_e0v2z13', 'PK_e0v3z13', 'PK_e0v4z13',\
         'PK_e0v1z18', 'PK_e0v2z18', 'PK_e0v3z18', 'PK_e0v4z18',\
-        'PK_e0v3z13_q6m2y45l800u200', 'PK_e0v4z13_q6m2y45l800u200']
+        'PK_e0v4z13_q8m2y45l800u200']
         symbols =  ['o', 's', '*']
         colors = ['k', '#00B300', '#0099CC', '#B30000']
         labels = [r'$p_{oz} \sim 200$ hPa', r'$p_{oz} \sim 100$ hPa', '+ asymmetry', r'$\gamma = 1$ K km$^{-1}$', r'$\gamma = 2$ K km$^{-1}$',r'$\gamma = 3$ K km$^{-1}$', r'$\gamma = 4$ K km$^{-1}$']
         legend_elements = [Line2D([0], [0], marker=symbols[0], color='w', label=labels[0], markerfacecolor='k', markersize=10),\
                     Line2D([0], [0], marker=symbols[1], color='w', label=labels[1], markerfacecolor='k', markersize=10),\
-                    Line2D([0], [0], marker=symbols[2], color='w', label=labels[2], markerfacecolor='k', markersize=15),\
+                    Line2D([0], [0], marker=symbols[2], color='w', label=labels[2], markerfacecolor='#4D0099', markersize=15),\
                     Line2D([0], [0], color=colors[0], lw=5, label=labels[3]),\
                     Line2D([0], [0], color=colors[1], lw=5, label=labels[4]),\
                     Line2D([0], [0], color=colors[2], lw=5, label=labels[5]),\
@@ -269,13 +269,12 @@ if __name__ == '__main__':
         ax.axvline(30, linestyle='--', linewidth=1, color='k')
         ax.scatter(tau[:4], vtx[:4], s=50, c=colors, marker=symbols[0])
         ax.scatter(tau[4:8], vtx[4:8], s=50, c=colors, marker=symbols[1])
-        ax.scatter(tau[-2], vtx[-2], s=75, c='#0099CC', marker=symbols[2])
-        ax.scatter(tau[-1], vtx[-1], s=75, c='#B30000', marker=symbols[2])
+        ax.scatter(tau[-1], vtx[-1], s=75, c='#4D0099', marker=symbols[2])
         ax.set_xlabel(r'EOF1 $\tau$ (days)', fontsize='x-large')
         ax.set_ylabel(r'10 hPa, 60 N Zonal Wind Mean (ms$^{-1}$)', fontsize='x-large')
         ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
         ax.legend(handles=legend_elements, fontsize='large')
         sq = plt.Rectangle((10,25), 20, 25, fc='#00B300', alpha=0.2)
         plt.gca().add_patch(sq)
-        plt.savefig('vtx_vs_tau.pdf', bbox_inches = 'tight')
+        plt.savefig('vtx_vs_tau_v4q8.pdf', bbox_inches = 'tight')
         plt.close()
