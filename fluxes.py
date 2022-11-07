@@ -260,15 +260,16 @@ if __name__ == '__main__':
                 plot_ep(utz, div_diff, ep1_diff, ep2_diff, exp[i], heat, 'diff')
 
     elif flux == 'b':
-        p = int(input('At which pressure level? (i.e. 10 or 100 hPa)'))
+        p = int(input('At which pressure level? (i.e. 10 or 100 hPa) '))
         print(datetime.now(), " - plotting PDFs at {:.0f} hPa".format(p))
         x_min = x_max = 0
         fig, ax = plt.subplots(figsize=(6,6))
         for i in range(len(exp)):
             print(datetime.now(), " - opening files ({0:.0f}/{1:.0f})".format(i+1, len(exp)))
             u, v, w, t = open_data(indir, exp[i])[1:]
+            print(datetime.now(), " - finding EP flux")
             ep1, ep2, div1, div2 = climate.ComputeEPfluxDivXr(u, v, t, 'lon', 'lat', 'pfull', 'time', w=w, do_ubar=True)
-            x = ep2
+            x = ep2.sel(pfull=p,method='nearest').sel(lat=slice(45,75)).mean('lat')
             x_sort, f, m = pdf(x)
             if max(x) > x_max:
                 x_max = max(x)
@@ -276,14 +277,15 @@ if __name__ == '__main__':
                 x_min = min(x)
             print(datetime.now(), ' - plotting')
             ax.plot(x_sort, f, linewidth=1.25, color=blues[i], label=labels[i])
-            ax.axvline(0, color='k', linewidth=0.25)
-            ax.set_xlim(x_min, x_max)
-            ax.set_ylim(bottom=0)
-            ax.set_xlabel(xlabel, fontsize='xx-large')
-            ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
-            plt.legend(fancybox=False, ncol=1, fontsize='x-large')
-            plt.savefig(name+'_{:.0f}pdf.pdf'.format(p1), bbox_inches = 'tight')
-            plt.close()
+        ax.axvline(0, color='k', linewidth=0.25)
+        ax.set_xlim(x_min, x_max)
+        ax.set_ylim(bottom=0)
+        ax.set_xlabel(r'45-75$\degree$N,'+str(p)+r'hPa EP$_z$ (hPa m s$^{-2}$)', fontsize='xx-large')
+        ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
+        plt.legend(fancybox=False, ncol=1, fontsize='x-large')
+        plt.savefig(basis+'_{:.0f}pdf.pdf'.format(p), bbox_inches = 'tight')
+        plt.show()
+        plt.close()
             
     elif flux == 'c':
         plot_type = input("Plot a) lat-p climatology and variability or b) linear addition?")
