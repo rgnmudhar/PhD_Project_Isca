@@ -133,9 +133,29 @@ def linear_add(indir, exp, label, lats, lats_label):
         plt.savefig(vars[j]+'_addvcombo_'+label+'.pdf', bbox_inches = 'tight')
         plt.close()
 
-def tropopause(T):
+def min_lapse(T, z):
+    # Finds where lapse rate reaches < 2 K/km (in hPa)
+    dtdz = []
+    for i in range(len(T)-1):
+        dtdz.append( -(T[i+1] - T[i]) / (z[i+1] - z[i]) )
+    for j in range(len(dtdz)):
+        if dtdz[j] < 2:
+            idx = (np.abs(z - (z[j]+2)).argmin())
+            if dtdz[idx] < 2:
+                h_tropo = z[j]
+                break
+    return h_tropo
+
+def tropopause(exp):
     # Finds tropopause
-    return print(":)")
+    T = xr.open_dataset(indir+exp+'_Ttz.nc', decode_times=False).temp[0]
+    T_sort = T.transpose().reindex(pfull=list(reversed(T.pfull)))
+    p = T.pfull
+    z = list(reversed(altitude(p).data))
+    tropo = []
+    for i in range(len(T_sort)):
+        tropo.append(min_lapse(T_sort[i], z))
+    return T.lat.data, tropo
 
 def merid_Tgrad(exp, lat_min):
     lat_max = 90
@@ -143,7 +163,6 @@ def merid_Tgrad(exp, lat_min):
     p = T.pfull
     T1 = T.sel(lat=lat_min, method='nearest')
     T2 = T.sel(lat=lat_max, method='nearest')
-
     grads = []
     for i in range(len(p)):
         grads.append(T1[i] - T2[i])
@@ -152,9 +171,9 @@ def merid_Tgrad(exp, lat_min):
 if __name__ == '__main__': 
     #Set-up data to be read in
     indir = '/disco/share/rm811/processed/'
-    plot_type = input("Plot a) individual experiments, b) difference vs. control, c) linear additions, or d) meridional T gradients?")
+    plot_type = input("Plot a) individual experiments, b) difference vs. control, c) linear additions, d) meridional T gradients or e) tropopause?")
     
-    if plot_type == 'a' or plot_type == 'b' or plot_type == 'd':
+    if plot_type == 'a' or plot_type == 'b' or plot_type == 'd' or plot_type == 'e':
         var_type = input("Plot a) depth, b) width, c) location, d) strength or e) topography experiments?")
         if var_type == 'a':
             extension = '_depth'
@@ -169,16 +188,16 @@ if __name__ == '__main__':
         exp, labels, xlabel = return_exp(extension)
         upper_p = 1 # hPa
         lvls = [np.arange(160, 330, 10), np.arange(-200, 205, 5)]
+        blues = ['k', '#dbe9f6', '#bbd6eb', '#88bedc', '#549ecd',  '#2a7aba', '#0c56a0', '#08306b']
 
         if plot_type =='d':
-            lat_min = 30
-            blues = ['k', '#dbe9f6', '#bbd6eb', '#88bedc', '#549ecd',  '#2a7aba', '#0c56a0', '#08306b', '#B30000']
+            lat_min = 0
             fig, ax = plt.subplots(figsize=(6,6))
             for i in range(len(exp)):
                 p, grads = merid_Tgrad(exp[i], lat_min)
                 ax.plot(grads, p, linewidth=1.25, color=blues[i], label=labels[i])
             ax.axvline(0, color='k', linewidth=0.25)
-            ax.fill_between(range(-20,70), 200, 800, facecolor ='gainsboro', alpha = 0.8)
+            ax.fill_between(range(-30,100), 200, 800, facecolor ='gainsboro', alpha = 0.2)
             ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
             plt.xlim(-15,35)
             plt.xlabel(str(lat_min)+r'$-90\degree$N $\Delta T_{y}$ (K)', fontsize='xx-large')
@@ -187,6 +206,23 @@ if __name__ == '__main__':
             plt.ylabel('pressure (hPa)', fontsize='xx-large')
             plt.legend(fancybox=False, ncol=1, fontsize='x-large')
             plt.savefig('Tgradv{:.0f}N'.format(lat_min)+extension+'.pdf', bbox_inches = 'tight')
+            plt.show()
+            plt.close()
+        
+        elif plot_type =='e':
+            fig, ax = plt.subplots(figsize=(6,6))
+            for i in range(len(exp)):
+                print(datetime.now(), " - finding tropopause ({0:.0f}/{1:.0f})".format(i+1, len(exp)))
+                lats, trop = tropopause(exp[i])
+                ax.plot(lats, trop, linewidth=1.25, color=blues[i], label=labels[i])
+            ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
+            plt.xlim(0,90)
+            plt.xticks([10, 30, 50, 70, 90], ['10', '30', '50', '70', '90'])
+            plt.xlabel('latitude ($\degree$)', fontsize='xx-large')
+            #plt.yscale('log')
+            plt.ylabel('tropopause height (km)', fontsize='xx-large')
+            plt.legend(fancybox=False, ncol=1, fontsize='x-large')
+            plt.savefig('tropopause'+extension+'.pdf', bbox_inches = 'tight')
             plt.show()
             plt.close()
 
