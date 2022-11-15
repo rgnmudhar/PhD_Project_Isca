@@ -209,8 +209,8 @@ if __name__ == '__main__':
     plot_type = input("a) individual experiment, b) multiple PCs, or c) plot for report?")
 
     indir = '/disco/share/rm811/processed/'
-    basis = 'PK_e0v4z18'
-    exp = [basis] #, basis+'_q6m2y45l800u200']
+    basis = 'PK_e0v4z13'
+    exp = [basis+'_h4000m2l25u65']
 
     # For EOFs follow Sheshadri & Plumb 2017, use p>100hPa, lat>20degN
     p_min = 100  # hPa
@@ -239,7 +239,7 @@ if __name__ == '__main__':
         # For creating a plot that shows SPV speed and AM timescale for various experiments
         exp = ['PK_e0v1z13', 'PK_e0v2z13', 'PK_e0v3z13', 'PK_e0v4z13',\
         'PK_e0v1z18', 'PK_e0v2z18', 'PK_e0v3z18', 'PK_e0v4z18',\
-        'PK_e0v4z13_q8m2y45l800u200']
+        'PK_e0v4z13_h4000m2l25u65']
         symbols =  ['o', 's', '*']
         colors = ['k', '#00B300', '#0099CC', '#B30000']
         labels = [r'$p_{oz} \sim 200$ hPa', r'$p_{oz} \sim 100$ hPa', '+ asymmetry', r'$\gamma = 1$ K km$^{-1}$', r'$\gamma = 2$ K km$^{-1}$',r'$\gamma = 3$ K km$^{-1}$', r'$\gamma = 4$ K km$^{-1}$']
