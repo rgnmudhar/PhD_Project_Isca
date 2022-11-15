@@ -175,6 +175,18 @@ def use_altitude(x, coord1, coord2, dim1, dim2, unit): #KEEP
     x_xr.attrs['units'] = unit
     return x_xr
 
+def inv_altitude(z): #KEEP
+    """
+    Finds pressure from altitude using z = -H*log10(p/p0).
+    Single value conversion
+    """
+    H = 7 #scale height km
+    p0 = 1000 #surface pressure hPa    
+      
+    p = p0*np.exp((-1)*z/H)
+    
+    return p
+
 def difference(a1, a2, coord1, coord2, dim1, dim2, unit): #KEEP
     """
     Take the difference between 2 datasets and create an xarray DataArray.

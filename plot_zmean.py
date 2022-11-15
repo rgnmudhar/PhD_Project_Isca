@@ -155,7 +155,7 @@ def tropopause(exp):
     tropo = []
     for i in range(len(T_sort)):
         tropo.append(min_lapse(T_sort[i], z))
-    return T.lat.data, tropo
+    return z, T.lat.data, tropo
 
 def merid_Tgrad(exp, lat_min):
     lat_max = 90
@@ -210,18 +210,33 @@ if __name__ == '__main__':
             plt.close()
         
         elif plot_type =='e':
+            # Below is experiment before zonal asymmetry was added for reference
+            exp.append('PK_e0v4z13')
+            labels.append('original')
+            blues.append('#B30000')
+
             fig, ax = plt.subplots(figsize=(6,6))
             for i in range(len(exp)):
                 print(datetime.now(), " - finding tropopause ({0:.0f}/{1:.0f})".format(i+1, len(exp)))
-                lats, trop = tropopause(exp[i])
+                z, lats, trop = tropopause(exp[i])
                 ax.plot(lats, trop, linewidth=1.25, color=blues[i], label=labels[i])
+            ax.set_ylim(min(z), 25)
+            ax.set_ylabel('psuedo-altitude (km)', fontsize='xx-large')
+            ax.set_xlabel(r'latitude ($\degree$N)', fontsize='xx-large')
             ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
+            plt.legend(fancybox=False, ncol=1, fontsize='x-large', facecolor='white')
+
+            ax2 = ax.twinx()
+            file = '/disco/share/rm811/isca_data/' + exp[0] + '/run0100/atmos_daily_interp.nc'
+            ds = xr.open_dataset(file)
+            heat = ds.local_heating.sel(lon=180, method='nearest').mean('time')
+            ax2.contour(lats, heat.pfull, heat, colors='g', linewidths=1, alpha=0.25, levels=7)
+            ax2.set_ylim(inv_altitude(min(z)), inv_altitude(30))
+            ax2.set_ylabel('pressure (hPa)', fontsize='xx-large')
+            ax2.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
+
             plt.xlim(0,90)
             plt.xticks([10, 30, 50, 70, 90], ['10', '30', '50', '70', '90'])
-            plt.xlabel('latitude ($\degree$)', fontsize='xx-large')
-            #plt.yscale('log')
-            plt.ylabel('tropopause height (km)', fontsize='xx-large')
-            plt.legend(fancybox=False, ncol=1, fontsize='x-large')
             plt.savefig('tropopause'+extension+'.pdf', bbox_inches = 'tight')
             plt.show()
             plt.close()
