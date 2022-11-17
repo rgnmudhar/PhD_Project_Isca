@@ -210,7 +210,7 @@ if __name__ == '__main__':
 
     indir = '/disco/share/rm811/processed/'
     basis = 'PK_e0v4z13'
-    exp = [basis+'_h4000m2l25u65']
+    exp = [basis+'_q6m2y45l800u200']
 
     # For EOFs follow Sheshadri & Plumb 2017, use p>100hPa, lat>20degN
     p_min = 100  # hPa
@@ -239,7 +239,7 @@ if __name__ == '__main__':
         # For creating a plot that shows SPV speed and AM timescale for various experiments
         exp = ['PK_e0v1z13', 'PK_e0v2z13', 'PK_e0v3z13', 'PK_e0v4z13',\
         'PK_e0v1z18', 'PK_e0v2z18', 'PK_e0v3z18', 'PK_e0v4z18',\
-        'PK_e0v4z13_h4000m2l25u65']
+        'PK_e0v3z13_q6m2y45l800u200']
         symbols =  ['o', 's', '*']
         colors = ['k', '#00B300', '#0099CC', '#B30000']
         labels = [r'$p_{oz} \sim 200$ hPa', r'$p_{oz} \sim 100$ hPa', '+ asymmetry', r'$\gamma = 1$ K km$^{-1}$', r'$\gamma = 2$ K km$^{-1}$',r'$\gamma = 3$ K km$^{-1}$', r'$\gamma = 4$ K km$^{-1}$']
@@ -276,5 +276,5 @@ if __name__ == '__main__':
         ax.legend(handles=legend_elements, fontsize='large')
         sq = plt.Rectangle((10,25), 20, 25, fc='#00B300', alpha=0.2)
         plt.gca().add_patch(sq)
-        plt.savefig('vtx_vs_tau_v4q8.pdf', bbox_inches = 'tight')
+        plt.savefig('vtx_vs_tau_v3q6.pdf', bbox_inches = 'tight')
         plt.close()

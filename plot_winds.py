@@ -313,7 +313,6 @@ if __name__ == '__main__':
                         sd_diff = sd1 - sd2
                         NH_zonal(lat, p, sd_diff, utz, np.arange(-20, 22, 2), ulvls, 'RdBu_r',\
                             r'zonal-mean zonal wind SD (ms$^{-1}$)', exp[i]+'_usd_diff.pdf')
-    
     elif level == 'e':
         n = len(exp)
         u10_full = []
@@ -345,7 +344,7 @@ if __name__ == '__main__':
             for j in u100:
                 if j < 0:
                     count += 1
-            print(labels[i]+' days w/ westward winds (100 hPa): {0:.2f} %'.format(100*count/len(u100)))
+            print(labels[1]+' days w/ westward winds: {0:.2f} %'.format(100*count/len(u100)))
 
             plot1 = [u100, u100_full[0], u100_full[1]] 
             plot2 = [u10, u10_full[0], u10_full[1]]

@@ -94,11 +94,10 @@ def return_exp(extension):
         labels = ['control', 'weak', 'shallow', 'narrow']
         xlabel = ''
     elif extension == '_test':
-        exp = ['PK_e0v3z13_q4m2y45l800u200',\
-            'PK_e0v3z13_q6m2y45l800u200',\
+        exp = ['PK_e0v3z13_q6m2y45l800u200',\
             'PK_e0v4z13_q6m2y45l800u200',\
             'PK_e0v4z13_q8m2y45l800u200']
-        labels = [r'$\gamma = 3, q = 4$', r'$\gamma = 3, q = 6$', r'$\gamma = 4, q = 6$', r'$\gamma = 4, q = 8$']
+        labels = [r'$\gamma = 3, q = 6$', r'$\gamma = 4, q = 6$', r'$\gamma = 4, q = 8$']
         xlabel = ''
     return exp, labels, xlabel
 
