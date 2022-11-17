@@ -17,9 +17,9 @@ def open_data(dir, exp):
     utz = xr.open_dataset(dir+exp+'_utz.nc', decode_times=False).ucomp[0]
     return utz, u, v, w, T
 
-def calc_ep(u, v, w, t):
+def calc_ep(u, v, w, t, k):
     print(datetime.now(), ' - finding EP Fluxes')
-    ep1, ep2, div1, div2 = climate.ComputeEPfluxDivXr(u, v, t, 'lon', 'lat', 'pfull', 'time', w=w, do_ubar=True) # default w=None and do_ubar=False for QG approx.
+    ep1, ep2, div1, div2 = climate.ComputeEPfluxDivXr(u, v, t, 'lon', 'lat', 'pfull', 'time', w=w, do_ubar=True, wave=k) # default w=None and do_ubar=False for QG approx.
     # take time mean of relevant quantities
     print(datetime.now(), ' - taking time mean')
     div = div1 + div2
@@ -28,7 +28,7 @@ def calc_ep(u, v, w, t):
     ep2 = ep2.mean(dim='time')
     return div, ep1, ep2
 
-def plot_ep(uz, div, ep1, ep2, exp_name, heat, type):
+def plot_ep(uz, div, ep1, ep2, k, exp_name, heat, type):
     print(datetime.now(), " - plotting EP Fluxes")
     p = uz.coords['pfull']
     lat = uz.coords['lat']
@@ -63,9 +63,8 @@ def plot_ep(uz, div, ep1, ep2, exp_name, heat, type):
     plt.xticks([10, 30, 50, 70, 90], ['10', '30', '50', '70', '90'])
     plt.ylabel('Pressure (hPa)', fontsize='xx-large')
     plt.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
-    plt.savefig(exp_name+'_EPflux.pdf', bbox_inches = 'tight')
-    plt.close()
-    return div, ep1
+    plt.savefig(exp_name+'_k{0:.0f}EPflux.pdf'.format(k), bbox_inches = 'tight')
+    return plt.close()
 
 def vT_calc(exp):
     print(datetime.now(), " - opening files for ", exp)
@@ -171,16 +170,23 @@ def plot_stats(stat, p, exp, ext, lab):
 
 def check_vs_MERRA(exp):
     print(datetime.now(), " - setting up MERRA2 data")
-    vars = ['uv', 'vT', 'z1']
+    vars = ['uv', 'vT', 'z1', 'z2']
     merra2_p = [100, 70, 50, 30, 10]
-    merra2_uv_4575mean = [-3.64865774378585, -2.9196845124283, 1.50874952198854, 17.1705812619504, 92.7788451242831]
     merra2_vT_4575mean = [17.2502638623327, 21.3728413001912, 26.7985621414914, 38.4797055449332, 75.6868871892927]
-    merra1_z1_60mean = [198.617317399618, 251.389999999999, 319.728965583174, 451.971359464627, 781.923244741875]
-    merra2_uv_4575sd = [18.622067598426, 20.5531656863889, 25.1494305485741, 37.5029171205106, 86.9587997758016]
-    merra2_vT_4575sd = [11.756538354396, 15.1474702772449, 19.7676915762039, 30.2586902501783, 70.0534319324615]
-    merra1_z1_60sd = [96.9030853954761, 125.266337610638, 158.865054753343, 218.504235655414, 357.295161771025]
-    merra2_data = [merra2_uv_4575mean, merra2_vT_4575mean, merra1_z1_60mean]
-    merra2_sd = [merra2_uv_4575sd, merra2_vT_4575sd, merra1_z1_60sd]
+    merra2_uv_4575mean = [-3.64865774378585, -2.9196845124283, 1.50874952198854, 17.1705812619504, 92.7788451242831]
+    merra2_z1_60mean = [198.617317399618, 251.389999999999, 319.728965583174, 451.971359464627, 781.923244741875]
+    merra2_z2_60mean = [192.398684512428, 210.373868068833, 231.328782026768, 267.965894837477, 338.587994263863]
+    merra2_vT_4575min = [-17.89, -21.52, -33.87, -61.26, -103.91]
+    merra2_uv_4575min = [-75.68, -90.66, -114.64, -140.05, -208.51]
+    merra2_z1_60min = [2.53, 4.01, 8.37, 2.54, 6.79]
+    merra2_z2_60min = [1.19, 2.61, 4.02, 1.45, 6.38]
+    merra2_vT_4575max = [76.16, 103.93, 143.06, 236.09, 564.32]
+    merra2_uv_4575max = [74.33, 110.7, 142.76, 266.22, 575.8]
+    merra2_z1_60max = [569.56, 750.82, 931.77, 1196.42, 1748.62]
+    merra2_z2_60max = [643.51, 764.96, 879.78, 1023.24, 1214.21]
+    merra2_data = [merra2_uv_4575mean, merra2_vT_4575mean, merra2_z1_60mean, merra2_z2_60mean]
+    merra2_min = [merra2_uv_4575min, merra2_vT_4575min, merra2_z1_60min, merra2_z2_60min]
+    merra2_max = [merra2_uv_4575max, merra2_vT_4575max, merra2_z1_60max, merra2_z2_60max]
 
     print(datetime.now(), ' - opening Isca data')
     uv = uv_calc(exp)
@@ -189,19 +195,20 @@ def check_vs_MERRA(exp):
     z_60 = xr.open_dataset(indir+exp+'_h.nc', decode_times=False).height.sel(lat=60, method='nearest')
     waves = climate.GetWavesXr(z_60)
     z1_60mean = np.abs(waves.sel(k=1)).mean(('lon', 'time'))
+    z2_60mean = np.abs(waves.sel(k=2)).mean(('lon', 'time'))
     p = uv.pfull
     uv_4575mean = uv.sel(lat=slice(45,75)).mean(('lat', 'lon', 'time'))
     vT_4575mean = vT.sel(lat=slice(45,75)).mean(('lat', 'lon', 'time'))
-    isca_data = [uv_4575mean, vT_4575mean, z1_60mean]
+    isca_data = [uv_4575mean, vT_4575mean, z1_60mean, z2_60mean]
 
     print(datetime.now(), " - plotting")
     colors = ['k', '#B30000']
     lines = ['--', '-']
     labels = ['MERRA2 data', 'control simulation']
-    units = [r"v'T' (K m s$^{-1}$)", r"u'v' (m$^{2}$ s$^{-2}$)", 'Wave-1 GPH (m)']
+    units = [r"v'T' (K m s$^{-1}$)", r"u'v' (m$^{2}$ s$^{-2}$)", 'Wave-1 GPH (m)', 'Wave-2 GPH (m)']
     for i in range(len(vars)):
         fig, ax = plt.subplots(figsize=(6,6))
-        ax.errorbar(merra2_data[i], merra2_p, xerr=merra2_sd[i], fmt='.', linewidth=1.25, capsize=5, color=colors[0], linestyle=lines[0], label=labels[0])
+        ax.errorbar(merra2_data[i], merra2_p, xerr=[[merra2_min[i]],[merra2_max[i]]], fmt='.', linewidth=1.25, capsize=5, color=colors[0], linestyle=lines[0], label=labels[0])
         ax.plot(isca_data[i], p, linewidth=1.25, color=colors[1], linestyle=lines[1], label=labels[1])
         plt.xlabel(r"$45-75\degree$N mean "+units[i], fontsize='x-large')
         plt.ylabel('Pressure (hPa)', fontsize='x-large')
@@ -211,12 +218,42 @@ def check_vs_MERRA(exp):
         plt.legend(fancybox=False, ncol=1, fontsize='x-large')
         plt.savefig(exp+'_'+vars[i]+'_vsMERRA2.pdf', bbox_inches = 'tight')
         plt.show()
+    return plt.close()
+
+def refractive_index(dir, exp, k):
+    # plot of n2 follows approach of Walz et al. (2022)
+    print(datetime.now(), " - opening files")
+    utz = xr.open_dataset(dir+exp+'_utz.nc', decode_times=False).ucomp[0]
+    Ttz = xr.open_dataset(dir+exp+'_Ttz.nc', decode_times=False).temp[0]
+    p = utz.coords['pfull']
+    lat = utz.coords['lat']
+    print(datetime.now(), " - finding n2")
+    n2 = climate.ComputeRefractiveIndexXr(utz,Ttz,k,'lat','pfull')
+    n2_masked = np.ma.masked_less(n2, 0) # mask out values < 0 (i.e. where waves can't propagate)
+    n2_masked = np.ma.masked_greater(n2_masked, 100) # mask out values > 100 (i.e. where u~0)
+    ulvls = np.arange(-200, 200, 10)
+    fig, ax = plt.subplots(figsize=(6,6))
+    print(datetime.now(), " - plotting uz")
+    utz.plot.contour(colors='k', linewidths=0.5, alpha=0.4, levels=ulvls)
+    print(datetime.now(), " - plotting n2")
+    cs = plt.contourf(lat, p, n2_masked, levels=11, cmap='Reds')
+    cb = plt.colorbar(cs)
+    cb.set_label(label=r'Refractive index squared $n^{2}$', size='large')
+    plt.ylim(max(p), 1)
+    plt.yscale('log')
+    plt.ylabel('Pressure (hPa)', fontsize='xx-large')
+    plt.xlim(0,90)
+    plt.xlabel(r'Latitude ($\degree$N)', fontsize='xx-large')
+    plt.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
+    plt.title('')
+    plt.savefig(exp+'_n2_k{0:.0f}.pdf'.format(k), bbox_inches = 'tight')
+    return plt.close()
 
 if __name__ == '__main__': 
     #Set-up data to be read in
     indir = '/disco/share/rm811/processed/'
     basis = 'PK_e0v4z13'
-    flux = input("Plot a) EP flux divergence, b) upward EP Flux or c) v'T'?")
+    flux = input("Plot a) EP flux divergence, b) upward EP Flux, c) v'T', d) vs. MERRA2, or e) refractive index?")
     var_type = input("Plot a) depth, b) width, c) location, d) strength, or e) topography experiments?")
     if var_type == 'a':
         extension = '_depth'
@@ -235,10 +272,11 @@ if __name__ == '__main__':
     ulvls = np.arange(-200, 200, 10)
 
     if flux == 'a':
+        k = int(input('Which wave no.? (i.e. 0 for all, 1, 2, etc.)'))
         for i in range(len(exp)):
             print(datetime.now(), " - opening files ({0:.0f}/{1:.0f})".format(i+1, len(exp)))
             utz, u, v, w, T = open_data(indir, exp[i])
-            div, ep1, ep2 = calc_ep(u, v, w, T)
+            div, ep1, ep2 = calc_ep(u, v, w, T, k)
 
             if i == 0:
                 print("skipping control")
@@ -251,13 +289,13 @@ if __name__ == '__main__':
                 ds = xr.open_dataset(file)
                 heat = ds.local_heating.sel(lon=180, method='nearest').mean(dim='time')  
                 print(datetime.now(), " - plotting")
-                plot_ep(utz, div, ep1, ep2, exp[i], heat, 'single')
+                plot_ep(utz, div, ep1, ep2, k, exp[i], heat, 'single')
 
                 print(datetime.now(), " - taking differences")
                 div_diff = div - div_og
                 ep1_diff = ep1 - ep1_og
                 ep2_diff = ep2 - ep2_og
-                plot_ep(utz, div_diff, ep1_diff, ep2_diff, exp[i], heat, 'diff')
+                plot_ep(utz, div_diff, ep1_diff, ep2_diff, k, exp[i], heat, 'diff')
 
     elif flux == 'b':
         p = int(input('At which pressure level? (i.e. 10 or 100 hPa) '))
@@ -268,7 +306,7 @@ if __name__ == '__main__':
             print(datetime.now(), " - opening files ({0:.0f}/{1:.0f})".format(i+1, len(exp)))
             u, v, w, t = open_data(indir, exp[i])[1:]
             print(datetime.now(), " - finding EP flux")
-            ep1, ep2, div1, div2 = climate.ComputeEPfluxDivXr(u, v, t, 'lon', 'lat', 'pfull', 'time', w=w, do_ubar=True)
+            ep1, ep2, div1, div2 = climate.ComputeEPfluxDivXr(u, v, t, 'lon', 'lat', 'pfull', 'time', w=w, do_ubar=True, wave=0)
             x = ep2.sel(pfull=p,method='nearest').sel(lat=slice(45,75)).mean('lat')
             x_sort, f, m = pdf(x)
             if max(x) > x_max:
@@ -353,6 +391,12 @@ if __name__ == '__main__':
                 compare = comparison(vT_exp, lats[i])
                 linear_add(compare, p, label, lats_labels[i]) 
 
+    elif flux == 'd':
+        check_vs_MERRA(exp[0])
+
+    elif flux == 'e':
+        for i in exp:
+            refractive_index(indir, i, 2)
 """
 # Following commented functions/code is for checking against Neil Lewis' code
 def get_pt(t, p, Rd=287., cp=1005., p0=1000.): 
