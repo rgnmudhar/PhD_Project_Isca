@@ -86,14 +86,14 @@ def SPVvexp1(mean, mode, sd, err, p, labels, xlabel, name):
     plt.legend(loc='upper center' , bbox_to_anchor=(0.5, 1), fancybox=False, shadow=False, ncol=2, fontsize='xx-large')
     ax.set_xticks(labels)
     ax.set_xlabel(xlabel, fontsize='xx-large')
-    ax.set_ylabel(r'zonal wind average (m s$^{-1}$)', fontsize='xx-large', color='#B30000')
+    ax.set_ylabel(r'zonal-mean zonal wind average (m s$^{-1}$)', fontsize='xx-large', color='#B30000')
     #ax.set_ylim(36,42)
     ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
     ax2 = ax.twinx()
-    ax2.plot(labels[1:], sd[1:], marker='o', linewidth=1.25, color='#4D0099', linestyle=':', label='S.D.')
+    ax2.plot(labels[1:], sd[1:], marker='o', linewidth=1.25, color='#4D0099', linestyle='--', label='S.D.')
     #ax2.axhline(sd[0], color='#4D0099', linewidth=0.5)
     #ax2.text(5.6, sd[0]-0.6, 'Control', color='#4D0099', fontsize='x-large')
-    ax2.set_ylabel(r'zonal wind standard deviation (m s$^{-1}$)', color='#4D0099', fontsize='xx-large')
+    ax2.set_ylabel(r'zonal-mean zonal wind S.D. (m s$^{-1}$)', color='#4D0099', fontsize='xx-large')
     #ax2.set_ylim(12,22)
     ax2.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
     plt.savefig(name+'_{:.0f}stats1.pdf'.format(p), bbox_inches = 'tight')
@@ -107,15 +107,15 @@ def SPVvexp2(skew, kurt, p, labels, xlabel, name):
     fig, ax = plt.subplots(figsize=(10,6))
     ax.plot(labels[1:], skew[1:], marker='o', linewidth=1.25, color='#B30000', linestyle=':')
     ax.set_xticks(labels)
-    ax.set_xlabel(xlabel, fontsize='x-large')
-    ax.set_ylabel('{:.0f} hPa,'.format(p)+r' 60$\degree$N zonal wind skewness', fontsize='xx-large', color='#B30000')
+    ax.set_xlabel(xlabel, fontsize='xx-large')
+    ax.set_ylabel(r'zonal wind skewness', fontsize='xx-large', color='#B30000')
     ax.axhline(skew[0], color='#B30000', linewidth=0.5)
     ax.text(-0.25, skew[0]+0.05, 'control', color='#B30000', fontsize='xx-large')
     ax.set_ylim(-0.5, 0.5)
     ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
     ax2 = ax.twinx()
     ax2.plot(labels[1:], kurt[1:], marker='o', linewidth=1.25, color='#4D0099', linestyle=':')
-    ax2.set_ylabel('{:.0f} hPa,'.format(p)+r' 60$\degree$N zonal wind kurtosis', color='#4D0099', fontsize='xx-large')
+    ax2.set_ylabel('zonal wind kurtosis', color='#4D0099', fontsize='xx-large')
     ax2.axhline(kurt[0], color='#4D0099', linewidth=0.5)
     ax2.text(5.75, kurt[0]+0.05, 'control', color='#4D0099', fontsize='xx-large')
     ax2.set_xlim(-0.5, 6.5)
@@ -221,7 +221,7 @@ if __name__ == '__main__':
     indir = '/disco/share/rm811/processed/'
     outdir = '../Files/'
     basis = 'PK_e0v4z13'
-    var_type = input("Plot a) depth, b) width, c) location, d) strength, or e) topography experiments? or f) test?")
+    var_type = input("Plot a) depth, b) width, c) location, d) strength, e) topography experiments or f) test?")
     if var_type == 'a':
         extension = '_depth'
     elif var_type == 'b':
@@ -238,11 +238,7 @@ if __name__ == '__main__':
     n = len(exp)
 
     #User choices for plotting - subjects
-    level = input('Plot a) near-surface winds, \
-        b) tropospheric jet(s), \
-        c) lower stratosphere, \
-        d) stratospheric polar vortex, \
-        or e) SPV and SSW values?')
+    level = input('Plot a) near-surface, b) tropospheric, c) stratospheric wind stats, d) SPV stuff, or e) SPV and SSW values?')
 
     colors = ['k', '#B30000', '#FF9900', '#FFCC00', '#00B300', '#0099CC', '#4D0099', '#CC0080']
     reds = ['k', '#fedbcb', '#fcaf94', '#fc8161', '#f44f39', '#d52221', '#aa1016', '#67000d']
@@ -265,18 +261,30 @@ if __name__ == '__main__':
                 u = xr.open_dataset(indir+exp[i]+'_ut.nc', decode_times=False).ucomp[0]
                 plot_jet(u, p[j], lvls[j], exp[i])
     elif level == 'c':
-        p = 100
-        me, mo, sd, e, sk, k = plot_pdf('u', indir, exp, '_uz.nc', '', [p], labels, r"zonal-mean zonal wind (m s$^{-1}$)", blues, basis+extension)
-        SPVvexp1(me[0], mo[0], sd[0], e[0], p, labels, xlabel, basis+extension)
-        SPVvexp2(sk[0], k[0], p, labels, xlabel, basis+extension)
+        alt = input("Plot a) neck, b) 100 hPa SPV or c) 10 hPa SPV winds?")
+        if alt == "a":
+            #neck winds as per Isla Simpson's SPARC talk @ 45-55N, 70 hPa
+            p = 70
+            lats = slice(45,55)
+            lab = 'neck '
+        elif alt == "b":
+            #lower SPV winds @ 60N, 100 hPa
+            p = 100
+            lats = 60
+            lab = 'lower SPV '
+        elif alt == "c":
+            #lower SPV winds @ 60N, 10 hPa
+            p = 10
+            lats = 60
+            lab = 'SPV '
+        me, mo, sd, e, sk, k = plot_pdf('u', indir, exp, '_uz.nc', '', p, lats, labels, lab+r"zonal-mean zonal wind (m s$^{-1}$)", blues, basis+extension)
+        SPVvexp1(me, mo, sd, e, p, labels, xlabel, basis+extension)
+        #SPVvexp2(sk, k, p, labels, xlabel, basis+extension)
+
     elif level == 'd':
         p = 10 # pressure level at which we want to find the SPV (hPa)
         #User choice for plotting - type
-        plot_type = input('Plot a) SPV @ 10hPa, 60N over time, \
-            b) 10 hPa max. wind and lat vs experiment, \
-            c) distribution and stats, or \
-            d) SSW frequency vs experiment, \
-            e) s.d. as a function of lat and p?')
+        plot_type = input('Plot a) SPV over time, b) 10 hPa max. wind/lats, c) SSW frequencies, or d) lat-p s.d.?')
         if plot_type == 'a':
             exp = exp[:2]
             labels = ['zonally symmetric', 'off-pole']
@@ -287,13 +295,9 @@ if __name__ == '__main__':
         elif plot_type == 'b':
             windsvexp(outdir, labels, xlabel, str(p), basis+extension)
         elif plot_type == 'c':
-            me, mo, sd, e, sk, k = plot_pdf('u', indir, exp, '_uz.nc', '', [p], labels, r"zonal-mean zonal wind (m s$^{-1}$)", blues, basis+extension)
-            SPVvexp1(me[0], mo[0], sd[0], e[0], p, labels, xlabel, basis+extension)
-            SPVvexp2(sk[0], k[0], p, labels, xlabel, basis+extension)
-        elif plot_type == 'd':
             SSWsvexp(outdir, exp, labels, xlabel, basis+extension)
             #SSWsvexp_multi(outdir, exp, labels, xlabel, legend, ['#B30000', '#00B300', '#0099CC', 'k'], basis+extension)
-        elif plot_type == 'e':
+        elif plot_type == 'd':
             ulvls = np.arange(-200, 200, 10)
             plot_what = input('Plot a) climatology or b) difference?)')
             for i in range(n):
@@ -303,7 +307,7 @@ if __name__ == '__main__':
                 if plot_what == 'a':
                     lat, p, sd = find_sd(u)
                     NH_zonal(lat, p, sd, utz, np.arange(0, 42, 2), ulvls, 'Blues',\
-                        r'zonal-mean zonal wind SD (ms$^{-1}$)', exp[i]+'_usd.pdf')
+                        r'zonal-mean zonal wind S.D. (ms$^{-1}$)', exp[i]+'_usd.pdf')
                 elif plot_what == 'b':
                     if i == 0:
                         print("skipping control")
@@ -312,7 +316,7 @@ if __name__ == '__main__':
                         lat, p, sd2 = find_sd(xr.open_dataset(indir+exp[0]+'_uz.nc', decode_times=False).ucomp)
                         sd_diff = sd1 - sd2
                         NH_zonal(lat, p, sd_diff, utz, np.arange(-20, 22, 2), ulvls, 'RdBu_r',\
-                            r'zonal-mean zonal wind SD (ms$^{-1}$)', exp[i]+'_usd_diff.pdf')
+                            r'zonal-mean zonal wind S.D. (ms$^{-1}$)', exp[i]+'_usd_diff.pdf')
     elif level == 'e':
         n = len(exp)
         u10_full = []
@@ -331,11 +335,11 @@ if __name__ == '__main__':
             u10_full.append(u10)
             u100_full.append(u100)
 
-        obs = input('Plot MERRA2 data? Y/N')
-        if obs == 'y' or 'Y':
+        obs = input('Plot MERRA2 data? (y/n)')
+        if obs == 'y':
             exp = ['obs_u1060', 'obs_u10060']
             labels = ['MERRA2 @ 10 hPa', 'MERRA2 @ 100 hPa']
-            months = 'NDJF' #'NDJFM'
+            months = 'NDJF'
             u10 = open_file(outdir, exp[0], months)
             u100 = open_file(outdir, exp[1], months)
             report_vals(exp[0], labels[0], u10)
