@@ -174,7 +174,7 @@ if __name__ == '__main__':
     plot_type = input("Plot a) individual experiments, b) difference vs. control, c) linear additions, d) meridional T gradients or e) tropopause?")
     
     if plot_type == 'a' or plot_type == 'b' or plot_type == 'd' or plot_type == 'e':
-        var_type = input("Plot a) depth, b) width, c) location, d) strength or e) topography experiments?")
+        var_type = input("Plot a) depth, b) width, c) location, d) strength, e) topography experiments or f) test?")
         if var_type == 'a':
             extension = '_depth'
         elif var_type == 'b':
@@ -185,6 +185,8 @@ if __name__ == '__main__':
             extension = '_strength'
         elif var_type == 'e':
             extension = '_topo'
+        elif var_type == 'f':
+            extension = '_test'
         exp, labels, xlabel = return_exp(extension)
         upper_p = 1 # hPa
         lvls = [np.arange(160, 330, 10), np.arange(-200, 205, 5)]
