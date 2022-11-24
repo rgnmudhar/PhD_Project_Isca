@@ -94,10 +94,9 @@ def return_exp(extension):
         labels = ['control', 'weak', 'shallow', 'narrow']
         xlabel = ''
     elif extension == '_test':
-        exp = ['PK_e0v3z13_q6m2y45l800u200',\
-            'PK_e0v4z13_q6m2y45l800u200',\
-            'PK_e0v4z13_q8m2y45l800u200']
-        labels = [r'$\gamma = 3, q = 6$', r'$\gamma = 4, q = 6$', r'$\gamma = 4, q = 8$']
+        exp = ['PK_e0v3z13_q4m2y45l800u200',\
+            'PK_e0v4z13_h3000m2l25u65']
+        labels = [r'$\gamma = 3, q = 4$', r'$\gamma = 4, h = 3000$']
         xlabel = ''
     return exp, labels, xlabel
 
@@ -250,63 +249,46 @@ def pdf(x, plot=False):
     mode = x[int(np.argmax(p))]
     return x, p, mode
 
-def plot_pdf(var, dir, exp, input, z, p, labels, xlabel, colors, name):
+def plot_pdf(var, dir, exp, ext, z, p, lats, labels, xlabel, colors, name):
     mode = []
     mean = []
     sd = []
     err = []
     skew = []
     kurt = []
-    for j in range(len(p)):
-        if type(p) == int:
-            p1 = p
-        elif type(p) == list:
-            p1 = p[j]
-        print(datetime.now(), " - plotting PDFs at {:.0f} hPa".format(p1))
-        x_min = x_max = 0
-        sub_mode = []
-        sub_mean = []
-        sub_sd = []
-        sub_err = []
-        sub_skew = []
-        sub_kurt = []
-        fig, ax = plt.subplots(figsize=(6,6))
-        for i in range(len(exp)):
-            if var == 'u':
-                x = xr.open_dataset(dir+exp[i]+input, decode_times=False).ucomp.sel(pfull=p1, method='nearest').sel(lat=60, method='nearest')
-            elif var == 'vT':
-                x = vT_level(z[i], p1)
-            elif var == 'ep2':
-                x = vT_level(z[i], p1)
-            elif var == 'gph':
-                x = z[i]
-            x_sort, f, m = pdf(x)
-            sub_mode.append(m)
-            sub_sd.append(np.std(x))
-            sub_mean.append(np.mean(x))
-            sub_err.append(np.std(x/np.sqrt(len(x))))
-            sub_skew.append(sps.skew(x))
-            sub_kurt.append(sps.kurtosis(x))
-            if max(x) > x_max:
-                x_max = max(x)
-            if min(x) < x_min:
-                x_min = min(x)
-            print(datetime.now(), ' - plotting')
-            ax.plot(x_sort, f, linewidth=1.25, color=colors[i], label=labels[i])
-        mode.append(sub_mode)
-        sd.append(sub_sd)
-        mean.append(sub_mean)
-        err.append(sub_err)
-        skew.append(sub_skew)
-        kurt.append(sub_kurt)
-        ax.axvline(0, color='k', linewidth=0.25)
-        ax.set_xlim(x_min, x_max)
-        ax.set_ylim(bottom=0)
-        ax.set_xlabel(xlabel, fontsize='xx-large')
-        ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
-        plt.legend(fancybox=False, ncol=1, fontsize='x-large')
-        plt.savefig(name+'_{:.0f}pdf.pdf'.format(p1), bbox_inches = 'tight')
-        plt.close()
+    x_min = x_max = 0
+    fig, ax = plt.subplots(figsize=(6,6))
+    for i in range(len(exp)):
+        if var == 'u':
+            if type(lats) == int:
+                x = xr.open_dataset(dir+exp[i]+ext, decode_times=False).ucomp.sel(pfull=p, method='nearest').sel(lat=lats, method='nearest')
+            elif type(lats) == slice:
+                x = xr.open_dataset(dir+exp[i]+ext, decode_times=False).ucomp.sel(pfull=p, method='nearest').sel(lat=lats).mean('lat')
+        elif var == 'vT':
+            x = vT_level(z[i], p, lats)
+        elif var == 'gph':
+            x = z[i]
+        x_sort, f, m = pdf(x)
+        mode.append(m)
+        sd.append(np.std(x))
+        mean.append(np.mean(x))
+        err.append(np.std(x/np.sqrt(len(x))))
+        skew.append(sps.skew(x))
+        kurt.append(sps.kurtosis(x))
+        if max(x) > x_max:
+            x_max = max(x)
+        if min(x) < x_min:
+            x_min = min(x)
+        print(datetime.now(), " - plotting ({0:.0f}/{1:.0f})".format(i+1, len(exp)))
+        ax.plot(x_sort, f, linewidth=1.25, color=colors[i], label=labels[i])
+    ax.axvline(0, color='k', linewidth=0.25)
+    ax.set_xlim(x_min, x_max)
+    ax.set_ylim(bottom=0)
+    ax.set_xlabel(xlabel, fontsize='xx-large')
+    ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
+    plt.legend(fancybox=False, ncol=1, fontsize='x-large')
+    plt.savefig(name+'_{:.0f}pdf.pdf'.format(p), bbox_inches = 'tight')
+    plt.close()
     return mean, mode, sd, err, skew, kurt
 
 def find_sd(x):
