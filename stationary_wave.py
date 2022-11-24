@@ -118,8 +118,8 @@ if __name__ == '__main__':
     plt.savefig(basis+extension+'_k2mag.pdf', bbox_inches = 'tight')
 
     print(datetime.now(), ' - plotting PDFs')
-    plot_pdf('gph', indir, exp, '', mags10, [10], labels, r'zonal-mean 10 hPa 60$\degree$N wave-2 absolute magnitude', blues, exp[0]+extension+'_k2mag')
-    plot_pdf('gph', indir, exp, '', mags100, [100], labels, r'zonal-mean 100 hPa 60$\degree$N wave-2 absolute magnitude', blues, exp[0]+extension+'_k2mag')
+    plot_pdf('gph', indir, exp, '', mags10, 10, 0, labels, r'zonal-mean 10 hPa 60$\degree$N wave-2 absolute magnitude', blues, exp[0]+extension+'_k2mag')
+    plot_pdf('gph', indir, exp, '', mags100, 100, 0, labels, r'zonal-mean 100 hPa 60$\degree$N wave-2 absolute magnitude', blues, exp[0]+extension+'_k2mag')
 
 """
     lons = [0, 90, 180, 270]
