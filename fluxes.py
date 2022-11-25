@@ -70,21 +70,23 @@ def plot_ep2(uz, ep2, k, name):
     print(datetime.now(), " - plotting EP Fluxes")
     p = uz.coords['pfull']
     lat = uz.coords['lat']
+    norm = cm.TwoSlopeNorm(vmin=-0.07, vmax=0.07, vcenter=0)
+    lvls = np.arange(-0.07, 0.07, 0.005)
     #Filled contour plot of time-mean EP flux divergence plus EP flux arrows and zonal wind contours
-    fig, ax = plt.subplots(figsize=(6,6), constrained_layout=True)
+    fig, ax = plt.subplots(figsize=(6,6))
     print(datetime.now(), " - plot uz")
     uplt = uz.plot.contour(colors='k', linewidths=0.5, alpha=0.4, levels=ulvls)
     uplt.collections[int(len(ulvls)/2)].set_linewidth(1.5)
     print(datetime.now(), " - plot upward EP flux")
-    cs = ep2.plot.contourf(levels=11, cmap='Blues', add_colorbar=False)
+    cs = ep2.plot.contourf(cmap='RdBu_r', levels=lvls, norm=norm, add_colorbar=False)
     cb = plt.colorbar(cs)
     cb.set_label(label=r'EP$_{z}$ (hPa m s$^{-2}$)', size='large')
-    plt.yscale('log')
     plt.ylim(max(p), 1) #to 1 hPa
-    plt.xlabel(r'Latitude ($\degree$N)', fontsize='xx-large')
-    plt.xlim(0,90)
-    plt.xticks([10, 30, 50, 70, 90], ['10', '30', '50', '70', '90'])
+    plt.yscale('log')
     plt.ylabel('Pressure (hPa)', fontsize='xx-large')
+    plt.xlim(0,max(lat))
+    plt.xticks([20, 40, 60, 80], ['20', '40', '60', '80'])
+    plt.xlabel(r'Latitude ($\degree$N)', fontsize='xx-large')
     plt.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
     plt.savefig(name+'_EPz_k{0:.0f}.pdf'.format(k), bbox_inches = 'tight')
     plt.show()
@@ -422,18 +424,17 @@ if __name__ == '__main__':
                 linear_add(compare, p, label, lats_labels[i]) 
 
     elif flux == 'd':
-        check_vs_MERRA('PK_e0v3z13_q6m2y45l800u200')
+        check_vs_MERRA('PK_e0v4z13_q6m2y45l800u200')
 
     elif flux == 'e':
         for i in exp:
             plot_n2(indir, i, k)
 
     elif flux =='f':
-        exp = ['PK_e0v4z13_q6m2y45l800u200']
+        exp = ['PK_e0v4z13_w15a4p800f800g50_q6m2y45l800u200']
         for i in range(len(exp)):
             print(datetime.now(), " - opening files ({0:.0f}/{1:.0f})".format(i+1, len(exp)))
             utz, u, v, w, t = open_data(indir, exp[i])
-            Ttz = xr.open_dataset(indir+exp[i]+'_Ttz.nc', decode_times=False).temp[0]
             ep2 = calc_ep(u, v, w, t, k)[2]
             plot_ep2(utz, ep2, k, exp[i])
 

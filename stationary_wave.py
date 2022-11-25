@@ -69,6 +69,39 @@ def find_heat(exp, p, type):
         heat = ds.sel(pfull=p, method='nearest').variables[name]
     return ds, heat
 
+def plot_waves1(exp, wav, k, name, type):
+    uz = xr.open_dataset(indir+exp+'_utz.nc', decode_times=False).ucomp[0]
+    p = uz.coords['pfull']
+    lat = uz.coords['lat']
+    fig, ax = plt.subplots(figsize=(6,6))
+    print(datetime.now(), " - plot uz")
+    uplt = uz.plot.contour(colors='k', linewidths=0.5, alpha=0.4, levels=ulvls)
+    uplt.collections[int(len(ulvls)/2)].set_linewidth(1.5)
+    print(datetime.now(), " - plot waves")
+    if type == 'single':
+        lvls = np.arange(0, 180, 20)
+        cs = wav.plot.contourf(levels=lvls, cmap='Reds', add_colorbar=False)
+    elif type == 'diff':
+        lvls = np.arange(-20, 55, 5)
+        norm = cm.TwoSlopeNorm(vmin=-20, vmax=50, vcenter=0)
+        cs = wav.plot.contourf(levels=lvls, cmap='RdBu_r', norm=norm, extend='both', add_colorbar=False)
+    cb = plt.colorbar(cs, extend='both')
+    cb.set_label(label='absolute wave-{0:.0f} magnitude (m)'.format(2), size='large')
+    cb.ax.set_yticks(lvls)
+    fig.canvas.draw()
+    ticklabs = cb.ax.get_yticklabels()
+    cb.ax.set_yticklabels(ticklabs, fontsize='large')
+    plt.ylim(max(p), 1) #to 1 hPa
+    plt.yscale('log')
+    plt.ylabel('Pressure (hPa)', fontsize='xx-large')
+    plt.xlim(0,max(lat))
+    plt.xticks([20, 40, 60, 80], ['20', '40', '60', '80'])
+    plt.xlabel(r'Latitude ($\degree$N)', fontsize='xx-large')
+    plt.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
+    plt.title('')
+    plt.savefig(name+'_wavemag1_k{0:.0f}_{1}.pdf'.format(k,type), bbox_inches = 'tight')
+    return plt.close()
+
 if __name__ == '__main__': 
     #Set-up data to be read in
     indir = '/disco/share/rm811/processed/'
@@ -76,7 +109,7 @@ if __name__ == '__main__':
     perturb = '_q6m2y45'
     off_pole = '_a4x75y180w5v30p800'
     polar = '_w15a4p800f800g50'
-    var_type = input("Plot a) depth, b) width, c) location, d) strength or e) topography experiments? or f) poster plot?")
+    var_type = input("Plot a) depth, b) width, c) location, d) strength or e) topography experiments, or f) test?")
     if var_type == 'a':
         extension = '_depth'
     elif var_type == 'b':
@@ -88,38 +121,70 @@ if __name__ == '__main__':
     elif var_type == 'e':
         extension = '_topo'
     elif var_type == 'f':
-        extension = '_poster'
+        extension = '_test'
     exp, labels, xlabel = return_exp(extension)
+    plot_type = input('Plot a) gph lat-p or b) gph @ 60N and PDFs @ 10 & 100 hPa? ')
+    k = int(input('Which wave no.? (i.e. 0 for all, 1, 2, etc.) '))
 
     colors = ['k', '#B30000', '#FF9900', '#FFCC00', '#00B300', '#0099CC', '#4D0099', '#CC0080']
     blues = ['k', '#dbe9f6', '#bbd6eb', '#88bedc', '#549ecd',  '#2a7aba', '#0c56a0', '#08306b']
+    ulvls = np.arange(-200, 210, 10)
 
-    # For mean state, plot pressure vs. wave 1/2 magnitudes across experiments
-    mags10 = []
-    mags100 = []
-    fig, ax = plt.subplots(figsize=(6,6))
-    for i in range(len(exp)):
-        print(datetime.now(), ' - opening files {0:.0f}/{1:.0f} - '.format(i+1, len(exp)), exp[i])
-        gph = xr.open_dataset(indir+exp[i]+'_h.nc', decode_times=False).height.sel(lat=60, method='nearest')
-        print(datetime.now(), ' - wave decomposition')
-        waves = climate.GetWavesXr(gph)
-        wav = np.abs(waves.sel(k=2)).mean('lon')
-        print(datetime.now(), ' - plotting')
-        ax.plot(wav.mean('time').transpose(), gph.pfull, color=blues[i], linestyle='-', label=labels[i])
-        mags10.append(wav.sel(pfull=10, method='nearest'))
-        mags100.append(wav.sel(pfull=100, method='nearest'))
-    ax.set_xlabel('absolute wave magnitude (m)', fontsize='xx-large')
-    ax.set_ylabel('Pressure (hPa)', fontsize='xx-large')
-    ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
-    plt.legend(fancybox=False, ncol=1, fontsize='x-large', loc='lower right')
-    plt.ylim(max(gph.pfull), 1)
-    plt.yscale('log')
-    #plt.title(xlabel, fontsize='x-large')
-    plt.savefig(basis+extension+'_k2mag.pdf', bbox_inches = 'tight')
+    if plot_type == 'a':
+        for i in range(len(exp)):
+            print(datetime.now(), ' - opening files {0:.0f}/{1:.0f} - '.format(i+1, len(exp)), exp[i])
+            gph = xr.open_dataset(indir+exp[i]+'_h.nc', decode_times=False).height.mean('time')
+            print(datetime.now(), ' - wave decomposition')
+            waves = climate.GetWavesXr(gph)
+            wav = np.abs(waves.sel(k=k)).mean('lon')
+            if i == 0:
+                print("skipping control")
+                wav_og = wav
+            elif i != 0:
+                # Read in data to plot polar heat contours
+                plot_waves1(exp[i], wav, k, exp[i], 'single')
 
-    print(datetime.now(), ' - plotting PDFs')
-    plot_pdf('gph', indir, exp, '', mags10, 10, 0, labels, r'zonal-mean 10 hPa 60$\degree$N wave-2 absolute magnitude', blues, exp[0]+extension+'_k2mag')
-    plot_pdf('gph', indir, exp, '', mags100, 100, 0, labels, r'zonal-mean 100 hPa 60$\degree$N wave-2 absolute magnitude', blues, exp[0]+extension+'_k2mag')
+                print(datetime.now(), " - taking differences")
+                wav_diff = wav - wav_og
+                plot_waves1(exp[i], wav_diff, k, exp[i], 'diff')
+            
+    elif plot_type == 'b':
+        # For mean state, plot pressure vs. wave 1/2 magnitudes across experiments
+        loc = input("Plot a) at 60N or b) for 45-75N mean?")
+        if loc == "a":
+            lats = slice(45,75)
+            lab = r'$45-75\deg$N'
+        elif loc == "b":
+            lats = 60
+            lab = r'$60\deg$N'
+        mags10 = []
+        mags100 = []
+        fig, ax = plt.subplots(figsize=(6,6))
+        for i in range(len(exp)):
+            print(datetime.now(), ' - opening files {0:.0f}/{1:.0f} - '.format(i+1, len(exp)), exp[i])
+            if type(lats) == int:
+                gph = xr.open_dataset(indir+exp[i]+'_h.nc', decode_times=False).height.sel(lat=lats, method='nearest')
+            elif type(lats) == slice:
+                gph = xr.open_dataset(indir+exp[i]+'_h.nc', decode_times=False).height.sel(lat=lats).mean('lat')        
+            print(datetime.now(), ' - wave decomposition')
+            waves = climate.GetWavesXr(gph)
+            wav = np.abs(waves.sel(k=k)).mean('lon')
+            print(datetime.now(), ' - plotting')
+            ax.plot(wav.mean('time').transpose(), gph.pfull, color=blues[i], linestyle='-', label=labels[i])
+            mags10.append(wav.sel(pfull=10, method='nearest'))
+            mags100.append(wav.sel(pfull=100, method='nearest'))
+        ax.set_xlabel('absolute wave-{0:.0f} magnitude (m)'.format(k), fontsize='xx-large')
+        ax.set_ylabel('Pressure (hPa)', fontsize='xx-large')
+        ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
+        plt.legend(fancybox=False, ncol=1, fontsize='x-large', loc='lower right')
+        plt.ylim(max(gph.pfull), 1)
+        plt.yscale('log')
+        #plt.title(xlabel, fontsize='x-large')
+        plt.savefig(basis+extension+'_wavemag2_k{0:.0f}.pdf'.format(k), bbox_inches = 'tight')
+
+        print(datetime.now(), ' - plotting PDFs')
+        plot_pdf('gph', indir, exp, '', mags10, 10, 0, labels, 'zonal-mean 10 hPa '+lab+' wave-{0:.0f} absolute magnitude'.format(k), blues, exp[0]+extension+'_wavemag_k{0:.0f}.pdf'.format(k))
+        plot_pdf('gph', indir, exp, '', mags100, 100, 0, labels, 'zonal-mean 100 hPa '+lab+' wave-{0:.0f} absolute magnitude'.format(k), blues, exp[0]+extension+'_wavemag_k{0:.0f}.pdf'.format(k))
 
 """
     lons = [0, 90, 180, 270]
