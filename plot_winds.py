@@ -7,6 +7,7 @@ import xarray as xr
 import numpy as np
 import scipy.stats as sps
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 import cartopy.crs as ccrs
 from datetime import datetime
 from open_winds import *
@@ -58,21 +59,21 @@ def plot_vtx(dir, exp, labels, colors, style, cols, fig_name):
     Plots strength of winds at 60N, 10 hPa only.
     Best for 2 datsets, the second of which has its SSW statistics as a plot subtitle
     """
-    
     print(datetime.now(), " - plotting SPV")
-    fig, ax = plt.subplots(figsize=(8,6))
+    fig, ax = plt.subplots(figsize=(10,6))
     for i in range(len(exp)):
-        SPV = open_file(dir, exp[i], 'SPV')
-        ax.plot(SPV, color=colors[i], linewidth=1, linestyle=style[i], label=labels[i])
+        SPV = open_file(dir, exp[i], 'u10')
+        ax.plot(SPV, color=colors[i], linewidth=1.5, linestyle=style[i], label=labels[i])
     ax.axhline(0, color='k', linewidth=0.5)
-    ax.set_xlim(1,len(SPV))
-    ax.set_xlabel('Months Simulated', fontsize='x-large')       
-    ax.set_ylabel(r'10 hPa, 60 N Zonal Wind Mean (ms$^{-1}$)', color='k', fontsize='x-large')
-    ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
-    ax.set_xticks([10*(12*30), 20*(12*30), 30*(12*30), 40*(12*30)], [10*12, 20*12, 30*12, 40*12])
-    plt.legend(loc='upper center' , bbox_to_anchor=(0.5, 0.11), fancybox=False, shadow=False, ncol=cols, fontsize='x-large')
+    ax.set_xlim(1, 2999)
+    ax.set_xlabel('Days Simulated', fontsize='xx-large')
+    ax.set_ylim(-35, 90) 
+    ax.set_ylabel(r'U$_{10,60}$ Mean (ms$^{-1}$)', color='k', fontsize='xx-large')
+    ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
+    #ax.set_xticks([10*(12*30), 20*(12*30), 30*(12*30), 40*(12*30)], [10*12, 20*12, 30*12, 40*12])
+    plt.legend(loc='lower center', fancybox=False, shadow=False, ncol=cols, fontsize='xx-large')
     plt.savefig(fig_name+'_vtx.pdf', bbox_inches = 'tight')
-    
+    plt.show()
     return plt.close()
 
 def SPVvexp1(mean, mode, sd, err, p, labels, xlabel, name):
@@ -216,6 +217,45 @@ def report_vals(exp, label, u, SSW_flag=True):
         SSWs, SSWs_err = find_SSW(u)
         print(label+' SSWs: {0:.2f} ± {1:.2f}'.format(SSWs, SSWs_err))
 
+def report_plot(exp, x, xlabel, name):
+    """
+    Plots SSW frequency and SPV s.d. against (heating) experiment.
+    """
+    print(datetime.now(), " - finding SSWs")
+    SSWs, errors = find_SSWs(outdir, exp)
+    og = SSWs[0]
+    og_err = errors[0]
+    obs = 0.48
+    obs_err = 0.19
+
+    print(datetime.now(), " - finding s.d.")
+    sd = []
+    for i in exp:
+        u = xr.open_dataset(indir+i+'_uz.nc', decode_times=False).ucomp.sel(lat=60, method='nearest').sel(pfull=10, method='nearest')
+        sd.append(np.std(u))
+    
+    print(datetime.now(), " - plotting SSWs and SPV s.d. vs experiment")
+    fig, ax = plt.subplots(figsize=(10,6))
+    ax.errorbar(x[1:], SSWs[1:], yerr=errors[1:], fmt='o', linewidth=1.5, capsize=5, color='#B30000', linestyle='--')
+    ax.set_xlim(-0.5,len(exp)-1.5)
+    ax.set_xticks(x[1:])
+    ax.set_xlabel(xlabel, fontsize='xx-large')
+    ax.set_ylim(0.1, 0.52)
+    ax.set_ylabel('SSW Frequency (per 100 days)', fontsize='xx-large', color='#B30000')
+    ax.axhline(obs, color='#0c56a0', linewidth=1.5, linestyle='--')
+    ax.text(len(exp)-3, obs+0.01, 'observations', color='#0c56a0', fontsize='xx-large')
+    ax.axhline(og, color='#666666', linewidth=1.5, linestyle='--')
+    ax.fill_between(range(-1,8), (og - og_err), (og + og_err), facecolor ='gainsboro', alpha = 0.4)
+    ax.text(len(exp)-2.4, og+0.01, 'control', color='#666666', fontsize='xx-large')
+    ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
+    ax2 = ax.twinx()
+    ax2.plot(labels[1:], sd[1:], marker='o', linewidth=1.5, color='#4D0099', linestyle='-', label='S.D.')
+    ax2.set_ylim(13, 19)
+    ax2.set_ylabel(r'U$_{10,60}$ S.D. (m s$^{-1}$)', color='#4D0099', fontsize='xx-large')
+    ax2.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
+    plt.savefig(name+'_SSWs+sd.pdf', bbox_inches = 'tight')
+    return plt.close()
+
 if __name__ == '__main__': 
     #Set-up data to be read in
     indir = '/disco/share/rm811/processed/'
@@ -280,15 +320,14 @@ if __name__ == '__main__':
         me, mo, sd, e, sk, k = plot_pdf('u', indir, exp, '_uz.nc', '', p, lats, labels, lab+r"zonal-mean zonal wind (m s$^{-1}$)", blues, basis+extension)
         SPVvexp1(me, mo, sd, e, p, labels, xlabel, basis+extension)
         #SPVvexp2(sk, k, p, labels, xlabel, basis+extension)
-
     elif level == 'd':
         p = 10 # pressure level at which we want to find the SPV (hPa)
         #User choice for plotting - type
-        plot_type = input('Plot a) SPV over time, b) 10 hPa max. wind/lats, c) SSW frequencies, or d) lat-p s.d.?')
+        plot_type = input('Plot a) SPV over time, b) 10 hPa max. wind/lats, c) SSW frequencies, d) lat-p s.d., or e) paper plot?')
         if plot_type == 'a':
-            exp = exp[:2]
-            labels = ['zonally symmetric', 'off-pole']
-            colors = ['#0099CC', '#B30000']
+            exp = [exp[1], exp[-1]]
+            labels = [labels[1]+' hPa', labels[-1]+' hPa']
+            colors = ['#88bedc', '#0c56a0']
             style = ['-', '-']
             cols = 2
             plot_vtx(outdir, exp, labels, colors, style, cols, exp[0])
@@ -317,6 +356,8 @@ if __name__ == '__main__':
                         sd_diff = sd1 - sd2
                         NH_zonal(lat, p, sd_diff, utz, np.arange(-20, 22, 2), ulvls, 'RdBu_r',\
                             r'zonal-mean zonal wind S.D. (ms$^{-1}$)', exp[i]+'_usd_diff.pdf')
+        elif plot_type == 'e':
+            report_plot(exp, labels, xlabel, basis+extension)
     elif level == 'e':
         n = len(exp)
         u10_full = []
