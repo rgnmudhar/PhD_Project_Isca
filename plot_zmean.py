@@ -7,8 +7,71 @@
 import xarray as xr
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.colors as cm
 from shared_functions import *
 from datetime import datetime
+
+def report_plot(exp, lvls, variable, unit, name):
+    # Plots control, then 3 experiments of your choice - starting with temperature
+
+    print(datetime.now(), " - opening files")
+    X = []
+    X_response = []
+    heat = []
+    for i in range(len(exp)):
+        if variable == 'Temperature':
+            Xtz = xr.open_dataset(indir+exp[i]+'_Ttz.nc', decode_times=False).temp[0]
+        elif variable == 'Zonal Wind':
+            Xtz = xr.open_dataset(indir+exp[i]+'_utz.nc', decode_times=False).ucomp[0]
+        X.append(Xtz)
+        ds = xr.open_dataset('/disco/share/rm811/isca_data/' + exp[i] + '/run0100/atmos_daily_interp.nc')
+        heat.append(ds.local_heating.sel(lon=180, method='nearest').mean('time'))
+        if i == 0:
+            ctrl = Xtz
+        else:
+            X_response.append(Xtz - ctrl)
+
+    p = ctrl.pfull
+    lat = ctrl.lat
+
+    print(datetime.now(), " - plotting")
+    fig, axes = plt.subplots(1, 4, figsize=(20,7))
+    if variable == 'Temperature':
+        csa_ctrl = axes[0].contourf(lat, p, ctrl, levels=lvls[0], cmap='Blues_r')
+    elif variable == 'Zonal Wind':
+        norm = cm.TwoSlopeNorm(vmin=min(lvls[0]), vmax=max(lvls[0]), vcenter=0)
+        csa_ctrl = axes[0].contourf(lat, p, ctrl, levels=lvls[0], norm=norm, cmap='RdBu_r')
+    cb_ctrl  = fig.colorbar(csa_ctrl, ax=axes[0], orientation='horizontal', extend='both', pad=0.15)
+    cb_ctrl.set_label(label=variable+unit, size='xx-large')
+    cb_ctrl.ax.tick_params(labelsize='x-large')
+    #axes[0].contour(lat, p, heat[0], colors='g', linewidths=1.5, alpha=0.25, levels=11)
+    axes[0].set_ylabel('Pressure (hPa)', fontsize='xx-large')
+    
+    norm = cm.TwoSlopeNorm(vmin=min(lvls[1]), vmax=max(lvls[1]), vcenter=0)
+    for i in range(len(exp)):
+        if i > 0:
+            csa = axes[i].contourf(lat, p, X_response[i-1], levels=lvls[1], norm=norm, cmap='RdBu_r')
+            csb = axes[i].contour(lat, p, X[i], colors='k', levels=lvls[2], linewidths=1.5, alpha=0.25)
+            if variable == 'Zonal Wind':
+                csb.collections[int(len(lvls[2])/2)].set_linewidth(1.5)
+            #axes[i].contour(lat, p, heat[i], colors='g', linewidths=1.5, alpha=0.25, levels=11)
+
+    cb  = fig.colorbar(csa, ax=axes[1:], shrink=0.3, orientation='horizontal', extend='both', pad=0.15)
+    cb.set_label(label='Response'+unit, size='xx-large')
+    cb.ax.tick_params(labelsize='x-large')
+
+    for i in range(len(axes)):
+        axes[i].text(2, 1.75, labels[i], color='k', weight='bold', fontsize='xx-large')
+        axes[i].set_ylim(max(p), 1) #goes to ~1hPa
+        axes[i].set_yscale('log')
+        axes[i].set_xlabel(r'Latitude ($\degree$N)', fontsize='xx-large')
+        axes[i].set_xlim(0, max(lat))
+        axes[i].set_xticks([0, 20, 40, 60, 80], ['0', '20', '40', '60', '80'])
+        axes[i].tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
+        if i > 0:
+            axes[i].tick_params(axis='y',label1On=False)
+    plt.savefig(name+'.pdf', bbox_inches = 'tight')
+    return plt.close()
 
 def plot_combo(u, T, lvls, perturb, lat, p, exp_name):
     # Plots time and zonal-mean Zonal Wind Speed and Temperature
@@ -171,9 +234,10 @@ def merid_Tgrad(exp, lat_min):
 if __name__ == '__main__': 
     #Set-up data to be read in
     indir = '/disco/share/rm811/processed/'
-    plot_type = input("Plot a) individual experiments, b) difference vs. control, c) linear additions, d) meridional T gradients or e) tropopause?")
+    basis = 'PK_e0v4z13'
+    plot_type = input("Plot a) individual experiments, b) difference vs. control, c) linear additions, d) meridional T gradients, e) tropopause, or f) paper plot?")
     
-    if plot_type == 'a' or plot_type == 'b' or plot_type == 'd' or plot_type == 'e':
+    if plot_type == 'a' or plot_type == 'b' or plot_type == 'd' or plot_type == 'e' or plot_type == 'f':
         var_type = input("Plot a) depth, b) width, c) location, d) strength, e) topography experiments or f) test?")
         if var_type == 'a':
             extension = '_depth'
@@ -242,6 +306,14 @@ if __name__ == '__main__':
             plt.savefig('tropopause'+extension+'.pdf', bbox_inches = 'tight')
             plt.show()
             plt.close()
+        
+        elif plot_type == 'f':
+            exp = [exp[0], exp[1], exp[4], exp[-1]]
+            labels = [labels[0], labels[1], labels[4], labels[-1]]
+            T_lvls = [np.arange(160, 330, 10), np.arange(-10, 25, 2.5), np.arange(160, 340, 20)]
+            u_lvls = [np.arange(-70, 100, 10), np.arange(-20, 17.5, 2.5), np.arange(-70, 110, 10)]
+            report_plot(exp, T_lvls, 'Temperature', ' (K)', basis+extension+'_T')
+            report_plot(exp, u_lvls, 'Zonal Wind', r' (m s$^{-1}$)', basis+extension+'_u')
 
         else:
             for i in range(len(exp)):
