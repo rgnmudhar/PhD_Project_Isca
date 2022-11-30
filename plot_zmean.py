@@ -12,7 +12,7 @@ from shared_functions import *
 from datetime import datetime
 
 def report_plot(exp, lvls, variable, unit, name):
-    # Plots control, then 3 experiments of your choice - starting with temperature
+    # Plots control, then 3 experiments of your choice
 
     print(datetime.now(), " - opening files")
     X = []
@@ -53,7 +53,7 @@ def report_plot(exp, lvls, variable, unit, name):
             csa = axes[i].contourf(lat, p, X_response[i-1], levels=lvls[1], norm=norm, cmap='RdBu_r')
             csb = axes[i].contour(lat, p, X[i], colors='k', levels=lvls[2], linewidths=1.5, alpha=0.25)
             if variable == 'Zonal Wind':
-                csb.collections[int(len(lvls[2])/2)].set_linewidth(1.5)
+                csb.collections[list(lvls[2]).index(0)].set_linewidth(3)
             #axes[i].contour(lat, p, heat[i], colors='g', linewidths=1.5, alpha=0.25, levels=11)
 
     cb  = fig.colorbar(csa, ax=axes[1:], shrink=0.3, orientation='horizontal', extend='both', pad=0.15)
@@ -311,7 +311,7 @@ if __name__ == '__main__':
             exp = [exp[0], exp[1], exp[4], exp[-1]]
             labels = [labels[0], labels[1], labels[4], labels[-1]]
             T_lvls = [np.arange(160, 330, 10), np.arange(-10, 25, 2.5), np.arange(160, 340, 20)]
-            u_lvls = [np.arange(-70, 100, 10), np.arange(-20, 17.5, 2.5), np.arange(-70, 110, 10)]
+            u_lvls = [np.arange(-70, 100, 10), np.arange(-20, 17.5, 2.5), np.arange(-70, 100, 10)]
             report_plot(exp, T_lvls, 'Temperature', ' (K)', basis+extension+'_T')
             report_plot(exp, u_lvls, 'Zonal Wind', r' (m s$^{-1}$)', basis+extension+'_u')
 

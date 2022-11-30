@@ -66,32 +66,6 @@ def plot_ep(uz, div, ep1, ep2, k, exp_name, heat, type):
     plt.savefig(exp_name+'_EPflux_k{0:.0f}.pdf'.format(k), bbox_inches = 'tight')
     return plt.close()
 
-def plot_ep2(uz, ep2, k, name):
-    print(datetime.now(), " - plotting EP Fluxes")
-    p = uz.coords['pfull']
-    lat = uz.coords['lat']
-    norm = cm.TwoSlopeNorm(vmin=-0.07, vmax=0.07, vcenter=0)
-    lvls = np.arange(-0.07, 0.07, 0.005)
-    #Filled contour plot of time-mean EP flux divergence plus EP flux arrows and zonal wind contours
-    fig, ax = plt.subplots(figsize=(6,6))
-    print(datetime.now(), " - plot uz")
-    uplt = uz.plot.contour(colors='k', linewidths=0.5, alpha=0.4, levels=ulvls)
-    uplt.collections[int(len(ulvls)/2)].set_linewidth(1.5)
-    print(datetime.now(), " - plot upward EP flux")
-    cs = ep2.plot.contourf(cmap='RdBu_r', levels=lvls, norm=norm, add_colorbar=False)
-    cb = plt.colorbar(cs)
-    cb.set_label(label=r'EP$_{z}$ (hPa m s$^{-2}$)', size='large')
-    plt.ylim(max(p), 1) #to 1 hPa
-    plt.yscale('log')
-    plt.ylabel('Pressure (hPa)', fontsize='xx-large')
-    plt.xlim(0,max(lat))
-    plt.xticks([20, 40, 60, 80], ['20', '40', '60', '80'])
-    plt.xlabel(r'Latitude ($\degree$N)', fontsize='xx-large')
-    plt.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
-    plt.savefig(name+'_EPz_k{0:.0f}.pdf'.format(k), bbox_inches = 'tight')
-    plt.show()
-    return plt.close()
-
 def vT_calc(exp):
     print(datetime.now(), " - opening files for ", exp)
     v = xr.open_dataset(indir+exp+'_v.nc', decode_times=False).vcomp
@@ -258,7 +232,7 @@ def plot_n2(dir, exp, k):
     fig, ax = plt.subplots(figsize=(6,6))
     print(datetime.now(), " - plotting uz")
     uplt = utz.plot.contour(colors='k', linewidths=0.5, alpha=0.4, levels=ulvls)
-    uplt.collections[int(len(ulvls)/2)].set_linewidth(1.5)
+    uplt.collections[list(ulvls).index(0)].set_linewidth(1)
     print(datetime.now(), " - plotting n2")
     colors = ['#bbd6eb', '#88bedc', '#549ecd',  '#2a7aba', '#0c56a0', '#08306b']
     nlvls = np.arange(0, 120, 20)
@@ -279,11 +253,132 @@ def plot_n2(dir, exp, k):
     plt.savefig(exp+'_n2_k{0:.0f}.pdf'.format(k), bbox_inches = 'tight')
     return plt.close()
 
+def report_plot_n2(exp, k, name):
+    # Plots control, then 3 experiments of your choice
+
+    print(datetime.now(), " - opening files")
+    u = []
+    n2 = []
+    heat = []
+    for i in range(len(exp)):
+        utz = xr.open_dataset(indir+exp[i]+'_utz.nc', decode_times=False).ucomp[0]
+        Ttz = xr.open_dataset(indir+exp[i]+'_Ttz.nc', decode_times=False).temp[0]
+        n = refractive_index(utz, Ttz, k)
+        u.append(utz)
+        n2.append(n)
+        ds = xr.open_dataset('/disco/share/rm811/isca_data/' + exp[i] + '/run0100/atmos_daily_interp.nc')
+        heat.append(ds.local_heating.sel(lon=180, method='nearest').mean('time'))
+
+    p = utz.pfull
+    lat = utz.lat
+    colors = ['#bbd6eb', '#88bedc', '#549ecd',  '#2a7aba', '#0c56a0', '#08306b']
+    nlvls = np.arange(0, 120, 20)
+    cmap = cm.ListedColormap(colors)
+    cmap.set_under('#eeeeee')
+    cmap.set_over('w')
+    norm = cm.Normalize(vmin=0,vmax=100)
+
+    print(datetime.now(), " - plotting")
+    fig, axes = plt.subplots(1, 4, figsize=(20,7))
+    for i in range(len(exp)):
+        csa = axes[i].contourf(lat, p, n2[i], levels=nlvls, extend='both', cmap=cmap)
+        csb = axes[i].contour(lat, p, u[i], colors='k', levels=ulvls, linewidths=1.5, alpha=0.25)
+        csb.collections[list(ulvls).index(0)].set_linewidth(3)
+        #axes[i].contour(lat, p, heat[i], colors='g', linewidths=1.5, alpha=0.25, levels=11)
+        axes[i].text(2, 1.75, labels[i], color='k', weight='bold', fontsize='xx-large')
+        axes[i].set_ylim(max(p), 1) #goes to ~1hPa
+        axes[i].set_yscale('log')
+        axes[i].set_xlabel(r'Latitude ($\degree$N)', fontsize='xx-large')
+        axes[i].set_xlim(0, max(lat))
+        axes[i].set_xticks([0, 20, 40, 60, 80], ['0', '20', '40', '60', '80'])
+        axes[i].tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
+        if i == 0:
+            axes[i].set_ylabel('Pressure (hPa)', fontsize='xx-large')
+        elif i > 0:
+            axes[i].tick_params(axis='y',label1On=False)
+
+    cb  = fig.colorbar(csa, ax=axes[0:], shrink=0.3, orientation='horizontal', extend='both', pad=0.15)
+    cb.set_label(label=r'Refractive Index Squared, $n^{2}$', size='x-large')
+    cb.ax.tick_params(labelsize='x-large')
+    plt.savefig(name+'_n2_k{0:.0f}.pdf'.format(k), bbox_inches = 'tight')
+    return plt.close()
+
+def report_plot_EP(exp, name):
+    # Plots control, then 3 experiments of your choice
+
+    lvls = [np.arange(-12,13,1), np.arange(-5,5.5,0.5)]
+    div_response = []
+    ep1_response = []
+    ep2_response = []
+    uz = []
+    heat = []
+    for i in range(len(exp)):
+        print(datetime.now(), " - opening files")
+        utz, u, v, w, T = open_data(indir, exp[i])
+        uz.append(utz)
+        ds = xr.open_dataset('/disco/share/rm811/isca_data/' + exp[i] + '/run0100/atmos_daily_interp.nc')
+        heat.append(ds.local_heating.sel(lon=180, method='nearest').mean('time'))
+
+        print(datetime.now(), " - finding EP flux")
+        div, ep1, ep2 = calc_ep(u, v, w, T, k)
+        if i == 0:
+                div_ctrl = div
+                ep1_ctrl = ep1
+                ep2_ctrl = ep2
+        elif i > 0:
+                print(datetime.now(), " - taking differences")
+                div_response.append(div - div_ctrl)
+                ep1_response.append(ep1 - ep1_ctrl)
+                ep2_response.append(ep2 - ep2_ctrl)
+
+    p = utz.pfull
+    lat = utz.lat
+
+    print(datetime.now(), " - plotting control")
+    fig, axes = plt.subplots(1, 4, figsize=(20,7))
+    norm = cm.TwoSlopeNorm(vmin=min(lvls[0]), vmax=max(lvls[0]), vcenter=0)
+    csa_ctrl = axes[0].contourf(lat, p, div_ctrl, levels=lvls[1], norm=norm, cmap='RdBu_r')
+    cb_ctrl  = fig.colorbar(csa_ctrl, ax=axes[0], orientation='horizontal', extend='both', pad=0.15)
+    cb_ctrl.set_label(label=r'Divergence (m s$^{-1}$ day$^{-1}$)', size='xx-large')
+    cb_ctrl.ax.tick_params(labelsize='x-large')
+    csb_ctrl = axes[0].contour(lat, p, uz[0], colors='k', levels=ulvls, linewidths=1.5, alpha=0.25)
+    csb_ctrl.collections[list(lvls[2]).index(0)].set_linewidth(3)
+    axes[0] = climate.PlotEPfluxArrows(lat, p, ep1_ctrl, ep2_ctrl, fig, axes[0], yscale='log')
+    #axes[0].contour(lat, p, heat[0], colors='g', linewidths=1.5, alpha=0.25, levels=11)
+    axes[0].set_ylabel('Pressure (hPa)', fontsize='xx-large')
+
+    print(datetime.now(), " - plotting responses")
+    norm = cm.TwoSlopeNorm(vmin=min(lvls[1]), vmax=max(lvls[1]), vcenter=0)
+    for i in range(len(exp)):
+        if i > 0:
+            csa = axes[i].contourf(lat, p, div_response[i], levels=lvls[1], norm=norm, cmap='RdBu_r')
+            csb = axes[i].contour(lat, p, uz[i], colors='k', levels=ulvls, linewidths=1.5, alpha=0.25)
+            csb.collections[list(ulvls).index(0)].set_linewidth(3)
+            axes[i] = climate.PlotEPfluxArrows(lat, p, ep1_response[i], ep2_response[i], fig, axes[i], yscale='log')
+            #axes[i].contour(lat, p, heat[i], colors='g', linewidths=1.5, alpha=0.25, levels=11)
+
+    cb  = fig.colorbar(csa, ax=axes[1:], shrink=0.3, orientation='horizontal', extend='both', pad=0.15)
+    cb.set_label(label=r'Response (m s$^{-1}$ day$^{-1}$)', size='xx-large')
+    cb.ax.tick_params(labelsize='x-large')
+
+    for i in range(len(axes)):
+        axes[i].text(2, 1.75, labels[i], color='k', weight='bold', fontsize='xx-large')
+        axes[i].set_ylim(max(p), 1) #goes to ~1hPa
+        axes[i].set_yscale('log')
+        axes[i].set_xlabel(r'Latitude ($\degree$N)', fontsize='xx-large')
+        axes[i].set_xlim(0, max(lat))
+        axes[i].set_xticks([0, 20, 40, 60, 80], ['0', '20', '40', '60', '80'])
+        axes[i].tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
+        if i > 0:
+            axes[i].tick_params(axis='y',label1On=False)
+    plt.savefig(name+'_EP.pdf', bbox_inches = 'tight')
+    return plt.close()
+
 if __name__ == '__main__': 
     #Set-up data to be read in
     indir = '/disco/share/rm811/processed/'
     basis = 'PK_e0v4z13'
-    flux = input("Plot a) EP flux divergence, b) upward EP Flux, c) v'T', d) vs. MERRA2, e) refractive index or f) combo of b & e?")
+    flux = input("Plot a) EP flux divergence, b) upward EP Flux, c) v'T', d) vs. MERRA2, e) refractive index or f) report plot?")
     var_type = input("Plot a) depth, b) width, c) location, d) strength, e) topography experiments? or f) test?")
     if var_type == 'a':
         extension = '_depth'
@@ -300,7 +395,7 @@ if __name__ == '__main__':
     exp, labels, xlabel = return_exp(extension)
     colors = ['k', '#B30000', '#FF9900', '#FFCC00', '#00B300', '#0099CC', '#4D0099', '#CC0080']
     blues = ['k', '#dbe9f6', '#bbd6eb', '#88bedc', '#549ecd',  '#2a7aba', '#0c56a0', '#08306b']
-    ulvls = np.arange(-200, 210, 10)
+    ulvls = np.arange(-70, 100, 10)
     k = int(input('Which wave no.? (i.e. 0 for all, 1, 2, etc.)'))
 
     if flux == 'a':
@@ -431,12 +526,11 @@ if __name__ == '__main__':
             plot_n2(indir, i, k)
 
     elif flux =='f':
-        exp = ['PK_e0v4z13_w15a4p800f800g50_q6m2y45l800u200']
-        for i in range(len(exp)):
-            print(datetime.now(), " - opening files ({0:.0f}/{1:.0f})".format(i+1, len(exp)))
-            utz, u, v, w, t = open_data(indir, exp[i])
-            ep2 = calc_ep(u, v, w, t, k)[2]
-            plot_ep2(utz, ep2, k, exp[i])
+        exp = [exp[0], exp[1], exp[4], exp[-1]]
+        labels = [labels[0], labels[1], labels[4], labels[-1]]
+        u_lvls = np.arange(-70, 100, 10)
+        #n_lvls = [np.arange(160, 330, 10), np.arange(-10, 25, 2.5), np.arange(160, 340, 20)]
+        #report_plot_n2(exp, k, basis+extension)
 
 """
 # Following commented functions/code is for checking against Neil Lewis' code
