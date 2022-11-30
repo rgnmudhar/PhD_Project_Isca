@@ -27,8 +27,8 @@ def return_exp(extension):
         basis+'_w15a4p500f800g50'+perturb,\
         basis+'_w15a4p400f800g50'+perturb,\
         basis+'_w15a4p300f800g50'+perturb]
-        #labels = ['control', '900 hPa', '800 hPa', '700 hPa', '600 hPa', '500 hPa', '400 hPa', '300 hPa']
-        labels = ['control', '900', '800', '700', '600', '500', '400', '300']
+        labels = ['control', '900 hPa', '800 hPa', '700 hPa', '600 hPa', '500 hPa', '400 hPa', '300 hPa']
+        #labels = ['control', '900', '800', '700', '600', '500', '400', '300']
         xlabel = 'Depth of Heating (hPa)'
     elif extension == '_width':
         exp = [basis+perturb,\
