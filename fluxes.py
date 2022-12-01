@@ -10,6 +10,112 @@ from aostools import climate
 from shared_functions import *
 from datetime import datetime
 
+def PlotEPfluxArrows(x,y,ep1,ep2,fig,ax,xlim=None,ylim=None,xscale='linear',yscale='linear',invert_y=True, newax=False, pivot='tail',scale=None,quiv_args=None):
+	"""Correctly scales the Eliassen-Palm flux vectors for plotting on a latitude-pressure or latitude-height axis.
+		x,y,ep1,ep2 assumed to be xarray.DataArrays.
+	INPUTS:
+		x	: horizontal coordinate, assumed in degrees (latitude) [degrees]
+		y	: vertical coordinate, any units, but usually this is pressure or height
+		ep1	: horizontal Eliassen-Palm flux component, in [m2/s2]. Typically, this is ep1_cart from
+				   ComputeEPfluxDiv()
+		ep2	: vertical Eliassen-Palm flux component, in [U.m/s2], where U is the unit of y.
+				   Typically, this is ep2_cart from ComputeEPfluxDiv(), in [hPa.m/s2] and y is pressure [hPa].
+		fig	: a matplotlib figure object. This figure contains the axes ax.
+		ax	: a matplotlib axes object. This is where the arrows will be plotted onto.
+		xlim	: axes limits in x-direction. If None, use [min(x),max(x)]. [None]
+		ylim	: axes limits in y-direction. If None, use [min(y),max(y)]. [None]
+		xscale	: x-axis scaling. currently only 'linear' is supported. ['linear']
+		yscale	: y-axis scaling. 'linear' or 'log' ['linear']
+		invert_y: invert y-axis (for pressure coordinates). [True]
+		newax	: plot on second y-axis. [False]
+		pivot	: keyword argument for quiver() ['tail']
+		scale	: keyword argument for quiver(). Smaller is longer [None]
+				  besides fixing the length, it is also usefull when calling this function inside a
+				   script without display as the only way to have a quiverkey on the plot.
+               quiv_args: further arguments passed to quiver plot.
+	OUTPUTS:
+	   Fphi*dx : x-component of properly scaled arrows. Units of [m3.inches]
+	   Fp*dy   : y-component of properly scaled arrows. Units of [m3.inches]
+	   ax	: secondary y-axis if newax == True
+	"""
+	import numpy as np
+	import matplotlib.pyplot as plt
+	#
+	def Deltas(z,zlim):
+		# if zlim is None:
+		return np.max(z)-np.min(z)
+		# else:
+			# return zlim[1]-zlim[0]
+	# Scale EP vector components as in Edmon, Hoskins & McIntyre JAS 1980:
+	cosphi = np.cos(np.deg2rad(x))
+	a0 = 6376000.0 # Earth radius [m]
+	grav = 9.81
+	# first scaling: Edmon et al (1980), Eqs. 3.1 & 3.13
+	Fphi = 2*np.pi/grav*cosphi**2*a0**2*ep1 # [m3.rad]
+	Fp   = 2*np.pi/grav*cosphi**2*a0**3*ep2 # [m3.hPa]
+	#
+	# Now comes what Edmon et al call "distances occupied by 1 radian of
+	#  latitude and 1 [hecto]pascal of pressure on the diagram."
+	# These distances depend on figure aspect ratio and axis scale
+	#
+	# first, get the axis width and height for
+	#  correct aspect ratio
+	width,height = climate.GetAxSize(fig,ax)
+	# we use min(),max(), but note that if the actual axis limits
+	#  are different, this will be slightly wrong.
+	delta_x = Deltas(x,xlim)
+	delta_y = Deltas(y,ylim)
+	#
+	#scale the x-axis:
+	if xscale == 'linear':
+		dx = width/delta_x/np.pi*180
+	else:
+		raise ValueError('ONLY LINEAR X-AXIS IS SUPPORTED AT THE MOMENT')
+	#scale the y-axis:
+	if invert_y:
+		y_sign = -1
+	else:
+		y_sign = 1
+	if yscale == 'linear':
+		dy = y_sign*height/delta_y
+	elif yscale == 'log':
+		dy = y_sign*height/y/np.log(np.max(y)/np.min(y))
+	#
+	# plot the arrows onto axis
+	quivArgs = {'angles':'uv','scale_units':'inches','pivot':pivot}
+	if quiv_args is not None:
+		for key in quiv_args.keys():
+			quivArgs[key] = quiv_args[key]
+	if scale is not None:
+		quivArgs['scale'] = scale
+	if newax:
+		ax = ax.twinx()
+		ax.set_ylabel('pressure [hPa]')
+	try:
+		Q = ax.quiver(x,y,Fphi*dx,Fp*dy,**quivArgs)
+	except:
+		Q = ax.quiver(x,y,dx*Fphi.transpose(),dy*Fp.transpose(),**quivArgs)
+	if scale is None:
+		fig.canvas.draw() # need to update the plot to get the Q.scale
+		U = Q.scale
+	else:
+		U = scale
+	if U is not None: # when running inside a script, the figure might not exist and therefore U is None
+		ax.quiverkey(Q,0.9,1.02,U/width,label=r'{0:.1e}$\,m^3$'.format(U),labelpos='W',coordinates='axes') # CHANGED LABELPOS FROM E TO W !!!
+	if invert_y:
+		ax.invert_yaxis()
+	if xlim is not None:
+		ax.set_xlim(xlim)
+	if ylim is not None:
+		ax.set_ylim(ylim)
+	ax.set_yscale(yscale)
+	ax.set_xscale(xscale)
+	#
+	if newax:
+		return Fphi*dx,Fp*dy,ax
+	else:
+		return Fphi*dx,Fp*dy
+
 def open_data(dir, exp):
     u = xr.open_dataset(dir+exp+'_u.nc', decode_times=False).ucomp
     v = xr.open_dataset(dir+exp+'_v.nc', decode_times=False).vcomp
@@ -303,65 +409,40 @@ def report_plot_n2(exp, k, name):
     plt.savefig(name+'_n2_k{0:.0f}.pdf'.format(k), bbox_inches = 'tight')
     return plt.close()
 
-def report_plot_EP(exp, name):
+def report_plot_EP(u, div_ctrl, ep1_ctrl, ep2_ctrl, div_response, ep1_response, ep2_response, name):
     # Plots control, then 3 experiments of your choice
-
-    lvls = [np.arange(-12,13,1), np.arange(-5,5.5,0.5)]
-    div_response = []
-    ep1_response = []
-    ep2_response = []
-    uz = []
-    heat = []
-    for i in range(len(exp)):
-        print(datetime.now(), " - opening files")
-        utz, u, v, w, T = open_data(indir, exp[i])
-        uz.append(utz)
-        ds = xr.open_dataset('/disco/share/rm811/isca_data/' + exp[i] + '/run0100/atmos_daily_interp.nc')
-        heat.append(ds.local_heating.sel(lon=180, method='nearest').mean('time'))
-
-        print(datetime.now(), " - finding EP flux")
-        div, ep1, ep2 = calc_ep(u, v, w, T, k)
-        if i == 0:
-                div_ctrl = div
-                ep1_ctrl = ep1
-                ep2_ctrl = ep2
-        elif i > 0:
-                print(datetime.now(), " - taking differences")
-                div_response.append(div - div_ctrl)
-                ep1_response.append(ep1 - ep1_ctrl)
-                ep2_response.append(ep2 - ep2_ctrl)
-
-    p = utz.pfull
-    lat = utz.lat
+    lvls = [np.arange(-12,13,1), np.arange(-6,6.5,0.5)]
+    p = u[0].pfull
+    lat = u[0].lat
 
     print(datetime.now(), " - plotting control")
     fig, axes = plt.subplots(1, 4, figsize=(20,7))
-    norm = cm.TwoSlopeNorm(vmin=min(lvls[0]), vmax=max(lvls[0]), vcenter=0)
-    csa_ctrl = axes[0].contourf(lat, p, div_ctrl, levels=lvls[1], norm=norm, cmap='RdBu_r')
+    csa_ctrl = axes[0].contourf(lat, p, div_ctrl, levels=lvls[0], cmap='RdBu_r')
     cb_ctrl  = fig.colorbar(csa_ctrl, ax=axes[0], orientation='horizontal', extend='both', pad=0.15)
     cb_ctrl.set_label(label=r'Divergence (m s$^{-1}$ day$^{-1}$)', size='xx-large')
     cb_ctrl.ax.tick_params(labelsize='x-large')
-    csb_ctrl = axes[0].contour(lat, p, uz[0], colors='k', levels=ulvls, linewidths=1.5, alpha=0.25)
-    csb_ctrl.collections[list(lvls[2]).index(0)].set_linewidth(3)
-    axes[0] = climate.PlotEPfluxArrows(lat, p, ep1_ctrl, ep2_ctrl, fig, axes[0], yscale='log')
-    #axes[0].contour(lat, p, heat[0], colors='g', linewidths=1.5, alpha=0.25, levels=11)
-    axes[0].set_ylabel('Pressure (hPa)', fontsize='xx-large')
+    csb_ctrl = axes[0].contour(lat, p, u[0], colors='k', levels=ulvls, linewidths=1.5, alpha=0.25)
+    csb_ctrl.collections[list(ulvls).index(0)].set_linewidth(3)
+    PlotEPfluxArrows(lat, p, ep1_ctrl, ep2_ctrl, fig, axes[0], yscale='log')
+        #axes[0].contour(lat, p, heat[0], colors='g', linewidths=1.5, alpha=0.25, levels=11)
+    axes[0].set_ylabel('Pressure (hPa)', fontsize='xx-large')    
 
     print(datetime.now(), " - plotting responses")
-    norm = cm.TwoSlopeNorm(vmin=min(lvls[1]), vmax=max(lvls[1]), vcenter=0)
-    for i in range(len(exp)):
+    for i in range(len(axes)):
         if i > 0:
-            csa = axes[i].contourf(lat, p, div_response[i], levels=lvls[1], norm=norm, cmap='RdBu_r')
-            csb = axes[i].contour(lat, p, uz[i], colors='k', levels=ulvls, linewidths=1.5, alpha=0.25)
+            csa = axes[i].contourf(lat, p, div_response[i-1], levels=lvls[1], cmap='RdBu_r')
+            csb = axes[i].contour(lat, p, u[i], colors='k', levels=ulvls, linewidths=1.5, alpha=0.25)
             csb.collections[list(ulvls).index(0)].set_linewidth(3)
-            axes[i] = climate.PlotEPfluxArrows(lat, p, ep1_response[i], ep2_response[i], fig, axes[i], yscale='log')
-            #axes[i].contour(lat, p, heat[i], colors='g', linewidths=1.5, alpha=0.25, levels=11)
+                #axes[i].contour(lat, p, heat[i], colors='g', linewidths=1.5, alpha=0.25, levels=11)
 
-    cb  = fig.colorbar(csa, ax=axes[1:], shrink=0.3, orientation='horizontal', extend='both', pad=0.15)
+    cb  = fig.colorbar(csa, ax=axes[1:], ticks=np.arange(-8, 10, 2), shrink=0.3, orientation='horizontal', extend='both', pad=0.15)
     cb.set_label(label=r'Response (m s$^{-1}$ day$^{-1}$)', size='xx-large')
     cb.ax.tick_params(labelsize='x-large')
 
     for i in range(len(axes)):
+        if i > 0:
+            axes[i].tick_params(axis='y',label1On=False)
+            PlotEPfluxArrows(lat, p, ep1_response[i-1], ep2_response[i-1], fig, axes[i], yscale='log')
         axes[i].text(2, 1.75, labels[i], color='k', weight='bold', fontsize='xx-large')
         axes[i].set_ylim(max(p), 1) #goes to ~1hPa
         axes[i].set_yscale('log')
@@ -369,8 +450,6 @@ def report_plot_EP(exp, name):
         axes[i].set_xlim(0, max(lat))
         axes[i].set_xticks([0, 20, 40, 60, 80], ['0', '20', '40', '60', '80'])
         axes[i].tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
-        if i > 0:
-            axes[i].tick_params(axis='y',label1On=False)
     plt.savefig(name+'_EP.pdf', bbox_inches = 'tight')
     return plt.close()
 
@@ -528,9 +607,37 @@ if __name__ == '__main__':
     elif flux =='f':
         exp = [exp[0], exp[1], exp[4], exp[-1]]
         labels = [labels[0], labels[1], labels[4], labels[-1]]
-        u_lvls = np.arange(-70, 100, 10)
-        #n_lvls = [np.arange(160, 330, 10), np.arange(-10, 25, 2.5), np.arange(160, 340, 20)]
-        #report_plot_n2(exp, k, basis+extension)
+
+        div_response = []
+        ep1_response = []
+        ep2_response = []
+        uz = []
+        heat = []
+        variable = input('Plot a) n2 or b) EP Flux?')
+        if variable == 'a':
+            n_lvls = [np.arange(160, 330, 10), np.arange(-10, 25, 2.5), np.arange(160, 340, 20)]
+            report_plot_n2(exp, k, basis+extension)
+        elif variable == 'b':
+            for i in range(len(exp)):
+                print(datetime.now(), " - opening files")
+                utz, u, v, w, T = open_data(indir, exp[i])
+                uz.append(utz)
+                ds = xr.open_dataset('/disco/share/rm811/isca_data/' + exp[i] + '/run0100/atmos_daily_interp.nc')
+                heat.append(ds.local_heating.sel(lon=180, method='nearest').mean('time'))
+
+                print(datetime.now(), " - finding EP flux")
+                div, ep1, ep2 = calc_ep(u, v, w, T, k)
+                if i == 0:
+                        div_ctrl = div
+                        ep1_ctrl = ep1
+                        ep2_ctrl = ep2
+                elif i > 0:
+                        print(datetime.now(), " - taking differences")
+                        div_response.append(div - div_ctrl)
+                        ep1_response.append(ep1 - ep1_ctrl)
+                        ep2_response.append(ep2 - ep2_ctrl)
+            report_plot_EP(uz, div_ctrl, ep1_ctrl, ep2_ctrl, div_response, ep1_response, ep2_response, basis+extension)
+
 
 """
 # Following commented functions/code is for checking against Neil Lewis' code
