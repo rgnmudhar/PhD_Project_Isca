@@ -167,7 +167,7 @@ if __name__ == '__main__':
     elif var_type == 'e':
         extension = '_topo'
     exp = return_exp(extension)[0]
-    exp = ['PK_e0v4z13_q8m2y45l800u200']
+    #exp = [basis+'_a4x75y0w5v30p800_q6m2y45_s']
     
     #Ro = []
     #for i in range(len(exp)):

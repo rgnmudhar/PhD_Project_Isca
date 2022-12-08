@@ -70,21 +70,21 @@ def return_exp(extension):
         xlabel = r'Strength of Heating (K day$^{-1}$)'
     elif extension == '_loc':   
         perturb = '_q6m2y45'
-        exp = [basis+perturb+'l800u200',\
-            basis+'_a11x75y180w5v45p800',\
-            basis+'_a11x75y180w5v45p800'+perturb]
-        labels = ['pole-centred control',\
-            r'$A=11$ K day$^{-1}$, $\lamba_w=45\degree$, no mid-lat', r'$A=11$ K day$^{-1}$, $\lamba_w=45\degree$, w/ mid-lat']
-        xlabel = r'Strength of Heating (K day$^{-1}$), Longitudinal width of heating ($\degree$)'
+        exp = [basis,\
+            basis+'_a4x75y0w5v30p800_s',\
+            basis+'_a4x75y90w5v30p800_s',\
+            basis+'_a4x75y180w5v30p800_s',\
+            basis+'_a4x75y270w5v30p800_s']
+        labels = ['control', r'$\lambda=0\degree$E', r'$\lambda=90\degree$E', r'$\lambda=180\degree$E', r'$\lambda=270\degree$E',]
+        xlabel = r'Longitude of heating ($\degree$E)'
     elif extension == '_topo':
         topo = '_h4000m2l25u65'
         exp = [basis+topo,\
+        basis+'_w15a4p900f800g50'+topo,\
         basis+'_w15a4p800f800g50'+topo,\
+        basis+'_w15a4p600f800g50'+topo,\
         basis+'_w15a4p300f800g50'+topo]
-        #basis+perturb,\
-        #basis+'_w15a4p800f800g50'+perturb,\
-        #basis+'_w15a4p300f800g50'+perturb,\
-        labels = ['control', '800 hPa', '300 hPa']
+        labels = ['control', '900 hPa', '800 hPa', '600 hPa', '300 hPa']
         xlabel = 'Depth of Heating (hPa)'
     elif extension == '_poster':
         exp = [basis+perturb,\

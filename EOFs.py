@@ -13,6 +13,7 @@ from matplotlib.lines import Line2D
 from eofs.xarray import Eof
 import statsmodels.api as sm
 from shared_functions import *
+from datetime import datetime
 
 def eof_u(uz, p_min, lat_min):
     """
@@ -206,21 +207,38 @@ def plot_multi(uz, lags, p_min, lat_min, labels, colors, style, cols, fig_name):
     return plt.close()
 
 if __name__ == '__main__': 
-    plot_type = input("a) individual experiment, b) multiple PCs, or c) plot for report?")
-
+    #Set-up data to be read in
     indir = '/disco/share/rm811/processed/'
     basis = 'PK_e0v4z13'
-    exp = [basis+'_q6m2y45l800u200']
+    var_type = input("Plot a) depth, b) width, c) location, d) strength, e) topography experiments or f) test?")
+    if var_type == 'a':
+        extension = '_depth'
+    elif var_type == 'b':
+        extension = '_width'
+    elif var_type == 'c':
+        extension = '_loc'
+    elif var_type == 'd':
+        extension = '_strength'
+    elif var_type == 'e':
+        extension = '_topo'
+    elif var_type == 'f':
+        extension = '_test'
+    exp = return_exp(extension)[0]
+    #exp = [basis+'_a4x75y0w5v30p800_q6m2y45_s']
 
     # For EOFs follow Sheshadri & Plumb 2017, use p>100hPa, lat>20degN
     p_min = 100  # hPa
     lat_min = 20  # degrees
 
+    plot_type = input("a) individual experiment, b) multiple PCs, or c) plot for report?")
+
     if plot_type=='a':
-        ds = add_phalf(indir+exp[0], '_uz.nc')
-        uz = ds.ucomp
-        utz = xr.open_dataset(indir+exp[0]+'_utz.nc', decode_times=False).ucomp[0]
-        plot_single(uz, utz, p_min, lat_min, exp[0])
+        for i in range(len(exp)):
+            print(datetime.now(), " - opening files ({0:.0f}/{1:.0f})".format(i+1, len(exp)))
+            ds = add_phalf(indir+exp[i], '_uz.nc')
+            uz = ds.ucomp
+            utz = xr.open_dataset(indir+exp[i]+'_utz.nc', decode_times=False).ucomp[0]
+            plot_single(uz, utz, p_min, lat_min, exp[i])
     
     elif plot_type=='b':
         uz = []
@@ -239,7 +257,7 @@ if __name__ == '__main__':
         # For creating a plot that shows SPV speed and AM timescale for various experiments
         exp = ['PK_e0v1z13', 'PK_e0v2z13', 'PK_e0v3z13', 'PK_e0v4z13',\
         'PK_e0v1z18', 'PK_e0v2z18', 'PK_e0v3z18', 'PK_e0v4z18',\
-        'PK_e0v3z13_q6m2y45l800u200']
+        'PK_e0v4z18_h3000m2l25u65']
         symbols =  ['o', 's', '*']
         colors = ['k', '#00B300', '#0099CC', '#B30000']
         labels = [r'$p_{oz} \sim 200$ hPa', r'$p_{oz} \sim 100$ hPa', '+ asymmetry', r'$\gamma = 1$ K km$^{-1}$', r'$\gamma = 2$ K km$^{-1}$',r'$\gamma = 3$ K km$^{-1}$', r'$\gamma = 4$ K km$^{-1}$']
@@ -276,5 +294,5 @@ if __name__ == '__main__':
         ax.legend(handles=legend_elements, fontsize='large')
         sq = plt.Rectangle((10,25), 20, 25, fc='#00B300', alpha=0.2)
         plt.gca().add_patch(sq)
-        plt.savefig('vtx_vs_tau_v3q6.pdf', bbox_inches = 'tight')
+        plt.savefig('vtx_vs_tau_v4h3000z18.pdf', bbox_inches = 'tight')
         plt.close()

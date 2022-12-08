@@ -250,7 +250,7 @@ def report_plot(exp, x, xlabel, name):
     ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
     ax2 = ax.twinx()
     ax2.plot(labels[1:], sd[1:], marker='o', linewidth=1.5, color='#4D0099', linestyle='-', label='S.D.')
-    ax2.set_ylim(13, 19)
+    ax2.set_ylim(int(min(sd))-1, int(max(sd))+1)
     ax2.set_ylabel(r'U$_{10,60}$ S.D. (m s$^{-1}$)', color='#4D0099', fontsize='xx-large')
     ax2.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
     plt.savefig(name+'_SSWs+sd.pdf', bbox_inches = 'tight')

@@ -372,8 +372,8 @@ def report_plot_n2(exp, k, name):
         n = refractive_index(utz, Ttz, k)
         u.append(utz)
         n2.append(n)
-        ds = xr.open_dataset('/disco/share/rm811/isca_data/' + exp[i] + '/run0100/atmos_daily_interp.nc')
-        heat.append(ds.local_heating.sel(lon=180, method='nearest').mean('time'))
+        #ds = xr.open_dataset('/disco/share/rm811/isca_data/' + exp[i] + '/run0100/atmos_daily_interp.nc')
+        #heat.append(ds.local_heating.sel(lon=180, method='nearest').mean('time'))
 
     p = utz.pfull
     lat = utz.lat
@@ -424,7 +424,7 @@ def report_plot_EP(u, div_ctrl, ep1_ctrl, ep2_ctrl, div_response, ep1_response, 
     csb_ctrl = axes[0].contour(lat, p, u[0], colors='k', levels=ulvls, linewidths=1.5, alpha=0.25)
     csb_ctrl.collections[list(ulvls).index(0)].set_linewidth(3)
     PlotEPfluxArrows(lat, p, ep1_ctrl, ep2_ctrl, fig, axes[0], yscale='log')
-        #axes[0].contour(lat, p, heat[0], colors='g', linewidths=1.5, alpha=0.25, levels=11)
+    #axes[0].contour(lat, p, heat[0], colors='g', linewidths=1.5, alpha=0.25, levels=11)
     axes[0].set_ylabel('Pressure (hPa)', fontsize='xx-large')    
 
     print(datetime.now(), " - plotting responses")
@@ -433,7 +433,7 @@ def report_plot_EP(u, div_ctrl, ep1_ctrl, ep2_ctrl, div_response, ep1_response, 
             csa = axes[i].contourf(lat, p, div_response[i-1], levels=lvls[1], cmap='RdBu_r')
             csb = axes[i].contour(lat, p, u[i], colors='k', levels=ulvls, linewidths=1.5, alpha=0.25)
             csb.collections[list(ulvls).index(0)].set_linewidth(3)
-                #axes[i].contour(lat, p, heat[i], colors='g', linewidths=1.5, alpha=0.25, levels=11)
+            #axes[i].contour(lat, p, heat[i], colors='g', linewidths=1.5, alpha=0.25, levels=11)
 
     cb  = fig.colorbar(csa, ax=axes[1:], ticks=np.arange(-8, 10, 2), shrink=0.3, orientation='horizontal', extend='both', pad=0.15)
     cb.set_label(label=r'Response (m s$^{-1}$ day$^{-1}$)', size='xx-large')
@@ -577,9 +577,9 @@ if __name__ == '__main__':
                 exp = [basis+midlat_heat, basis+polar_heat, basis+polar_heat+midlat_heat]
                 label = 'polar'
             elif heat_type == 'b':
-                polar_heat = '_a11x75y180w5v45p800'
+                polar_heat = '_a4x75y0w5v30p800'
                 midlat_heat = '_q6m2y45'
-                exp = [basis+midlat_heat+'l800u200', basis+polar_heat, basis+polar_heat+midlat_heat]
+                exp = [basis+midlat_heat+'l800u200', basis+polar_heat+'_s', basis+polar_heat+midlat_heat+'_s']
                 label = 'offpole'
            
             print(datetime.now(), " - opening files")
@@ -605,8 +605,8 @@ if __name__ == '__main__':
             plot_n2(indir, i, k)
 
     elif flux =='f':
-        exp = [exp[0], exp[1], exp[4], exp[-1]]
-        labels = [labels[0], labels[1], labels[4], labels[-1]]
+        exp = [exp[0], exp[1], exp[3], exp[-1]]
+        labels = [labels[0], labels[1], labels[3], labels[-1]]
 
         div_response = []
         ep1_response = []
@@ -622,8 +622,8 @@ if __name__ == '__main__':
                 print(datetime.now(), " - opening files")
                 utz, u, v, w, T = open_data(indir, exp[i])
                 uz.append(utz)
-                ds = xr.open_dataset('/disco/share/rm811/isca_data/' + exp[i] + '/run0100/atmos_daily_interp.nc')
-                heat.append(ds.local_heating.sel(lon=180, method='nearest').mean('time'))
+                #ds = xr.open_dataset('/disco/share/rm811/isca_data/' + exp[i] + '/run0100/atmos_daily_interp.nc')
+                #heat.append(ds.local_heating.sel(lon=180, method='nearest').mean('time'))
 
                 print(datetime.now(), " - finding EP flux")
                 div, ep1, ep2 = calc_ep(u, v, w, T, k)

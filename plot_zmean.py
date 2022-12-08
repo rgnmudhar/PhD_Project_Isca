@@ -24,8 +24,8 @@ def report_plot(exp, lvls, variable, unit, name):
         elif variable == 'Zonal Wind':
             Xtz = xr.open_dataset(indir+exp[i]+'_utz.nc', decode_times=False).ucomp[0]
         X.append(Xtz)
-        ds = xr.open_dataset('/disco/share/rm811/isca_data/' + exp[i] + '/run0100/atmos_daily_interp.nc')
-        heat.append(ds.local_heating.sel(lon=180, method='nearest').mean('time'))
+        #ds = xr.open_dataset('/disco/share/rm811/isca_data/' + exp[i] + '/run0100/atmos_daily_interp.nc')
+        #heat.append(ds.local_heating.sel(lon=180, method='nearest').mean('time'))
         if i == 0:
             ctrl = Xtz
         else:
@@ -73,9 +73,8 @@ def report_plot(exp, lvls, variable, unit, name):
     plt.savefig(name+'.pdf', bbox_inches = 'tight')
     return plt.close()
 
-def plot_combo(u, T, lvls, perturb, lat, p, exp_name):
+def plot_combo(u, T, lvls, perturb, lat, p, exp_name, vertical):
     # Plots time and zonal-mean Zonal Wind Speed and Temperature
-    vertical = input("Plot vs. a) log pressure or b) pseudo-altitude?")
     print(datetime.now(), " - plotting")
     fig, ax = plt.subplots(figsize=(6,6))
 
@@ -106,16 +105,15 @@ def plot_combo(u, T, lvls, perturb, lat, p, exp_name):
     cb.set_label(label='Temperature (K)', size='x-large')
     cb.ax.tick_params(labelsize='x-large')
     plt.xlabel(r'Latitude ($\degree$N)', fontsize='x-large')
-    plt.xlim(0,90)
-    plt.xticks([10, 30, 50, 70, 90], ['10', '30', '50', '70', '90'])    
+    plt.xlim(0, max(lat))
+    plt.xticks([0, 20, 40, 60, 80], ['0', '20', '40', '60', '80'])
     plt.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
     plt.savefig(exp_name+'_zonal.pdf', bbox_inches = 'tight')
 
     return plt.close()
 
-def plot_diff(vars, units, lvls, perturb, lat, p, exp_name):
+def plot_diff(vars, units, lvls, perturb, lat, p, exp_name, vertical):
     # Plots differences in time and zonal-mean of variables (vars)
-    vertical = input("Plot vs. a) log pressure or b) pseudo-altitude?")
     lvls_diff = np.arange(-20, 22.5, 2.5)
     for i in range(len(vars)):
         print(datetime.now(), " - taking differences")
@@ -149,8 +147,8 @@ def plot_diff(vars, units, lvls, perturb, lat, p, exp_name):
         cb.set_label(label='Difference ('+units[i]+')', size='x-large')
         cb.ax.tick_params(labelsize='x-large')        
         plt.xlabel(r'Latitude ($\degree$N)', fontsize='x-large')
-        plt.xlim(0,90)
-        plt.xticks([10, 30, 50, 70, 90], ['10', '30', '50', '70', '90'])        
+        plt.xlim(0, max(lat))
+        plt.xticks([0, 20, 40, 60, 80], ['0', '20', '40', '60', '80'])
         plt.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
         plt.savefig(exp_name+'_diff{:.0f}.pdf'.format(i), bbox_inches = 'tight')
         plt.close()
@@ -316,6 +314,7 @@ if __name__ == '__main__':
             report_plot(exp, u_lvls, 'Zonal Wind', r' (m s$^{-1}$)', basis+extension+'_u')
 
         else:
+            vertical = input("Plot vs. a) log pressure or b) pseudo-altitude?")
             for i in range(len(exp)):
                 print(datetime.now(), " - opening files ({0:.0f}/{1:.0f})".format(i+1, len(exp)))
                 uz = xr.open_dataset(indir+exp[i]+'_utz.nc', decode_times=False).ucomp[0]
@@ -334,12 +333,12 @@ if __name__ == '__main__':
                     ds = xr.open_dataset(file)
                     perturb = ds.local_heating.sel(lon=180, method='nearest').mean(dim='time')  
                     if plot_type =='a':
-                        plot_combo(uz, Tz, lvls, perturb, lat, p, exp[i])
+                        plot_combo(uz, Tz, lvls, perturb, lat, p, exp[i], vertical)
                     elif plot_type == 'b':
                             u = [uz, xr.open_dataset(indir+exp[0]+'_utz.nc', decode_times=False).ucomp[0]]
                             T = [Tz, xr.open_dataset(indir+exp[0]+'_Ttz.nc', decode_times=False).temp[0]]
                             plot_diff([T, u], ['K', r'ms$^{-1}$'], [np.arange(160, 330, 10), np.arange(-200, 210, 10)],\
-                                perturb, lat, p, exp[i])
+                                perturb, lat, p, exp[i], vertical)
    
     elif plot_type == 'c':
         basis = 'PK_e0v4z13'
@@ -350,9 +349,9 @@ if __name__ == '__main__':
             exp = [basis+midlat_heat, basis+polar_heat, basis+polar_heat+midlat_heat]
             label = 'polar'
         elif heat_type == 'b':
-            polar_heat = '_a11x75y180w5v45p800'
+            polar_heat = '_a4x75y0w5v30p800'
             midlat_heat = '_q6m2y45'
-            exp = [basis+midlat_heat+'l800u200', basis+polar_heat, basis+polar_heat+midlat_heat]
+            exp = [basis+midlat_heat+'l800u200', basis+polar_heat+'_s', basis+polar_heat+midlat_heat+'_s']
             label = 'offpole'
         lat_slice = input('Plot a) 60N, b) polar cap, or c) 45-75N average?')
         if lat_slice == 'a':
