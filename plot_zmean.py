@@ -17,7 +17,7 @@ def report_plot(exp, lvls, variable, unit, name):
     print(datetime.now(), " - opening files")
     X = []
     X_response = []
-    heat = []
+    #heat = []
     for i in range(len(exp)):
         if variable == 'Temperature':
             Xtz = xr.open_dataset(indir+exp[i]+'_Ttz.nc', decode_times=False).temp[0]
@@ -306,8 +306,8 @@ if __name__ == '__main__':
             plt.close()
         
         elif plot_type == 'f':
-            exp = [exp[0], exp[1], exp[4], exp[-1]]
-            labels = [labels[0], labels[1], labels[4], labels[-1]]
+            exp = [exp[0], exp[2], exp[3], exp[-1]]
+            labels = [labels[0], labels[2], labels[3], labels[-1]]
             T_lvls = [np.arange(160, 330, 10), np.arange(-10, 25, 2.5), np.arange(160, 340, 20)]
             u_lvls = [np.arange(-70, 100, 10), np.arange(-20, 17.5, 2.5), np.arange(-70, 100, 10)]
             report_plot(exp, T_lvls, 'Temperature', ' (K)', basis+extension+'_T')
@@ -349,7 +349,7 @@ if __name__ == '__main__':
             exp = [basis+midlat_heat, basis+polar_heat, basis+polar_heat+midlat_heat]
             label = 'polar'
         elif heat_type == 'b':
-            polar_heat = '_a4x75y0w5v30p800'
+            polar_heat = '_a4x75y270w5v30p800'
             midlat_heat = '_q6m2y45'
             exp = [basis+midlat_heat+'l800u200', basis+polar_heat+'_s', basis+polar_heat+midlat_heat+'_s']
             label = 'offpole'

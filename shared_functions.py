@@ -27,8 +27,8 @@ def return_exp(extension):
         basis+'_w15a4p500f800g50'+perturb,\
         basis+'_w15a4p400f800g50'+perturb,\
         basis+'_w15a4p300f800g50'+perturb]
-        labels = ['control', '900 hPa', '800 hPa', '700 hPa', '600 hPa', '500 hPa', '400 hPa', '300 hPa']
-        #labels = ['control', '900', '800', '700', '600', '500', '400', '300']
+        #labels = ['control', '900 hPa', '800 hPa', '700 hPa', '600 hPa', '500 hPa', '400 hPa', '300 hPa']
+        labels = ['control', '900', '800', '700', '600', '500', '400', '300']
         xlabel = 'Depth of Heating (hPa)'
     elif extension == '_width':
         exp = [basis+perturb,\
@@ -44,38 +44,25 @@ def return_exp(extension):
         labels = ['control', '10', '15', '20', '25', '30', '35', '40']
         xlabel = r'Extent of Heating ($\degree$)'
     elif extension == '_strength':
-        level = input("For depth a) 800, b) 600, or c) 400 hPa?")
-        if level == 'a':
-            exp = [basis+perturb,\
-            basis+'_w15a0p800f800g50'+perturb,\
-            basis+'_w15a2p800f800g50'+perturb,\
-            basis+'_w15a4p800f800g50'+perturb,\
-            basis+'_w15a6p800f800g50'+perturb,\
-            basis+'_w15a8p800f800g50'+perturb]
-            labels = ['control', r'0.5 K day$^{-1}$', r'2 K day$^{-1}$', r'4 K day$^{-1}$', r'6 K day$^{-1}$', r'8 K day$^{-1}$']
-        elif level == 'b':
-            exp = [basis+perturb,\
-            basis+'_w15a2p600f800g50'+perturb,\
-            basis+'_w15a4p600f800g50'+perturb,\
-            basis+'_w15a6p600f800g50'+perturb,\
-            basis+'_w15a8p600f800g50'+perturb]
-            labels = ['control', r'2 K day$^{-1}$', r'4 K day$^{-1}$', r'6 K day$^{-1}$', r'8 K day$^{-1}$']
-        elif level == 'c':
-            exp = [basis+perturb,\
-            basis+'_w15a2p400f800g50'+perturb,\
-            basis+'_w15a4p400f800g50'+perturb,\
-            basis+'_w15a6p400f800g50'+perturb,\
-            basis+'_w15a8p400f800g50'+perturb]
-            labels = ['control', r'2 K day$^{-1}$', r'4 K day$^{-1}$', r'6 K day$^{-1}$', r'8 K day$^{-1}$']
+        exp = [basis+perturb,\
+        basis+'_w15a0p600f800g50'+perturb,\
+        basis+'_w15a1p600f800g50'+perturb,\
+        basis+'_w15a2p600f800g50'+perturb,\
+        basis+'_w15a4p600f800g50'+perturb,\
+        basis+'_w15a8p600f800g50'+perturb]
+        labels = ['control', r'0.5 K day$^{-1}$', r'2 K day$^{-1}$', r'2 K day$^{-1}$', r'4 K day$^{-1}$', r'8 K day$^{-1}$']
+        labels = ['control', '0.5', '1', '2', '4', '8']
         xlabel = r'Strength of Heating (K day$^{-1}$)'
     elif extension == '_loc':   
-        perturb = '_q6m2y45'
-        exp = [basis,\
-            basis+'_a4x75y0w5v30p800_s',\
-            basis+'_a4x75y90w5v30p800_s',\
-            basis+'_a4x75y180w5v30p800_s',\
-            basis+'_a4x75y270w5v30p800_s']
-        labels = ['control', r'$\lambda=0\degree$E', r'$\lambda=90\degree$E', r'$\lambda=180\degree$E', r'$\lambda=270\degree$E',]
+        perturb = '_q6m2y45_s'
+        exp = [basis+'_q6m2y45l800u200',\
+            basis+'_a4x75y0w5v30p800'+perturb,\
+            basis+'_a4x75y90w5v30p800'+perturb,\
+            basis+'_a4x75y180w5v30p800'+perturb,\
+            basis+'_a4x75y270w5v30p800'+perturb]
+        #labels = ['control', r'$\lambda=0\degree$E', r'$\lambda=90\degree$E', r'$\lambda=180\degree$E', r'$\lambda=270\degree$E']
+        labels = ['control', '0', '90', '180', '270']
+        #labels = ['control', r'$0\degree$E', r'$90\degree$E', r'$180\degree$E', r'$270\degree$E']
         xlabel = r'Longitude of heating ($\degree$E)'
     elif extension == '_topo':
         topo = '_h4000m2l25u65'
@@ -86,13 +73,6 @@ def return_exp(extension):
         basis+'_w15a4p300f800g50'+topo]
         labels = ['control', '900 hPa', '800 hPa', '600 hPa', '300 hPa']
         xlabel = 'Depth of Heating (hPa)'
-    elif extension == '_poster':
-        exp = [basis+perturb,\
-            basis+'_w15a0p800f800g50'+perturb,\
-            basis+'_w15a4p900f800g50'+perturb,\
-            basis+'_w10a4p800f800g50'+perturb]
-        labels = ['control', 'weak', 'shallow', 'narrow']
-        xlabel = ''
     elif extension == '_test':
         exp = ['PK_e0v3z13_q4m2y45l800u200',\
             'PK_e0v4z13_h3000m2l25u65']
