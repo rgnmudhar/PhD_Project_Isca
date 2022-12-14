@@ -1,4 +1,3 @@
-from re import U
 from nco import Nco
 from glob import glob
 import xarray as xr
@@ -207,7 +206,7 @@ if __name__ == '__main__':
 
     func = input('Do you want to a) postprocess, b) remove uninterpolated files, c) find TKE, d) back-calculate w, e) retrospectively extract variables, or f) delete spin-up data?')
 
-    exp = ['PK_e0v3z13_q4m2y45l800u200', 'PK_e0v4z13_h3000m2l25u65'] 
+    exp = ['PK_e0v4z13_a4x75y90w5v30p800_q6m2y45_s', 'PK_e0v4z13_a4x75y180w5v30p800_q6m2y45_s', 'PK_e0v4z13_a4x75y270w5v30p800_q6m2y45_s'] 
 
     if func == 'b':
         remove_uninterp(exp)    
