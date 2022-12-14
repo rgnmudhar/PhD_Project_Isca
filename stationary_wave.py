@@ -107,7 +107,7 @@ if __name__ == '__main__':
     indir = '/disco/share/rm811/processed/'
     basis = 'PK_e0v4z13'
     perturb = '_q6m2y45'
-    off_pole = '_a4x75y180w5v30p800'
+    off_pole = '_a4x75y270w5v30p800'
     polar = '_w15a4p800f800g50'
     var_type = input("Plot a) depth, b) width, c) location, d) strength or e) topography experiments, or f) test?")
     if var_type == 'a':
@@ -123,7 +123,7 @@ if __name__ == '__main__':
     elif var_type == 'f':
         extension = '_test'
     exp, labels, xlabel = return_exp(extension)
-    plot_type = input('Plot a) gph lat-p or b) gph @ 60N and PDFs @ 10 & 100 hPa? ')
+    plot_type = input('Plot a) gph lat-p, b) gph @ 60N and PDFs @ 10 & 100 hPa, or c) linear add? ')
     k = int(input('Which wave no.? (i.e. 0 for all, 1, 2, etc.) '))
 
     colors = ['k', '#B30000', '#FF9900', '#FFCC00', '#00B300', '#0099CC', '#4D0099', '#CC0080']
@@ -185,6 +185,52 @@ if __name__ == '__main__':
         print(datetime.now(), ' - plotting PDFs')
         plot_pdf('gph', indir, exp, '', mags10, 10, 0, labels, 'zonal-mean 10 hPa '+lab+' wave-{0:.0f} absolute magnitude'.format(k), blues, exp[0]+extension+'_wavemag_k{0:.0f}.pdf'.format(k))
         plot_pdf('gph', indir, exp, '', mags100, 100, 0, labels, 'zonal-mean 100 hPa '+lab+' wave-{0:.0f} absolute magnitude'.format(k), blues, exp[0]+extension+'_wavemag_k{0:.0f}.pdf'.format(k))
+    
+    elif plot_type == 'c':
+        exp = [basis+off_pole+'_s', basis+perturb+'l800u200', basis+off_pole+perturb+'_s']
+        p = [500]
+        for j in range(len(p)):
+            print(datetime.now(), " - p = {0:.0f} hPa".format(p[j]))
+            anomalies = []
+            for i in range(len(exp)):
+                gph_t = xr.open_dataset(indir+exp[i]+'_ht.nc', decode_times=False).height.sel(pfull=p[j], method='nearest')
+                gph_tz = xr.open_dataset(indir+exp[i]+'_htz.nc', decode_times=False).height.sel(pfull=p[j], method='nearest')
+                anomalies.append(anomaly(gph_t, gph_tz)[0])
+            print(datetime.now(), " - addition")
+            anom_add = anomalies[0] + anomalies[1]
+            print(datetime.now(), " - combo")
+            anom_combo = anomalies[2]
+            print(datetime.now(), " - difference")
+            anom_diff = anom_combo - anom_add
+            ds, heat1 = find_heat(exp[0], 1000, type='exp')
+            ds, heat2 = find_heat(exp[1], 500, type='exp')
+            #anom_diff = anomalies[0] - anomalies[1]
+            plotting = [anomalies[0], anomalies[1], anom_add, anomalies[2], anom_diff]
+            names = [exp[0], exp[1], exp[0]+'+ctrl', exp[2], 'combo-'+exp[0]+'+ctrl']
+            lvls_full = [np.arange(-120, 130, 10), np.arange(-200, 220, 20), np.arange(-250, 270, 20)]
+            lvls_diff = [np.arange(-55, 60, 5), np.arange(-60, 70, 10), np.arange(-150, 170, 20)]
+            lvls_polar = [np.arange(-50, 55, 5), np.arange(-16, 18, 2), np.arange(-30, 35, 5)] #np.arange(-7, 8, 1)
+            lvls = [lvls_polar[j], lvls_full[j], lvls_full[j], lvls_full[j], lvls_diff[j]]
+
+            for k in range(len(plotting)):
+                print(datetime.now(), " - plotting ", names[k])
+                ax = plt.axes(projection=ccrs.NorthPolarStereo())
+                cs = ax.contourf(ds.coords['lon'].data, ds.coords['lat'].data, plotting[k],\
+                cmap='RdBu_r', levels=lvls[k], transform = ccrs.PlateCarree())
+                cb = plt.colorbar(cs, pad=0.1)
+                cb.set_label(label='Geopotential Height Anomaly (m)', size='x-large')
+                cb.ax.tick_params(labelsize='x-large')
+                ln_ctrl = ax.contour(ds.coords['lon'].data, ds.coords['lat'].data, heat1,\
+                    levels=11, colors='g', linewidths=0.5, alpha=0.4, transform = ccrs.PlateCarree())
+                if k in range(1,5):
+                    ln_exp = ax.contour(ds.coords['lon'].data, ds.coords['lat'].data, heat2,\
+                        levels=11, colors='g', linewidths=0.5, alpha=0.4, transform = ccrs.PlateCarree())
+                ax.set_global()
+                ax.gridlines(draw_labels=True, dms=True, x_inline=False, y_inline=False)
+                ax.set_extent([-180, 180, 0, 90], crs=ccrs.PlateCarree())
+                #ax.gridlines(draw_labels=True, dms=True, x_inline=False, y_inline=False)
+                plt.savefig(names[k]+'_'+str(p[j])+'gph.pdf', bbox_inches = 'tight')
+                plt.close()
 
 """
     lons = [0, 90, 180, 270]
@@ -229,48 +275,4 @@ if __name__ == '__main__':
                 gph_tz = xr.open_dataset(indir+exp[i]+'_htz.nc', decode_times=False).height
                 #a = anomaly(gph_t, gph_tz).mean(dim='time').mean(dim='lon')
                 plot_v(gph_tz[0], 21, heat, exp[i]+'_gph_v.pdf', 'GPH (m)')
-
-exp = [basis+off_pole, basis+'_q6m2y45l800u200', basis+off_pole+perturb]
-for j in range(len(p)):
-    print(datetime.now(), " - p = {0:.0f} hPa".format(p[j]))
-    anomalies = []
-    for i in range(len(exp)):
-        gph_t = xr.open_dataset(indir+exp[i]+'_ht.nc', decode_times=False).height.sel(pfull=p[j], method='nearest')
-        gph_tz = xr.open_dataset(indir+exp[i]+'_htz.nc', decode_times=False).height.sel(pfull=p[j], method='nearest')
-        anomalies.append(anomaly(gph_t, gph_tz)[0])
-    print(datetime.now(), " - addition")
-    anom_add = anomalies[0] + anomalies[1]
-    print(datetime.now(), " - combo")
-    anom_combo = anomalies[2]
-    print(datetime.now(), " - difference")
-    anom_diff = anom_combo - anom_add
-    ds, heat1 = find_heat(exp[0], 1000, type='polar')
-    ds, heat2 = find_heat(exp[1], 500, type='exp')
-    #anom_diff = anomalies[0] - anomalies[1]
-    plotting = [anomalies[0], anomalies[1], anom_add, anomalies[2], anom_diff]
-    names = [exp[0], exp[1], exp[0]+'+ctrl', exp[2], 'combo-'+exp[0]+'+ctrl']
-    lvls_full = [np.arange(-120, 130, 10), np.arange(-200, 220, 20), np.arange(-250, 270, 20)]
-    lvls_diff = [np.arange(-25, 27, 2), np.arange(-60, 70, 10), np.arange(-150, 170, 20)]
-    lvls_polar = [np.arange(-10, 11, 1), np.arange(-16, 18, 2), np.arange(-30, 35, 5)] #np.arange(-7, 8, 1)
-    lvls = [lvls_polar[j], lvls_full[j], lvls_full[j], lvls_full[j], lvls_diff[j]]
-
-    for k in range(len(plotting)):
-        print(datetime.now(), " - plotting ", names[k])
-        ax = plt.axes(projection=ccrs.NorthPolarStereo())
-        cs = ax.contourf(ds.coords['lon'].data, ds.coords['lat'].data, plotting[k],\
-        cmap='RdBu_r', levels=lvls[k], transform = ccrs.PlateCarree())
-        cb = plt.colorbar(cs, pad=0.1)
-        cb.set_label(label='Geopotential Height Anomaly (m)', size='x-large')
-        cb.ax.tick_params(labelsize='x-large')
-        ln_ctrl = ax.contour(ds.coords['lon'].data, ds.coords['lat'].data, heat1,\
-            levels=11, colors='g', linewidths=0.5, alpha=0.4, transform = ccrs.PlateCarree())
-        if k in range(1,5):
-            ln_exp = ax.contour(ds.coords['lon'].data, ds.coords['lat'].data, heat2,\
-                levels=11, colors='g', linewidths=0.5, alpha=0.4, transform = ccrs.PlateCarree())
-        ax.set_global()
-        ax.gridlines(draw_labels=True, dms=True, x_inline=False, y_inline=False)
-        ax.set_extent([-180, 180, 0, 90], crs=ccrs.PlateCarree())
-        #ax.gridlines(draw_labels=True, dms=True, x_inline=False, y_inline=False)
-        plt.savefig(names[k]+'_'+str(p[j])+'gph.pdf', bbox_inches = 'tight')
-        plt.close()
 """
