@@ -150,8 +150,8 @@ def plot_ep(uz, div, ep1, ep2, k, exp_name, heat, type):
     fig, ax = plt.subplots(figsize=(6,6), constrained_layout=True)
     print(datetime.now(), " - plot uz")
     uz.plot.contour(colors='k', linewidths=0.5, alpha=0.4, levels=ulvls)
-    print(datetime.now(), " - plot polar heat")
-    plt.contour(lat, p, heat, colors='g', linewidths=0.25, alpha=0.4, levels=11)
+    #print(datetime.now(), " - plot polar heat")
+    #plt.contour(lat, p, heat, colors='g', linewidths=0.25, alpha=0.4, levels=11)
     print(datetime.now(), " - plot EP flux divergence")
     cs = div.plot.contourf(levels=divlvls, cmap='RdBu_r', add_colorbar=False)
     cb = plt.colorbar(cs)
@@ -417,7 +417,7 @@ def report_plot_EP(u, div_ctrl, ep1_ctrl, ep2_ctrl, div_response, ep1_response, 
 
     print(datetime.now(), " - plotting control")
     fig, axes = plt.subplots(1, 4, figsize=(20,7))
-    csa_ctrl = axes[0].contourf(lat, p, div_ctrl, levels=lvls[0], cmap='RdBu_r')
+    csa_ctrl = axes[0].contourf(lat, p, div_ctrl, levels=lvls[0], cmap='RdBu_r', extend='both')
     cb_ctrl  = fig.colorbar(csa_ctrl, ax=axes[0], orientation='horizontal', extend='both', pad=0.15)
     cb_ctrl.set_label(label=r'Divergence (m s$^{-1}$ day$^{-1}$)', size='xx-large')
     cb_ctrl.ax.tick_params(labelsize='x-large')
@@ -430,7 +430,7 @@ def report_plot_EP(u, div_ctrl, ep1_ctrl, ep2_ctrl, div_response, ep1_response, 
     print(datetime.now(), " - plotting responses")
     for i in range(len(axes)):
         if i > 0:
-            csa = axes[i].contourf(lat, p, div_response[i-1], levels=lvls[1], cmap='RdBu_r')
+            csa = axes[i].contourf(lat, p, div_response[i-1], levels=lvls[1], cmap='RdBu_r', extend='both')
             csb = axes[i].contour(lat, p, u[i], colors='k', levels=ulvls, linewidths=1.5, alpha=0.25)
             csb.collections[list(ulvls).index(0)].set_linewidth(3)
             #axes[i].contour(lat, p, heat[i], colors='g', linewidths=1.5, alpha=0.25, levels=11)
@@ -605,8 +605,8 @@ if __name__ == '__main__':
             plot_n2(indir, i, k)
 
     elif flux =='f':
-        exp = [exp[0], exp[2], exp[3], exp[-1]]
-        labels = [labels[0], labels[2], labels[3], labels[-1]]
+        exp = [exp[0], exp[1], exp[3], exp[-1]]
+        labels = [labels[0], labels[1], labels[3], labels[-1]]
 
         div_response = []
         ep1_response = []
