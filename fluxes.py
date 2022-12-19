@@ -411,7 +411,7 @@ def report_plot_n2(exp, k, name):
 
 def report_plot_EP(u, div_ctrl, ep1_ctrl, ep2_ctrl, div_response, ep1_response, ep2_response, name):
     # Plots control, then 3 experiments of your choice
-    lvls = [np.arange(-12,13,1), np.arange(-6,6.5,0.5)]
+    lvls = [np.arange(-12,13,1), np.arange(-6,7,1)]
     p = u[0].pfull
     lat = u[0].lat
 
@@ -435,7 +435,7 @@ def report_plot_EP(u, div_ctrl, ep1_ctrl, ep2_ctrl, div_response, ep1_response, 
             csb.collections[list(ulvls).index(0)].set_linewidth(3)
             #axes[i].contour(lat, p, heat[i], colors='g', linewidths=1.5, alpha=0.25, levels=11)
 
-    cb  = fig.colorbar(csa, ax=axes[1:], ticks=np.arange(-8, 10, 2), shrink=0.3, orientation='horizontal', extend='both', pad=0.15)
+    cb  = fig.colorbar(csa, ax=axes[1:], shrink=0.3, orientation='horizontal', extend='both', pad=0.15)
     cb.set_label(label=r'Response (m s$^{-1}$ day$^{-1}$)', size='xx-large')
     cb.ax.tick_params(labelsize='x-large')
 
@@ -605,8 +605,8 @@ if __name__ == '__main__':
             plot_n2(indir, i, k)
 
     elif flux =='f':
-        exp = [exp[0], exp[1], exp[3], exp[-1]]
-        labels = [labels[0], labels[1], labels[3], labels[-1]]
+        exp = [exp[0], exp[3], exp[4], exp[-1]]
+        labels = [labels[0], labels[3], labels[4], labels[-1]]
 
         div_response = []
         ep1_response = []
