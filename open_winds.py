@@ -174,6 +174,6 @@ if __name__ == '__main__':
         #Ro.append(calc_Ro(indir, exp[i], p))
     #print(Ro)
 
-    #find_SPV(indir, outdir, exp)
+    find_SPV(indir, outdir, exp)
     p = 10 #850
     winds_errs(indir, outdir, exp, p, basis+extension)

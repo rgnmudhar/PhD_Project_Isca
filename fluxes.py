@@ -577,10 +577,10 @@ if __name__ == '__main__':
                 exp = [basis+midlat_heat, basis+polar_heat, basis+polar_heat+midlat_heat]
                 label = 'polar'
             elif heat_type == 'b':
-                polar_heat = '_a4x75y270w5v30p800'
+                polar_heat = '_a4x75y225w5v30p600'
                 midlat_heat = '_q6m2y45'
                 exp = [basis+midlat_heat+'l800u200', basis+polar_heat+'_s', basis+polar_heat+midlat_heat+'_s']
-                label = 'offpole'
+                label = 'offpole225'
            
             print(datetime.now(), " - opening files")
             vT_exp = []
@@ -605,8 +605,8 @@ if __name__ == '__main__':
             plot_n2(indir, i, k)
 
     elif flux =='f':
-        exp = [exp[0], exp[3], exp[4], exp[-1]]
-        labels = [labels[0], labels[3], labels[4], labels[-1]]
+        exp = [exp[0], exp[2], exp[3], exp[-1]]
+        labels = [labels[0], labels[2], labels[3], labels[-1]]
 
         div_response = []
         ep1_response = []

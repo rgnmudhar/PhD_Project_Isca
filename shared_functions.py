@@ -44,25 +44,26 @@ def return_exp(extension):
         labels = ['control', '10', '15', '20', '25', '30', '35', '40']
         xlabel = r'Extent of Heating ($\degree$)'
     elif extension == '_strength':
-        exp = [basis+perturb,\
+        perturb = '_q6m2y45'
+        exp = [basis+perturb+'l800u200',\
         basis+'_w15a0p600f800g50'+perturb,\
         basis+'_w15a1p600f800g50'+perturb,\
         basis+'_w15a2p600f800g50'+perturb,\
-        basis+'_w15a4p600f800g50'+perturb,\
+        basis+'_w15a4p600f800g50'+perturb+'l800u200',\
         basis+'_w15a8p600f800g50'+perturb]
-        labels = ['control', r'0.5 K day$^{-1}$', r'2 K day$^{-1}$', r'2 K day$^{-1}$', r'4 K day$^{-1}$', r'8 K day$^{-1}$']
+        #labels = ['control', r'0.5 K day$^{-1}$', r'1 K day$^{-1}$', r'2 K day$^{-1}$', r'4 K day$^{-1}$', r'8 K day$^{-1}$']
         labels = ['control', '0.5', '1', '2', '4', '8']
         xlabel = r'Strength of Heating (K day$^{-1}$)'
     elif extension == '_loc':   
         perturb = '_q6m2y45_s'
         exp = [basis+'_q6m2y45l800u200',\
-            basis+'_a4x75y0w5v30p800'+perturb,\
-            basis+'_a4x75y90w5v30p800'+perturb,\
-            basis+'_a4x75y180w5v30p800'+perturb,\
-            basis+'_a4x75y270w5v30p800'+perturb]
-        #labels = ['control', r'$\lambda=0\degree$E', r'$\lambda=90\degree$E', r'$\lambda=180\degree$E', r'$\lambda=270\degree$E']
-        labels = ['control', '0', '90', '180', '270']
-        #labels = ['control', r'$0\degree$E', r'$90\degree$E', r'$180\degree$E', r'$270\degree$E']
+            basis+'_a4x75y90w5v30p600'+perturb,\
+            basis+'_a4x75y135w5v30p600'+perturb,\
+            basis+'_a4x75y180w5v30p600'+perturb,\
+            basis+'_a4x75y225w5v30p600'+perturb]
+        #labels = ['control', r'$\lambda=90\degree$E', r'$\lambda=135\degree$E', r'$\lambda=180\degree$E', r'$\lambda=225\degree$E']
+        #labels = ['control', '90', '135', '180', '225']
+        labels = ['control', r'$90\degree$E', r'$135\degree$E', r'$180\degree$E', r'$225\degree$E']
         xlabel = r'Longitude of heating ($\degree$E)'
     elif extension == '_topo':
         topo = '_h4000m2l25u65'

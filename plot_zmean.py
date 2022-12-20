@@ -349,10 +349,10 @@ if __name__ == '__main__':
             exp = [basis+midlat_heat, basis+polar_heat, basis+polar_heat+midlat_heat]
             label = 'polar'
         elif heat_type == 'b':
-            polar_heat = '_a4x75y270w5v30p800'
+            polar_heat = '_a4x75y90w5v30p600'
             midlat_heat = '_q6m2y45'
             exp = [basis+midlat_heat+'l800u200', basis+polar_heat+'_s', basis+polar_heat+midlat_heat+'_s']
-            label = 'offpole'
+            label = 'offpole90'
         lat_slice = input('Plot a) 60N, b) polar cap, or c) 45-75N average?')
         if lat_slice == 'a':
             lats = 60
