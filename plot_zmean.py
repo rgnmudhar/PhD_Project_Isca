@@ -306,8 +306,8 @@ if __name__ == '__main__':
             plt.close()
         
         elif plot_type == 'f':
-            exp = [exp[0], exp[2], exp[3], exp[-1]]
-            labels = [labels[0], labels[2], labels[3], labels[-1]]
+            exp = [exp[0], exp[1], exp[3], exp[-1]]
+            labels = [labels[0], labels[1], labels[3], labels[-1]]
             T_lvls = [np.arange(160, 330, 10), np.arange(-10, 25, 2.5), np.arange(160, 340, 20)]
             u_lvls = [np.arange(-70, 100, 10), np.arange(-20, 17.5, 2.5), np.arange(-70, 100, 10)]
             report_plot(exp, T_lvls, 'Temperature', ' (K)', basis+extension+'_T')

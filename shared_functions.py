@@ -31,17 +31,15 @@ def return_exp(extension):
         labels = ['control', '900', '800', '700', '600', '500', '400', '300']
         xlabel = 'Depth of Heating (hPa)'
     elif extension == '_width':
-        exp = [basis+perturb,\
-        basis+'_w10a4p800f800g50'+perturb,\
-        basis+'_w15a4p800f800g50'+perturb,\
-        basis+'_w20a4p800f800g50'+perturb,\
-        basis+'_w25a4p800f800g50'+perturb,\
-        basis+'_w30a4p800f800g50'+perturb,\
-        #basis+'_w35a4p800f800g50'+perturb,\
-        basis+'_w35a4p800f800g50'+perturb+'_SCALED',\
-        basis+'_w40a4p800f800g50'+perturb]
-        #labels = ['control', r'10$\degree$', r'15$\degree$', r'20$\degree$', r'25$\degree$', r'30$\degree$', r'35$\degree$', r'40$\degree$']
-        labels = ['control', '10', '15', '20', '25', '30', '35', '40']
+        perturb = '_q6m2y45_s'
+        exp = [basis+'_q6m2y45l800u200',\
+        basis+'_w15a4p600f800g50'+'_q6m2y45l800u200',\
+        basis+'_w20a4p600f800g50'+perturb,\
+        basis+'_w25a4p600f800g50'+perturb,\
+        basis+'_w30a4p600f800g50'+perturb,\
+        basis+'_w35a4p600f800g50'+perturb]
+        labels = ['control', r'15$\degree$', r'20$\degree$', r'25$\degree$', r'30$\degree$', r'35$\degree$']
+        #labels = ['control', '15', '20', '25', '30', '35']
         xlabel = r'Extent of Heating ($\degree$)'
     elif extension == '_strength':
         perturb = '_q6m2y45'

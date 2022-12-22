@@ -243,14 +243,14 @@ def report_plot(exp, x, xlabel, name):
     ax.set_ylim(0.1, 0.52)
     ax.set_ylabel('SSW Frequency (per 100 days)', fontsize='xx-large', color='#B30000')
     ax.axhline(obs, color='#0c56a0', linewidth=1.5, linestyle='--')
-    ax.text(len(exp)-2.5, obs+0.01, 'observations', color='#0c56a0', fontsize='xx-large')
+    ax.text(len(exp)-2.6, obs+0.01, 'observations', color='#0c56a0', fontsize='xx-large')
     ax.axhline(og, color='#666666', linewidth=1.5, linestyle='--')
     ax.fill_between(range(-1,8), (og - og_err), (og + og_err), facecolor ='gainsboro', alpha = 0.4)
     ax.text(len(exp)-2.1, og+0.01, 'control', color='#666666', fontsize='xx-large')
     ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
     ax2 = ax.twinx()
     ax2.plot(labels[1:], sd[1:], marker='o', linewidth=1.5, color='#4D0099', linestyle='-', label='S.D.')
-    ax2.set_ylim(13, 17) #int(min(sd))-1, int(max(sd[1:]))+1)
+    ax2.set_ylim(int(min(sd))-1, int(max(sd[1:]))+1)
     ax2.set_ylabel(r'U$_{10,60}$ S.D. (m s$^{-1}$)', color='#4D0099', fontsize='xx-large')
     ax2.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
     plt.savefig(name+'_SSWs+sd.pdf', bbox_inches = 'tight')
@@ -325,8 +325,8 @@ if __name__ == '__main__':
         #User choice for plotting - type
         plot_type = input('Plot a) SPV over time, b) 10 hPa max. wind/lats, c) SSW frequencies, d) lat-p s.d., or e) paper plot?')
         if plot_type == 'a':
-            exp = [exp[2], exp[-1]]
-            labels = [labels[2], labels[-1]]
+            exp = [exp[1], exp[-1]]
+            labels = [labels[1], labels[-1]]
             colors = ['#88bedc', '#0c56a0']
             style = ['-', '-']
             cols = 2

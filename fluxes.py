@@ -605,8 +605,8 @@ if __name__ == '__main__':
             plot_n2(indir, i, k)
 
     elif flux =='f':
-        exp = [exp[0], exp[2], exp[3], exp[-1]]
-        labels = [labels[0], labels[2], labels[3], labels[-1]]
+        exp = [exp[0], exp[1], exp[3], exp[-1]]
+        labels = [labels[0], labels[1], labels[3], labels[-1]]
 
         div_response = []
         ep1_response = []
