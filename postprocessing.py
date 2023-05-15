@@ -102,7 +102,7 @@ def find_TKE(indir, outdir):
         plt.close()
 
 def remove_uninterp(exp):
-    print(datetime.now(), ' - interpolation processing')
+    print(datetime.now(), ' - interpolation processing already done')
     #os.chdir(indir + exp)
     #runs = sorted(glob('run*'))
     #n = len(runs) - 1
@@ -128,6 +128,26 @@ def delete_spinup(indir):
     folders = glob('*/spin*', recursive=True)
     for f in folders:
         print(datetime.now(), ' - ', f)
+        try:
+            shutil.rmtree(f)
+        except OSError as e:
+            print(e.strerror, ':', f)
+
+def delete_data(indir):
+    print(datetime.now(), ' - remove surplus data')
+    print(datetime.now(), ' - rename run0025 folders')
+    os.chdir(indir)
+    folders = glob('*', recursive=True)
+    folder_keep = 'run0025'
+    for f in folders: # rename run0025 folder
+        print(datetime.now(), ' - '+f)
+        os.chdir(indir+f)
+        os.rename(folder_keep, 'keep_'+folder_keep)
+
+    print(datetime.now(), ' - remove everything but restarts and run0025 folders')
+    os.chdir(indir)
+    folders = glob('*/run*', recursive=True)
+    for f in folders: # delete all folders starting with 'run'
         try:
             shutil.rmtree(f)
         except OSError as e:
@@ -174,7 +194,7 @@ def postprocess(exp):
     nco.ncwa(input = exp+'_ut.nc', output = exp+'_utz.nc', options = ['-a lon'])
     nco.ncwa(input = exp+'_vt.nc', output = exp+'_vtz.nc', options = ['-a lon'])
     nco.ncwa(input = exp+'_Tt.nc', output = exp+'_Ttz.nc', options = ['-a lon'])
-
+    
     # zonal means
     # NOTE THAT THE FOLLOWING ONLY SEEMS TO WORK ON GV3 OR GV4?
     print(datetime.now(), ' - zonal means')
@@ -194,7 +214,22 @@ def postprocess(exp):
         try:
             os.rename(f, outdir+f)
         except OSError as e:
+            print(e.strerror, ':', f)   
+
+    # in original folder remove everything but restarts and run0025 folders
+    print(datetime.now(), ' - remove surplus data')
+    print(datetime.now(), ' - rename run0025 folder')
+    folder_keep = 'run0025'
+    os.rename(folder_keep, 'keep_'+folder_keep)
+
+    print(datetime.now(), ' - remove everything but restarts and run0025 folders')
+    folders = glob('run*', recursive=True)
+    for f in folders: # delete all folders starting with 'run'
+        try:
+            shutil.rmtree(f)
+        except OSError as e:
             print(e.strerror, ':', f)
+
 
 if __name__ == '__main__': 
     indir = '/disco/share/rm811/isca_data/'
@@ -206,8 +241,8 @@ if __name__ == '__main__':
 
     func = input('Do you want to a) postprocess, b) remove uninterpolated files, c) find TKE, d) back-calculate w, e) retrospectively extract variables, or f) delete spin-up data?')
 
-    exp = ['PK_e0v4z13_a4x75y90w5v30p800_q6m2y45_s', 'PK_e0v4z13_a4x75y180w5v30p800_q6m2y45_s', 'PK_e0v4z13_a4x75y270w5v30p800_q6m2y45_s'] 
-
+    exp = ['PK_e0v5z13_w15a4p600f800g50_q6m2y45l800u200']
+    
     if func == 'b':
         remove_uninterp(exp)    
     elif func == 'c':
