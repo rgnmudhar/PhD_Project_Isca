@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 import os
 import sys
 import shutil
-from shared_functions import *
 from datetime import datetime
+from shared_functions import *
 
 def retrospective_calcs(indir, outdir):
     os.chdir(indir)
@@ -101,7 +101,7 @@ def find_TKE(indir, outdir):
         plt.savefig(outdir+exp[i]+'_spinup.pdf', bbox_inches = 'tight')
         plt.close()
 
-def remove_uninterp(exp):
+def remove_uninterp(indir, exp):
     print(datetime.now(), ' - interpolation processing already done')
     #os.chdir(indir + exp)
     #runs = sorted(glob('run*'))
@@ -133,25 +133,24 @@ def delete_spinup(indir):
         except OSError as e:
             print(e.strerror, ':', f)
 
-def delete_data(indir):
+def delete_data(indir, exp):
     print(datetime.now(), ' - remove surplus data')
-    print(datetime.now(), ' - rename run0025 folders')
     os.chdir(indir)
-    folders = glob('*', recursive=True)
     folder_keep = 'run0025'
-    for f in folders: # rename run0025 folder
-        print(datetime.now(), ' - '+f)
-        os.chdir(indir+f)
+    for e in exp:
+        # find folders
+        os.chdir(indir + e)
         os.rename(folder_keep, 'keep_'+folder_keep)
-
-    print(datetime.now(), ' - remove everything but restarts and run0025 folders')
-    os.chdir(indir)
-    folders = glob('*/run*', recursive=True)
-    for f in folders: # delete all folders starting with 'run'
-        try:
-            shutil.rmtree(f)
-        except OSError as e:
-            print(e.strerror, ':', f)
+        folders = glob('run*', recursive=True)
+        print(datetime.now(), ' - remove everything but restarts and run0025 folders')
+        for f in folders:
+            try:
+                shutil.rmtree(f)
+            except OSError as err:
+                print(err.strerror, ':', f)
+        os.chdir(indir + e)
+        os.rename('keep_'+folder_keep, folder_keep)
+    
 
 def postprocess(exp):
     print(datetime.now(), ' - ', exp)
@@ -218,18 +217,20 @@ def postprocess(exp):
             print(e.strerror, ':', f)   
 
     # in original folder remove everything but restarts and run0025 folders
-    #print(datetime.now(), ' - remove surplus data')
-    #print(datetime.now(), ' - rename run0025 folder')
-    #folder_keep = 'run0025'
-    #os.rename(folder_keep, 'keep_'+folder_keep)
+    print(datetime.now(), ' - remove surplus data')
+    print(datetime.now(), ' - rename run0025 folder')
+    folder_keep = 'run0025'
+    os.rename(folder_keep, 'keep_'+folder_keep)
 
-    #print(datetime.now(), ' - remove everything but restarts and run0025 folders')
-    #folders = glob('run*', recursive=True)
-    #for f in folders: # delete all folders starting with 'run'
-    #    try:
-    #        shutil.rmtree(f)
-    #    except OSError as e:
-    #        print(e.strerror, ':', f)
+    print(datetime.now(), ' - remove everything but restarts and run0025 folders')
+    folders = glob('run*', recursive=True)
+    for f in folders: # delete all folders starting with 'run'
+        try:
+            shutil.rmtree(f)
+        except OSError as e:
+            print(e.strerror, ':', f)
+    print(datetime.now(), ' - rename run0025 folder')
+    os.rename('keep_'+folder_keep, folder_keep)
 
 
 if __name__ == '__main__': 
@@ -242,10 +243,10 @@ if __name__ == '__main__':
 
     func = input('Do you want to a) postprocess, b) remove uninterpolated files, c) find TKE, d) back-calculate w, e) retrospectively extract variables, or f) delete spin-up data?')
 
-    exp = ['PK_e0v2z13_w15a4p600f800g50_q6m2y45l800u200', 'PK_e0v5z13_w15a4p600f800g50_q6m2y45l800u200', 'PK_e0v3z13_w15a4p600f800g50_q6m2y45l800u200']
+    exp = ['PK_e0v2z13_w15a4p600f800g50_q6m2y45l800u200', 'PK_e0v3z13_w15a4p600f800g50_q6m2y45l800u200', 'PK_e0v5z13_w15a4p600f800g50_q6m2y45l800u200']
     
     if func == 'b':
-        remove_uninterp(exp)    
+        remove_uninterp(indir, exp)    
     elif func == 'c':
         find_TKE(indir, analysisdir)  
     elif func == 'e':

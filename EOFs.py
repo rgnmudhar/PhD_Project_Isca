@@ -210,7 +210,7 @@ if __name__ == '__main__':
     #Set-up data to be read in
     indir = '/disco/share/rm811/processed/'
     basis = 'PK_e0v4z13'
-    var_type = input("Plot a) depth, b) width, c) location, d) strength, e) topography experiments or f) test?")
+    var_type = input("Plot a) depth, b) width, c) location, d) strength, e) vortex experiments or f) test?")
     if var_type == 'a':
         extension = '_depth'
     elif var_type == 'b':
@@ -220,7 +220,8 @@ if __name__ == '__main__':
     elif var_type == 'd':
         extension = '_strength'
     elif var_type == 'e':
-        extension = '_topo'
+        basis = 'PK_e0vXz13'
+        extension = '_vtx'
     elif var_type == 'f':
         extension = '_test'
     exp = return_exp(extension)[0]

@@ -240,13 +240,14 @@ def report_plot(exp, x, xlabel, name):
     ax.set_xlim(-0.5,len(exp)-1.5)
     ax.set_xticks(x[1:])
     ax.set_xlabel(xlabel, fontsize='xx-large')
-    ax.set_ylim(0.1, 0.52)
+    #ax.set_ylim(0.1, 0.52)
+    ax.set_ylim(min(min(SSWs)-0.05,0), max(SSWs)+0.2)
     ax.set_ylabel('SSW Frequency (per 100 days)', fontsize='xx-large', color='#B30000')
     ax.axhline(obs, color='#0c56a0', linewidth=1.5, linestyle='--')
-    ax.text(len(exp)-2.6, obs+0.01, 'observations', color='#0c56a0', fontsize='xx-large')
+    ax.text(len(exp)-2.35, obs+0.01, 'observations', color='#0c56a0', fontsize='xx-large')
     ax.axhline(og, color='#666666', linewidth=1.5, linestyle='--')
     ax.fill_between(range(-1,8), (og - og_err), (og + og_err), facecolor ='gainsboro', alpha = 0.4)
-    ax.text(len(exp)-2.1, og+0.01, 'control', color='#666666', fontsize='xx-large')
+    ax.text(len(exp)-2, og+0.01, 'control', color='#666666', fontsize='xx-large')
     ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
     ax2 = ax.twinx()
     ax2.plot(labels[1:], sd[1:], marker='o', linewidth=1.5, color='#4D0099', linestyle='-', label='S.D.')
@@ -261,7 +262,7 @@ if __name__ == '__main__':
     indir = '/disco/share/rm811/processed/'
     outdir = '../Files/'
     basis = 'PK_e0v4z13'
-    var_type = input("Plot a) depth, b) width, c) location, d) strength, e) topography experiments or f) test?")
+    var_type = input("Plot a) depth, b) width, c) location, d) strength, e) vortex experiments or f) test?")
     if var_type == 'a':
         extension = '_depth'
     elif var_type == 'b':
@@ -271,7 +272,8 @@ if __name__ == '__main__':
     elif var_type == 'd':
         extension = '_strength'
     elif var_type == 'e':
-        extension = '_topo'
+        basis = 'PK_e0vXz13'
+        extension = '_vtx'
     elif var_type == 'f':
         extension = '_test'
     exp, labels, xlabel = return_exp(extension)

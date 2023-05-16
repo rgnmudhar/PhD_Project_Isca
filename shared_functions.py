@@ -72,6 +72,16 @@ def return_exp(extension):
         basis+'_w15a4p300f800g50'+topo]
         labels = ['control', '900 hPa', '800 hPa', '600 hPa', '300 hPa']
         xlabel = 'Depth of Heating (hPa)'
+    elif extension == '_vtx':
+        perturb = '_w15a4p600f800g50_q6m2y45l800u200'
+        exp = ['PK_e0v4z13_q6m2y45l800u200',\
+        'PK_e0v2z13'+perturb,\
+        'PK_e0v3z13'+perturb,\
+        'PK_e0v4z13'+perturb,\
+        'PK_e0v5z13'+perturb]
+        #labels = ['control', '2', '3', '4', '5']
+        labels = ['control', r'$\gamma = 2$ K km$^{-1}$', r'$\gamma = 3$ K km$^{-1}$', r'$\gamma = 4$ K km$^{-1}$', r'$\gamma = 5$ K km$^{-1}$']
+        xlabel = r'Vortex $\gamma$ (K km$^{-1}$)'
     elif extension == '_test':
         exp = ['PK_e0v3z13_q4m2y45l800u200',\
             'PK_e0v4z13_h3000m2l25u65']

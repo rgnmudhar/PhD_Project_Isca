@@ -155,7 +155,7 @@ if __name__ == '__main__':
     indir = '/disco/share/rm811/processed/'
     outdir = '../Files/'
     basis = 'PK_e0v4z13'
-    var_type = input("Plot a) depth, b) width, c) location, d) strength or e) topography experiments?")
+    var_type = input("Run a) depth, b) width, c) location, d) strength or e) vortex experiments?")
     if var_type == 'a':
         extension = '_depth'
     elif var_type == 'b':
@@ -165,7 +165,8 @@ if __name__ == '__main__':
     elif var_type == 'd':
         extension = '_strength'
     elif var_type == 'e':
-        extension = '_topo'
+        basis = 'PK_e0vXz13'
+        extension = '_vtx'
     exp = return_exp(extension)[0]
     #exp = [basis+'_a4x75y0w5v30p800_q6m2y45_s']
     

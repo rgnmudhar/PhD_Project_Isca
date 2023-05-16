@@ -458,7 +458,7 @@ if __name__ == '__main__':
     indir = '/disco/share/rm811/processed/'
     basis = 'PK_e0v4z13'
     flux = input("Plot a) EP flux divergence, b) upward EP Flux, c) v'T', d) vs. MERRA2, e) refractive index or f) report plot?")
-    var_type = input("Plot a) depth, b) width, c) location, d) strength, e) topography experiments? or f) test?")
+    var_type = input("Plot a) depth, b) width, c) location, d) strength, e) vortex experiments? or f) test?")
     if var_type == 'a':
         extension = '_depth'
     elif var_type == 'b':
@@ -468,7 +468,8 @@ if __name__ == '__main__':
     elif var_type == 'd':
         extension = '_strength'
     elif var_type == 'e':
-        extension = '_topo'
+        basis = 'PK_e0vXz13'
+        extension = '_vtx'
     elif var_type == 'f':
         extension = '_test'
     exp, labels, xlabel = return_exp(extension)
@@ -605,8 +606,8 @@ if __name__ == '__main__':
             plot_n2(indir, i, k)
 
     elif flux =='f':
-        exp = [exp[0], exp[1], exp[3], exp[-1]]
-        labels = [labels[0], labels[1], labels[3], labels[-1]]
+        exp = [exp[0], exp[2], exp[3], exp[-1]]
+        labels = [labels[0], labels[2], labels[3], labels[-1]]
 
         div_response = []
         ep1_response = []

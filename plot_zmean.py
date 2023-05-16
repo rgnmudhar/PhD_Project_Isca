@@ -24,7 +24,7 @@ def report_plot(exp, lvls, variable, unit, name):
         elif variable == 'Zonal Wind':
             Xtz = xr.open_dataset(indir+exp[i]+'_utz.nc', decode_times=False).ucomp[0]
         X.append(Xtz)
-        #ds = xr.open_dataset('/disco/share/rm811/isca_data/' + exp[i] + '/run0100/atmos_daily_interp.nc')
+        #ds = xr.open_dataset('/disco/share/rm811/isca_data/' + exp[i] + '/run0025/atmos_daily_interp.nc')
         #heat.append(ds.local_heating.sel(lon=180, method='nearest').mean('time'))
         if i == 0:
             ctrl = Xtz
@@ -236,7 +236,7 @@ if __name__ == '__main__':
     plot_type = input("Plot a) individual experiments, b) difference vs. control, c) linear additions, d) meridional T gradients, e) tropopause, or f) paper plot?")
     
     if plot_type == 'a' or plot_type == 'b' or plot_type == 'd' or plot_type == 'e' or plot_type == 'f':
-        var_type = input("Plot a) depth, b) width, c) location, d) strength, e) topography experiments or f) test?")
+        var_type = input("Plot a) depth, b) width, c) location, d) strength, e) vortex experiments or f) test?")
         if var_type == 'a':
             extension = '_depth'
         elif var_type == 'b':
@@ -246,7 +246,8 @@ if __name__ == '__main__':
         elif var_type == 'd':
             extension = '_strength'
         elif var_type == 'e':
-            extension = '_topo'
+            basis = 'PK_e0vXz13'
+            extension = '_vtx'
         elif var_type == 'f':
             extension = '_test'
         exp, labels, xlabel = return_exp(extension)
@@ -291,7 +292,7 @@ if __name__ == '__main__':
             plt.legend(fancybox=False, ncol=1, fontsize='x-large', facecolor='white')
 
             ax2 = ax.twinx()
-            file = '/disco/share/rm811/isca_data/' + exp[0] + '/run0100/atmos_daily_interp.nc'
+            file = '/disco/share/rm811/isca_data/' + exp[0] + '/run0025/atmos_daily_interp.nc'
             ds = xr.open_dataset(file)
             heat = ds.local_heating.sel(lon=180, method='nearest').mean('time')
             ax2.contour(lats, heat.pfull, heat, colors='g', linewidths=1, alpha=0.25, levels=7)
@@ -306,10 +307,10 @@ if __name__ == '__main__':
             plt.close()
         
         elif plot_type == 'f':
-            exp = [exp[0], exp[1], exp[3], exp[-1]]
-            labels = [labels[0], labels[1], labels[3], labels[-1]]
+            exp = [exp[0], exp[2], exp[3], exp[-1]]
+            labels = [labels[0], labels[2], labels[3], labels[-1]]
             T_lvls = [np.arange(160, 330, 10), np.arange(-10, 25, 2.5), np.arange(160, 340, 20)]
-            u_lvls = [np.arange(-70, 100, 10), np.arange(-20, 17.5, 2.5), np.arange(-70, 100, 10)]
+            u_lvls = [np.arange(-70, 100, 10), np.arange(-22.5, 17.5, 2.5), np.arange(-70, 100, 10)] #prev min u_lvls_response = -20
             report_plot(exp, T_lvls, 'Temperature', ' (K)', basis+extension+'_T')
             report_plot(exp, u_lvls, 'Zonal Wind', r' (m s$^{-1}$)', basis+extension+'_u')
 
@@ -325,20 +326,20 @@ if __name__ == '__main__':
                 #MSF_xr = xr.DataArray(MSF, coords=[p,lat], dims=['pfull','lat'])  # Make into an xarray DataArray
                 #MSF_xr.attrs['units']=r'kgs$^{-1}$'
 
-                if i == 0:
-                    print("skipping control")
-                elif i != 0:
-                    #Read in data to plot polar heat contours
-                    file = '/disco/share/rm811/isca_data/' + exp[i] + '/run0100/atmos_daily_interp.nc'
-                    ds = xr.open_dataset(file)
-                    perturb = ds.local_heating.sel(lon=180, method='nearest').mean(dim='time')  
-                    if plot_type =='a':
-                        plot_combo(uz, Tz, lvls, perturb, lat, p, exp[i], vertical)
-                    elif plot_type == 'b':
-                            u = [uz, xr.open_dataset(indir+exp[0]+'_utz.nc', decode_times=False).ucomp[0]]
-                            T = [Tz, xr.open_dataset(indir+exp[0]+'_Ttz.nc', decode_times=False).temp[0]]
-                            plot_diff([T, u], ['K', r'ms$^{-1}$'], [np.arange(160, 330, 10), np.arange(-200, 210, 10)],\
-                                perturb, lat, p, exp[i], vertical)
+                #if i == 0:
+                #    print("skipping control")
+                #elif i != 0:
+                #Read in data to plot polar heat contours
+                file = '/disco/share/rm811/isca_data/' + exp[i] + '/run0025/atmos_daily_interp.nc'
+                ds = xr.open_dataset(file)
+                perturb = ds.local_heating.sel(lon=180, method='nearest').mean(dim='time')  
+                if plot_type =='a':
+                    plot_combo(uz, Tz, lvls, perturb, lat, p, exp[i], vertical)
+                elif plot_type == 'b':
+                        u = [uz, xr.open_dataset(indir+exp[0]+'_utz.nc', decode_times=False).ucomp[0]]
+                        T = [Tz, xr.open_dataset(indir+exp[0]+'_Ttz.nc', decode_times=False).temp[0]]
+                        plot_diff([T, u], ['K', r'ms$^{-1}$'], [np.arange(160, 330, 10), np.arange(-200, 210, 10)],\
+                             perturb, lat, p, exp[i], vertical)
    
     elif plot_type == 'c':
         basis = 'PK_e0v4z13'
