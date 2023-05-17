@@ -155,7 +155,6 @@ def delete_data(indir, exp):
 def postprocess(exp):
     print(datetime.now(), ' - ', exp)
     os.chdir(indir + exp)
-    """
     runs = sorted(glob('run*'))
     n = len(runs) - 1
     
@@ -194,7 +193,7 @@ def postprocess(exp):
     nco.ncwa(input = exp+'_ut.nc', output = exp+'_utz.nc', options = ['-a lon'])
     nco.ncwa(input = exp+'_vt.nc', output = exp+'_vtz.nc', options = ['-a lon'])
     nco.ncwa(input = exp+'_Tt.nc', output = exp+'_Ttz.nc', options = ['-a lon'])
-    """
+
     # zonal means
     # NOTE THAT THE FOLLOWING ONLY SEEMS TO WORK ON GV3 OR GV4?
     print(datetime.now(), ' - zonal means')
@@ -243,7 +242,7 @@ if __name__ == '__main__':
 
     func = input('Do you want to a) postprocess, b) remove uninterpolated files, c) find TKE, d) back-calculate w, e) retrospectively extract variables, or f) delete spin-up data?')
 
-    exp = ['PK_e0v2z13_w15a4p600f800g50_q6m2y45l800u200', 'PK_e0v3z13_w15a4p600f800g50_q6m2y45l800u200', 'PK_e0v5z13_w15a4p600f800g50_q6m2y45l800u200']
+    exp = ['PK_e0v1z13_w15a4p600f800g50_q6m2y45l800u200', 'PK_e0v6z13_w15a4p600f800g50_q6m2y45l800u200']
     
     if func == 'b':
         remove_uninterp(indir, exp)    
