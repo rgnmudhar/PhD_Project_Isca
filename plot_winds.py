@@ -13,7 +13,7 @@ from datetime import datetime
 from open_winds import *
 from shared_functions import *
 
-def plot_winds(indir, exp, labels, colors, style, cols, name, p):
+def plot_Xwinds(indir, exp, labels, colors, style, cols, name, p):
     """
     Plots time and zonal average zonal wind at the pressure level closest to XhPa
     """
@@ -35,7 +35,7 @@ def plot_winds(indir, exp, labels, colors, style, cols, name, p):
     plt.savefig(name+'_winds.pdf', bbox_inches = 'tight')
     return plt.close()
 
-def plot_jet(u, p, lvls, name):
+def show_jet(u, p, lvls, name):
     """
     Plots time-mean zonal wind on polar stereographic lat-lon grid
     """
@@ -217,9 +217,49 @@ def report_vals(exp, label, u, SSW_flag=True):
         SSWs, SSWs_err = find_SSW(u)
         print(label+' SSWs: {0:.2f} ± {1:.2f}'.format(SSWs, SSWs_err))
 
-def report_plot(exp, x, xlabel, name):
+def SPV_report_plot(exp, x, xlabel, name):
     """
-    Plots SSW frequency and SPV s.d. against (heating) experiment.
+    Plots SSW frequency and SPV s.d. against experiment.
+    """
+    print(datetime.now(), " - finding SSWs")
+    SSWs, errors = find_SSWs(outdir, exp)
+    og = SSWs[0]
+    og_err = errors[0]
+    obs = 0.48
+    obs_err = 0.19
+
+    print(datetime.now(), " - finding s.d.")
+    sd = []
+    for i in exp:
+        u = xr.open_dataset(indir+i+'_uz.nc', decode_times=False).ucomp.sel(lat=60, method='nearest').sel(pfull=10, method='nearest')
+        sd.append(np.std(u))
+    
+    print(datetime.now(), " - plotting SSWs and SPV s.d. vs experiment")
+    fig, ax = plt.subplots(figsize=(10,6))
+    ax.errorbar(x[1:], SSWs[1:], yerr=errors[1:], fmt='o', linewidth=1.5, capsize=5, color='#B30000', linestyle='--')
+    ax.set_xlim(-0.5,len(exp)-1.5)
+    ax.set_xticks(x[1:])
+    ax.set_xlabel(xlabel, fontsize='xx-large')
+    #ax.set_ylim(0.1, 0.52)
+    ax.set_ylim(min(min(SSWs)-0.05,0), max(SSWs)+0.2)
+    ax.set_ylabel('SSW Frequency (per 100 days)', fontsize='xx-large', color='#B30000')
+    ax.axhline(obs, color='#0c56a0', linewidth=1.5, linestyle='--')
+    ax.text(len(exp)-2.35, obs+0.01, 'observations', color='#0c56a0', fontsize='xx-large')
+    ax.axhline(og, color='#666666', linewidth=1.5, linestyle='--')
+    ax.fill_between(range(-1,8), (og - og_err), (og + og_err), facecolor ='gainsboro', alpha = 0.4)
+    ax.text(len(exp)-2, og+0.01, 'control', color='#666666', fontsize='xx-large')
+    ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
+    ax2 = ax.twinx()
+    ax2.plot(labels[1:], sd[1:], marker='o', linewidth=1.5, color='#4D0099', linestyle='-', label='S.D.')
+    ax2.set_ylim(int(min(sd))-1, int(max(sd[1:]))+1)
+    ax2.set_ylabel(r'U$_{10,60}$ S.D. (m s$^{-1}$)', color='#4D0099', fontsize='xx-large')
+    ax2.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
+    plt.savefig(name+'_SSWs+sd.pdf', bbox_inches = 'tight')
+    return plt.close()
+
+def Trop_report_plot(exp, x, xlabel, name):
+    """
+    Plots STJ and EDJ location against experiment.
     """
     print(datetime.now(), " - finding SSWs")
     SSWs, errors = find_SSWs(outdir, exp)
@@ -292,7 +332,7 @@ if __name__ == '__main__':
         p = 900 #hPa
         style = ['-', ':']
         cols = len(exp)
-        plot_winds(outdir, indir, exp, labels, colors, style, cols, exp[0], p)
+        plot_Xwinds(outdir, indir, exp, labels, colors, style, cols, exp[0], p)
     elif level == 'b':
         p = [850, 500] #hPa
         lvls = [np.arange(-25, 27.5, 2.5), np.arange(50, 55, 5)]
@@ -301,7 +341,7 @@ if __name__ == '__main__':
             for i in range(n):
                 print(datetime.now(), " - finding winds ({0:.0f}/{0:.0f})".format(i+1, n))
                 u = xr.open_dataset(indir+exp[i]+'_ut.nc', decode_times=False).ucomp[0]
-                plot_jet(u, p[j], lvls[j], exp[i])
+                show_jet(u, p[j], lvls[j], exp[i])
     elif level == 'c':
         alt = input("Plot a) neck, b) 100 hPa SPV or c) 10 hPa SPV winds?")
         if alt == "a":
@@ -359,7 +399,7 @@ if __name__ == '__main__':
                         NH_zonal(lat, p, sd_diff, utz, np.arange(-20, 22, 2), ulvls, 'RdBu_r',\
                             r'zonal-mean zonal wind S.D. (ms$^{-1}$)', exp[i]+'_usd_diff.pdf')
         elif plot_type == 'e':
-            report_plot(exp, labels, xlabel, basis+extension)
+            SPV_report_plot(exp, labels, xlabel, basis+extension)
     elif level == 'e':
         n = len(exp)
         u10_full = []
