@@ -244,10 +244,10 @@ def SPV_report_plot(exp, x, xlabel, name):
     ax.set_ylim(min(min(SSWs)-0.05,0), max(SSWs)+0.2)
     ax.set_ylabel('SSW Frequency (per 100 days)', fontsize='xx-large', color='#B30000')
     ax.axhline(obs, color='#0c56a0', linewidth=1.5, linestyle='--')
-    ax.text(len(exp)-2.35, obs+0.01, 'observations', color='#0c56a0', fontsize='xx-large')
+    ax.text(len(exp)-2.75, obs+0.01, 'observations', color='#0c56a0', fontsize='xx-large')
     ax.axhline(og, color='#666666', linewidth=1.5, linestyle='--')
     ax.fill_between(range(-1,8), (og - og_err), (og + og_err), facecolor ='gainsboro', alpha = 0.4)
-    ax.text(len(exp)-2, og+0.01, 'control', color='#666666', fontsize='xx-large')
+    ax.text(len(exp)-2.2, og+0.01, 'control', color='#666666', fontsize='xx-large')
     ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
     ax2 = ax.twinx()
     ax2.plot(labels[1:], sd[1:], marker='o', linewidth=1.5, color='#4D0099', linestyle='-', label='S.D.')
@@ -257,44 +257,53 @@ def SPV_report_plot(exp, x, xlabel, name):
     plt.savefig(name+'_SSWs+sd.pdf', bbox_inches = 'tight')
     return plt.close()
 
-def Trop_report_plot(exp, x, xlabel, name):
+def jet_lat_plot(exp, x, xlabel, name):
     """
     Plots STJ and EDJ location against experiment.
     """
-    print(datetime.now(), " - finding SSWs")
-    SSWs, errors = find_SSWs(outdir, exp)
-    og = SSWs[0]
-    og_err = errors[0]
-    obs = 0.48
-    obs_err = 0.19
+    print(datetime.now(), " - finding jets")
+    n = len(exp)
+    edj_lats = []
+    edj_lat_errs = []
+    stj_lats = []
+    stj_lat_errs = []
+    for i in range(n):
+        edj, edj_e, stj, stj_e = find_jets(indir, exp[i])
+        edj_lats.append(edj)
+        edj_lat_errs.append(edj_e)
+        stj_lats.append(stj)
+        stj_lat_errs.append(stj_e)
 
-    print(datetime.now(), " - finding s.d.")
-    sd = []
-    for i in exp:
-        u = xr.open_dataset(indir+i+'_uz.nc', decode_times=False).ucomp.sel(lat=60, method='nearest').sel(pfull=10, method='nearest')
-        sd.append(np.std(u))
-    
-    print(datetime.now(), " - plotting SSWs and SPV s.d. vs experiment")
+    print(datetime.now(), " - plotting jet latitudes vs experiment")
+    markers = ['o', 's']
     fig, ax = plt.subplots(figsize=(10,6))
-    ax.errorbar(x[1:], SSWs[1:], yerr=errors[1:], fmt='o', linewidth=1.5, capsize=5, color='#B30000', linestyle='--')
-    ax.set_xlim(-0.5,len(exp)-1.5)
+    ax2 = ax.twinx()
+    for i in range(n):
+        ax.errorbar(x[1:], edj_lats[i][1:], yerr=edj_lat_errs[i][1:], fmt=markers[i], linewidth=1.5, capsize=5, color='#B30000', linestyle='-')
+        ax2.errorbar(x[1:], stj_lats[i][1:], yerr=stj_lat_errs[i][1:], fmt=markers[i], linewidth=1.5, capsize=5, color='#4D0099', linestyle='-')
+    ax.set_xlim(-0.5,len(exp[0])-1.5)
     ax.set_xticks(x[1:])
     ax.set_xlabel(xlabel, fontsize='xx-large')
-    #ax.set_ylim(0.1, 0.52)
-    ax.set_ylim(min(min(SSWs)-0.05,0), max(SSWs)+0.2)
-    ax.set_ylabel('SSW Frequency (per 100 days)', fontsize='xx-large', color='#B30000')
-    ax.axhline(obs, color='#0c56a0', linewidth=1.5, linestyle='--')
-    ax.text(len(exp)-2.35, obs+0.01, 'observations', color='#0c56a0', fontsize='xx-large')
-    ax.axhline(og, color='#666666', linewidth=1.5, linestyle='--')
-    ax.fill_between(range(-1,8), (og - og_err), (og + og_err), facecolor ='gainsboro', alpha = 0.4)
-    ax.text(len(exp)-2, og+0.01, 'control', color='#666666', fontsize='xx-large')
+    ax.set_ylim(min(edj_lats[0])-0.5, max(edj_lats[0])+0.5)
+    ax.set_ylabel(r'EDJ Latitude ($\degree$N)', fontsize='xx-large', color='#B30000')
     ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
-    ax2 = ax.twinx()
-    ax2.plot(labels[1:], sd[1:], marker='o', linewidth=1.5, color='#4D0099', linestyle='-', label='S.D.')
-    ax2.set_ylim(int(min(sd))-1, int(max(sd[1:]))+1)
-    ax2.set_ylabel(r'U$_{10,60}$ S.D. (m s$^{-1}$)', color='#4D0099', fontsize='xx-large')
+    ax2.set_ylim(min(stj_lats[0])-0.5, max(stj_lats[0])+0.5)
+    ax2.set_ylabel(r'STJ Latitude ($\degree$N)', fontsize='xx-large', color='#4D0099')
     ax2.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
-    plt.savefig(name+'_SSWs+sd.pdf', bbox_inches = 'tight')
+    if n == 1:
+        # for polar heating experiments at fixed vortex strength
+        edj_og = edj_lats[0]
+        stj_og = stj_lats[0]
+        ax.axhline(edj_og, color='#B30000', linewidth=1.5, linestyle='--')
+        ax.text(-0.25, edj_og+0.1, 'EDJ control', color='#B30000', fontsize='xx-large')
+        ax2.axhline(stj_og, color='#4D0099', linewidth=1.5, linestyle='--')
+        ax2.text(len(exp)-2.5, stj_og+0.1, 'STJ control', color='#4D0099', fontsize='xx-large')
+    elif n == 2: 
+        # for comparing vortex strength experiments with and without polar heating
+        legend_elements = [Line2D([0], [0], marker=markers[0], color='k', label='polar heat', markerfacecolor='k', markersize=10),\
+                    Line2D([0], [0], marker=markers[1], color='k', label='no polar heat', markerfacecolor='k', markersize=10)]
+        ax.legend(loc='upper left',handles=legend_elements, fontsize='xx-large', fancybox=False)
+    plt.savefig(name+'_jetlats.pdf', bbox_inches = 'tight')
     return plt.close()
 
 if __name__ == '__main__': 
@@ -316,6 +325,7 @@ if __name__ == '__main__':
         extension = '_vtx'
     elif var_type == 'f':
         extension = '_test'
+        basis = 'PK_e0vXz13'
     exp, labels, xlabel = return_exp(extension)
     n = len(exp)
 
@@ -334,14 +344,18 @@ if __name__ == '__main__':
         cols = len(exp)
         plot_Xwinds(outdir, indir, exp, labels, colors, style, cols, exp[0], p)
     elif level == 'b':
-        p = [850, 500] #hPa
-        lvls = [np.arange(-25, 27.5, 2.5), np.arange(50, 55, 5)]
-        #windsvexp(outdir, labels, xlabel, str(p), basis+extension)
-        for j in range(len(p)):
-            for i in range(n):
-                print(datetime.now(), " - finding winds ({0:.0f}/{0:.0f})".format(i+1, n))
-                u = xr.open_dataset(indir+exp[i]+'_ut.nc', decode_times=False).ucomp[0]
-                show_jet(u, p[j], lvls[j], exp[i])
+        alt = input("Plot a) top-down jet view or b) EDJ and STJ lat vs experiment? ")
+        if alt == "a":
+            p = [850, 500] #hPa
+            lvls = [np.arange(-25, 27.5, 2.5), np.arange(50, 55, 5)]
+            #windsvexp(outdir, labels, xlabel, str(p), basis+extension)
+            for j in range(len(p)):
+                for i in range(n):
+                    print(datetime.now(), " - finding winds ({0:.0f}/{1:.0f})".format(i+1, n))
+                    u = xr.open_dataset(indir+exp[i]+'_ut.nc', decode_times=False).ucomp[0]
+                    show_jet(u, p[j], lvls[j], exp[i])
+        elif alt == "b":
+            jet_lat_plot(exp, labels, xlabel, basis+extension)
     elif level == 'c':
         alt = input("Plot a) neck, b) 100 hPa SPV or c) 10 hPa SPV winds?")
         if alt == "a":

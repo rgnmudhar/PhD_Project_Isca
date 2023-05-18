@@ -72,52 +72,79 @@ def winds_errs(indir, outdir, exp, p, name):
 
 def find_EDJ(indir, exp):
     """
-    Steps through each dataset to find EDJ strength and location over time.
+    Finds EDJ strength and location over time.
     Based on Fig 1. in Waugh et al. (2018), EDJ is defined as max. winds at 850 hPa.
-    Saves as a file.
     """
-    print(datetime.now(), " - finding wind speeds at ~850 hPa")
+    print(datetime.now(), " - finding EDJ for ", exp)
     u = xr.open_dataset(indir+exp+'_uz.nc', decode_times=False).ucomp.sel(pfull=850, method='nearest').sel(lat=slice(0,90))
+    n = len(u)
     edjs = []
     edj_lats = []
-    for j in range(len(u)):
+    for j in range(n):
         u_max = np.max(u[j])
         edjs.append(u_max)
         edj_lats.append(u.lat[np.where(u[j] == u_max)])
     edj = np.mean(edjs)
+    edj_err = np.std(edjs)/np.sqrt(n)
     edj_lat = np.mean(edj_lats)
+    edj_lat_err = np.std(edj_lats)/np.sqrt(n)
     
+    """
     # OR ...
     # Better to find max of mean, or mean of maxs? This is the former:
     u_mean = xr.open_dataset(indir+exp+'_utz.nc', decode_times=False).ucomp.sel(pfull=850, method='nearest').sel(lat=slice(0,90))[0]
     u_mean_max = np.max(u_mean)
     u_mean_lat = u_mean.lat[np.where(u_mean == u_mean_max)]
+    """
 
-    return edj, edj_lat
+    return edj, edj_lat, edj_err, edj_lat_err
     
 def find_STJ(indir, exp):
     """
-    Steps through each dataset to find EDJ strength and location over time.
-    Based on Fig 1. in Waugh et al. (2018), EDJ is defined as max. winds at 850 hPa.
-    Saves as a file.
+    Finds STJ strength and location over time.
+    Based on Fig 1. in Waugh et al. (2018), STJ is max of (mean of [100 - 400 hPa winds] - 850 hPa winds)
     """
-    print(datetime.now(), " - finding wind speeds")
+    print(datetime.now(), " - finding STJ for ", exp)
     u850 = xr.open_dataset(indir+exp+'_uz.nc', decode_times=False).ucomp.sel(pfull=850, method='nearest').sel(lat=slice(0,90))
     u100_400 = xr.open_dataset(indir+exp+'_uz.nc', decode_times=False).ucomp.sel(pfull=slice(100,400)).sel(lat=slice(0,90)).mean(dim='pfull')
     new_u = u100_400 - u850
+    n = len(new_u)
     stjs = []
     stj_lats = []
-    for j in range(len(new_u)):
+    for j in range(n):
         u_max = np.max(new_u[j])
         stjs.append(u_max)
-        stj_lats.append(new_u.lat[np.where(new_u[j] == u_max)])
+        stj_lats.append(np.mean(new_u.lat[np.where(new_u[j] == u_max)][0])) # added a mean for when max is the same across 2 consecutive lats
     stj = np.mean(stjs)
+    stj_err = np.std(stjs)/np.sqrt(n)
     stj_lat = np.mean(stj_lats)
+    stj_lat_err = np.std(stj_lats)/np.sqrt(n)
     
-    # OR ...
+    """
+    #OR ...
     # Better to find max of mean, or mean of maxs? The former is...
+    u_mean850 = xr.open_dataset(indir+exp+'_utz.nc', decode_times=False).ucomp.sel(pfull=850, method='nearest').sel(lat=slice(0,90))[0]
+    u_mean100_400 = xr.open_dataset(indir+exp+'_uz.nc', decode_times=False).ucomp.sel(pfull=slice(100,400)).sel(lat=slice(0,90)).mean(dim='pfull')[0]
+    new_u_mean = u_mean100_400 - u_mean850
+    new_u_mean_max = np.max(new_u_mean)
+    new_u_mean_lat = new_u_mean.lat[np.where(new_u_mean == new_u_mean_max)]
+    """
 
-    return stj, stj_lat
+    return stj, stj_lat, stj_err, stj_lat_err
+
+def find_jets(indir, exp):
+    edj_lats = []
+    edj_lat_errs = []
+    stj_lats = []
+    stj_lat_errs = []
+    for e in exp:
+        edj, edj_lat, edj_err, edj_lat_err = find_EDJ(indir, e)
+        stj, stj_lat, stj_err, stj_lat_err = find_STJ(indir, e)
+        edj_lats.append(edj_lat)
+        edj_lat_errs.append(edj_lat_err)
+        stj_lats.append(stj_lat)
+        stj_lat_errs.append(stj_lat_err)
+    return edj_lats, edj_lat_errs, stj_lats, stj_lat_errs
 
 def find_SPV(indir, outdir, exp):
     """
@@ -217,13 +244,13 @@ if __name__ == '__main__':
         basis = 'PK_e0vXz13'
         extension = '_vtx'
     exp = return_exp(extension)[0]
-    exp = ['PK_e0v6z13_w15a4p600f800g50_q6m2y45l800u200']
+    #exp = ['PK_e0v6z13_w15a4p600f800g50_q6m2y45l800u200']
     
     #Ro = []
     #for i in range(len(exp)):
         #Ro.append(calc_Ro(indir, exp[i], p))
     #print(Ro)
 
-    find_SPV(indir, outdir, exp)
+    #find_SPV(indir, outdir, exp)
     p = 10 #850
     winds_errs(indir, outdir, exp, p, basis+extension)
