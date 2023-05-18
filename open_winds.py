@@ -70,27 +70,55 @@ def winds_errs(indir, outdir, exp, p, name):
     save_file(outdir, name, maxlats_sd, 'maxlats_sd'+str(p))
     save_file(outdir, name, maxwinds_sd, 'maxwinds_sd'+str(p))
 
-def find_EDJ(indir, outdir, exp):
+def find_EDJ(indir, exp):
     """
     Steps through each dataset to find EDJ strength and location over time.
     Based on Fig 1. in Waugh et al. (2018), EDJ is defined as max. winds at 850 hPa.
     Saves as a file.
     """
     print(datetime.now(), " - finding wind speeds at ~850 hPa")
-    for i in range(len(exp)):
-        print(datetime.now(), " - ", exp[i])
-        u = xr.open_dataset(indir+exp[i]+'_uz.nc', decode_times=False).ucomp.sel(pfull=850, method='nearest')
-        edj = []
-        edj_lat = []
-        for j in range(len(u)):
-            u_max = np.max(u[j])
-            index = np.where(u[j] == u_max)
-            u_lat = u.lat[index]
-            edj.append(u_max)
-            edj_lat.append(u_lat)
-        save_file(outdir, exp[i], edj.mean(dim='time'), '_EDJ')
-        save_file(outdir, exp[i], edj_lat, '_EDJlat')
-        
+    u = xr.open_dataset(indir+exp+'_uz.nc', decode_times=False).ucomp.sel(pfull=850, method='nearest').sel(lat=slice(0,90))
+    edjs = []
+    edj_lats = []
+    for j in range(len(u)):
+        u_max = np.max(u[j])
+        edjs.append(u_max)
+        edj_lats.append(u.lat[np.where(u[j] == u_max)])
+    edj = np.mean(edjs)
+    edj_lat = np.mean(edj_lats)
+    
+    # OR ...
+    # Better to find max of mean, or mean of maxs? This is the former:
+    u_mean = xr.open_dataset(indir+exp+'_utz.nc', decode_times=False).ucomp.sel(pfull=850, method='nearest').sel(lat=slice(0,90))[0]
+    u_mean_max = np.max(u_mean)
+    u_mean_lat = u_mean.lat[np.where(u_mean == u_mean_max)]
+
+    return edj, edj_lat
+    
+def find_STJ(indir, exp):
+    """
+    Steps through each dataset to find EDJ strength and location over time.
+    Based on Fig 1. in Waugh et al. (2018), EDJ is defined as max. winds at 850 hPa.
+    Saves as a file.
+    """
+    print(datetime.now(), " - finding wind speeds")
+    u850 = xr.open_dataset(indir+exp+'_uz.nc', decode_times=False).ucomp.sel(pfull=850, method='nearest').sel(lat=slice(0,90))
+    u100_400 = xr.open_dataset(indir+exp+'_uz.nc', decode_times=False).ucomp.sel(pfull=slice(100,400)).sel(lat=slice(0,90)).mean(dim='pfull')
+    new_u = u100_400 - u850
+    stjs = []
+    stj_lats = []
+    for j in range(len(new_u)):
+        u_max = np.max(new_u[j])
+        stjs.append(u_max)
+        stj_lats.append(new_u.lat[np.where(new_u[j] == u_max)])
+    stj = np.mean(stjs)
+    stj_lat = np.mean(stj_lats)
+    
+    # OR ...
+    # Better to find max of mean, or mean of maxs? The former is...
+
+    return stj, stj_lat
+
 def find_SPV(indir, outdir, exp):
     """
     Steps through each dataset to find vortex strength over time.
