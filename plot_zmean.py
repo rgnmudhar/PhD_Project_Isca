@@ -11,28 +11,29 @@ import matplotlib.colors as cm
 from shared_functions import *
 from datetime import datetime
 
-def report_plot(exp, lvls, variable, unit, name):
-    # Plots control, then 3 experiments of your choice
-
+def report_plot1(exp, lvls, variable, unit, labels, name):
+    # Plots no polar heat, with polar heat, and the difference
     print(datetime.now(), " - opening files")
-    X = []
+    X = [[], []]
     X_response = []
-    #heat = []
+    heat = []
     for i in range(len(exp)):
         if variable == 'Temperature':
-            Xtz = xr.open_dataset(indir+exp[i]+'_Ttz.nc', decode_times=False).temp[0]
+            for j in range(len(exp[i])):
+                Xtz = xr.open_dataset(indir+exp[i][j]+'_Ttz.nc', decode_times=False).temp[0]
         elif variable == 'Zonal Wind':
-            Xtz = xr.open_dataset(indir+exp[i]+'_utz.nc', decode_times=False).ucomp[0]
-        X.append(Xtz)
-        #ds = xr.open_dataset('/disco/share/rm811/isca_data/' + exp[i] + '/run0025/atmos_daily_interp.nc')
-        #heat.append(ds.local_heating.sel(lon=180, method='nearest').mean('time'))
-        if i == 0:
-            ctrl = Xtz
-        else:
-            X_response.append(Xtz - ctrl)
+            for j in range(len(exp[i])):
+                Xtz = xr.open_dataset(indir+exp[i][j] +'_utz.nc', decode_times=False).ucomp[0]
+        X[i].append(Xtz)
+    
+    for j in range(len(exp[1])):
+        ds = xr.open_dataset('/disco/share/rm811/isca_data/' + exp[1][j] + '/run0025/atmos_daily_interp.nc')
+        heat.append(ds.local_heating.sel(lon=180, method='nearest').mean('time'))
+        X_response.append(X[1][j] - X[0][j])
 
-    p = ctrl.pfull
-    lat = ctrl.lat
+    p = ds.pfull
+    lat = ds.lat
+    h_lvls = np.arange(0, 7.5e-5, 5e-6)
 
     print(datetime.now(), " - plotting")
     fig, axes = plt.subplots(1, 4, figsize=(20,7))
@@ -44,7 +45,6 @@ def report_plot(exp, lvls, variable, unit, name):
     cb_ctrl  = fig.colorbar(csa_ctrl, ax=axes[0], orientation='horizontal', extend='both', pad=0.15)
     cb_ctrl.set_label(label=variable+unit, size='xx-large')
     cb_ctrl.ax.tick_params(labelsize='x-large')
-    #axes[0].contour(lat, p, heat[0], colors='g', linewidths=1.5, alpha=0.25, levels=11)
     axes[0].set_ylabel('Pressure (hPa)', fontsize='xx-large')
     
     norm = cm.TwoSlopeNorm(vmin=min(lvls[1]), vmax=max(lvls[1]), vcenter=0)
@@ -54,7 +54,70 @@ def report_plot(exp, lvls, variable, unit, name):
             csb = axes[i].contour(lat, p, X[i], colors='k', levels=lvls[2], linewidths=1.5, alpha=0.25)
             if variable == 'Zonal Wind':
                 csb.collections[list(lvls[2]).index(0)].set_linewidth(3)
-            #axes[i].contour(lat, p, heat[i], colors='g', linewidths=1.5, alpha=0.25, levels=11)
+            h = axes[i].contour(lat, p, heat[i], alpha=0, colors='g', levels=h_lvls)
+            h.collections[list(h_lvls).index(1e-5)].set_alpha(0.5) # just show where heating is 1e-5 K/day
+
+    cb  = fig.colorbar(csa, ax=axes[1:], shrink=0.3, orientation='horizontal', extend='both', pad=0.15)
+    cb.set_label(label='Response'+unit, size='xx-large')
+    cb.ax.tick_params(labelsize='x-large')
+
+    for i in range(len(axes)):
+        axes[i].text(2, 1.75, labels[i], color='k', weight='bold', fontsize='xx-large')
+        axes[i].set_ylim(max(p), 1) #goes to ~1hPa
+        axes[i].set_yscale('log')
+        axes[i].set_xlabel(r'Latitude ($\degree$N)', fontsize='xx-large')
+        axes[i].set_xlim(0, max(lat))
+        axes[i].set_xticks([0, 20, 40, 60, 80], ['0', '20', '40', '60', '80'])
+        axes[i].tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
+        if i > 0:
+            axes[i].tick_params(axis='y',label1On=False)
+    plt.savefig(name+'.pdf', bbox_inches = 'tight')
+    return plt.close()
+
+def report_plot2(exp, lvls, variable, unit, labels, name):
+    # Plots control, then 3 experiments of choice
+    print(datetime.now(), " - opening files")
+    X = []
+    X_response = []
+    heat = []
+    for i in range(len(exp)):
+        if variable == 'Temperature':
+            Xtz = xr.open_dataset(indir+exp[i]+'_Ttz.nc', decode_times=False).temp[0]
+        elif variable == 'Zonal Wind':
+                Xtz = xr.open_dataset(indir+exp[i] +'_utz.nc', decode_times=False).ucomp[0]
+        X.append(Xtz)
+        ds = xr.open_dataset('/disco/share/rm811/isca_data/' + exp[i] + '/run0025/atmos_daily_interp.nc')
+        heat.append(ds.local_heating.sel(lon=180, method='nearest').mean('time'))
+        if i == 0:
+            ctrl = Xtz
+        else:
+            X_response.append(Xtz - ctrl)
+
+    p = ctrl.pfull
+    lat = ctrl.lat
+    h_lvls = np.arange(0, 7.5e-5, 5e-6)
+
+    print(datetime.now(), " - plotting")
+    fig, axes = plt.subplots(1, 4, figsize=(20,7))
+    if variable == 'Temperature':
+        csa_ctrl = axes[0].contourf(lat, p, ctrl, levels=lvls[0], cmap='Blues_r')
+    elif variable == 'Zonal Wind':
+        norm = cm.TwoSlopeNorm(vmin=min(lvls[0]), vmax=max(lvls[0]), vcenter=0)
+        csa_ctrl = axes[0].contourf(lat, p, ctrl, levels=lvls[0], norm=norm, cmap='RdBu_r')
+    cb_ctrl  = fig.colorbar(csa_ctrl, ax=axes[0], orientation='horizontal', extend='both', pad=0.15)
+    cb_ctrl.set_label(label=variable+unit, size='xx-large')
+    cb_ctrl.ax.tick_params(labelsize='x-large')
+    axes[0].set_ylabel('Pressure (hPa)', fontsize='xx-large')
+    
+    norm = cm.TwoSlopeNorm(vmin=min(lvls[1]), vmax=max(lvls[1]), vcenter=0)
+    for i in range(len(exp)):
+        if i > 0:
+            csa = axes[i].contourf(lat, p, X_response[i-1], levels=lvls[1], norm=norm, cmap='RdBu_r')
+            csb = axes[i].contour(lat, p, X[i], colors='k', levels=lvls[2], linewidths=1.5, alpha=0.25)
+            if variable == 'Zonal Wind':
+                csb.collections[list(lvls[2]).index(0)].set_linewidth(3)
+            h = axes[i].contour(lat, p, heat[i], alpha=0, colors='g', levels=h_lvls)
+            h.collections[list(h_lvls).index(1e-5)].set_alpha(0.5) # just show where heating is 1e-5 K/day
 
     cb  = fig.colorbar(csa, ax=axes[1:], shrink=0.3, orientation='horizontal', extend='both', pad=0.15)
     cb.set_label(label='Response'+unit, size='xx-large')
@@ -234,7 +297,7 @@ if __name__ == '__main__':
     indir = '/disco/share/rm811/processed/'
     basis = 'PK_e0v4z13'
     plot_type = input("Plot a) individual experiments, b) difference vs. control, c) linear additions, d) meridional T gradients, e) tropopause, or f) paper plot?")
-    
+   
     if plot_type == 'a' or plot_type == 'b' or plot_type == 'd' or plot_type == 'e' or plot_type == 'f':
         var_type = input("Plot a) depth, b) width, c) location, d) strength, e) vortex experiments or f) test?")
         if var_type == 'a':
@@ -305,14 +368,19 @@ if __name__ == '__main__':
             plt.savefig('tropopause'+extension+'.pdf', bbox_inches = 'tight')
             plt.show()
             plt.close()
-        
+
         elif plot_type == 'f':
-            exp = [exp[0], exp[1], exp[2], exp[3]]
-            labels = [labels[0], labels[1], labels[2], labels[3]]
-            T_lvls = [np.arange(160, 330, 10), np.arange(-10, 25, 2.5), np.arange(160, 340, 20)]
-            u_lvls = [np.arange(-70, 100, 10), np.arange(-22.5, 17.5, 2.5), np.arange(-70, 100, 10)] #prev min u_lvls_response = -20
-            report_plot(exp, T_lvls, 'Temperature', ' (K)', basis+extension+'_T')
-            report_plot(exp, u_lvls, 'Zonal Wind', r' (m s$^{-1}$)', basis+extension+'_u')
+            if var_type == 'e':
+                # For polar vortex experiments:
+                print("hello :)")
+            else:
+                # For polar heat experiments:
+                exp = [exp[0], exp[1], exp[3], exp[4]]
+                labels = [labels[0], labels[1], labels[3], labels[4]]
+                T_lvls = [np.arange(160, 330, 10), np.arange(-10, 25, 2.5), np.arange(160, 340, 20)]
+                u_lvls = [np.arange(-70, 100, 10), np.arange(-22.5, 17.5, 2.5), np.arange(-70, 100, 10)] #prev min u_lvls_response = -20
+                report_plot2(exp, T_lvls, 'Temperature', ' (K)', labels, basis+extension+'_T')
+                report_plot2(exp, u_lvls, 'Zonal Wind', r' (m s$^{-1}$)', labels, basis+extension+'_u')
 
         else:
             vertical = input("Plot vs. a) log pressure or b) pseudo-altitude?")

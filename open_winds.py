@@ -253,4 +253,5 @@ if __name__ == '__main__':
 
     #find_SPV(indir, outdir, exp)
     p = 10 #850
-    winds_errs(indir, outdir, exp, p, basis+extension)
+    winds_errs(indir, outdir, exp[0], p, basis+extension+'_noheat')
+    winds_errs(indir, outdir, exp[1], p, basis+extension+'_heat')
