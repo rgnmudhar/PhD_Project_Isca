@@ -81,8 +81,8 @@ def SPVvexp1(n, mean, mode, sd, err, p, x, xlabel, name):
     Plots the mean and standard deviation of SPV against experiment.
     """
     print(datetime.now(), " - plotting average and s.d. vs experiment at {:.0f} hPa".format(p))
-    markers = ['o', '^']
-    lines = ['-', '--']
+    markers = ['^', 'o']
+    lines = ['--', '-']
     fig, ax = plt.subplots(figsize=(10,6))
     ax2 = ax.twinx()
     if n == 2:
@@ -90,8 +90,8 @@ def SPVvexp1(n, mean, mode, sd, err, p, x, xlabel, name):
             ax.errorbar(x, mean[i], yerr=err[i], fmt=markers[i], linewidth=1.25, capsize=5, color='#B30000', linestyle=lines[i])
             ax.set_xticks(x)
             ax2.plot(x, sd[i], marker=markers[i], linewidth=1.25, color='#4D0099', linestyle=lines[i], label='S.D.')
-            legend_elements = [Line2D([0], [0], marker=markers[0], color='k', label='polar heat', markerfacecolor='k', markersize=10, linestyle=lines[0]),\
-                    Line2D([0], [0], marker=markers[1], color='k', label='no polar heat', markerfacecolor='k', markersize=10, linestyle=lines[1])]
+            legend_elements = [Line2D([0], [0], marker=markers[0], color='k', label='no polar heat', markerfacecolor='k', markersize=10, linestyle=lines[0]),\
+                    Line2D([0], [0], marker=markers[1], color='k', label='polar heat', markerfacecolor='k', markersize=10, linestyle=lines[1])]
             ax.legend(loc='upper left',handles=legend_elements, fontsize='xx-large', fancybox=False)
     else:
         ax.errorbar(x[1:], mean[1:], yerr=err[1:], fmt='o', linewidth=1.25, capsize=5, color='#B30000', linestyle=':', label='mean')
@@ -142,12 +142,21 @@ def windsvexp(dir, x, xlabel, p, name):
     Then plots this against experiment.
     """
     print(datetime.now(), " - plotting wind maxima vs experiment")
-    markers = ['o', '^']
-    lines = ['-', '--']
+    markers = ['^', 'o']
+    lines = ['--', '-']
     fig, ax = plt.subplots(figsize=(10,6))
     ax2 = ax.twinx()
     if len(name) == 2:
-        print("hi")
+        for i in range(len(name)):
+            ax.errorbar(x, open_file(dir, name[i], 'maxwinds'+p), yerr=open_file(dir, name[i], 'maxwinds_sd'+p),\
+                    fmt=markers[i], linewidth=1.25, capsize=5, color='#B30000', linestyle=lines[i])
+            ax2.errorbar(x, open_file(dir, name[i], 'maxlats'+p), yerr=open_file(dir, name[i], 'maxlats_sd'+p),\
+                         fmt=markers[i], linewidth=1.25, capsize=5, color='#4D0099', linestyle=lines[i])
+        ax.set_xticks(x)
+        legend_elements = [Line2D([0], [0], marker=markers[0], color='k', label='no polar heat', markerfacecolor='k', markersize=10, linestyle=lines[0]),\
+                    Line2D([0], [0], marker=markers[1], color='k', label='polar heat', markerfacecolor='k', markersize=10, linestyle=lines[1])]
+        ax.legend(loc='lower right',handles=legend_elements, fontsize='xx-large', fancybox=False)
+        name = name[i]
     else:
         ax.errorbar(x[1:], open_file(dir, name, 'maxwinds'+p)[1:], yerr=open_file(dir, name, 'maxwinds_sd'+p)[1:],\
                     fmt=markers[0], linewidth=1.25, capsize=5, color='#B30000', linestyle=lines[0])
@@ -155,9 +164,9 @@ def windsvexp(dir, x, xlabel, p, name):
                      linewidth=1.25, capsize=5, color='#4D0099', linestyle=lines[0]) 
         ax.set_xticks(x[1:])
     ax.set_xlabel(xlabel, fontsize='x-large')
-    ax.set_ylabel(r'Strength of Max. 10 hPa Zonal Wind (ms$^{-1}$)', color='#B30000', fontsize='x-large')
+    ax.set_ylabel(r'Strength of Max. U$_{10}$ (ms$^{-1}$)', color='#B30000', fontsize='x-large')
     ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
-    ax2.set_ylabel(r'Laitude of Max. 10 hPa Zonal Wind ($\degree$N)', color='#4D0099', fontsize='x-large')
+    ax2.set_ylabel(r'Laitude of Max. U$_{10}$ ($\degree$N)', color='#4D0099', fontsize='x-large')
     ax2.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
     plt.savefig(name+'_windsvexp'+p+'.pdf', bbox_inches = 'tight')
     return plt.close()
@@ -239,8 +248,8 @@ def SPV_report_plot(exp, x, xlabel, name):
     n = len(exp)
     obs = 0.48
     obs_err = 0.19
-    markers = ['o', '^']
-    lines = ['-', '--']
+    markers = ['^', 'o']
+    lines = ['--', '-']
     fig, ax = plt.subplots(figsize=(10,6))
     if n == 2:
         SSWs_full = []
@@ -252,9 +261,9 @@ def SPV_report_plot(exp, x, xlabel, name):
         for i in range(n):
             print(datetime.now(), " - plotting SSWs vs experiment")
             ax.errorbar(x, SSWs_full[i], yerr=errors[i], fmt=markers[i], linewidth=1.5, capsize=5, color='#B30000', linestyle=lines[i])
-        legend_elements = [Line2D([0], [0], marker=markers[0], color='k', label='polar heat', markerfacecolor='k', markersize=10, linestyle=lines[0]),\
-                    Line2D([0], [0], marker=markers[1], color='k', label='no polar heat', markerfacecolor='k', markersize=10, linestyle=lines[1])]
-        ax.legend(loc='upper left',handles=legend_elements, fontsize='xx-large', fancybox=False)
+        legend_elements = [Line2D([0], [0], marker=markers[0], color='k', label='no polar heat', markerfacecolor='k', markersize=10, linestyle=lines[0]),\
+                    Line2D([0], [0], marker=markers[1], color='k', label='polar heat', markerfacecolor='k', markersize=10, linestyle=lines[1])]
+        ax.legend(loc='best',handles=legend_elements, fontsize='xx-large', fancybox=False)
         ax.set_ylim(min(min(SSWs_full[0])-0.05,0), max(SSWs_full[0])+0.2)
         ax.set_xlim(-0.5,len(exp[0])-0.5)
     else:
@@ -307,8 +316,8 @@ def jet_lat_plot(exp, x, xlabel, name):
         stj_lat_errs.append(stj_e)
 
     print(datetime.now(), " - plotting jet latitudes vs experiment")
-    markers = ['o', '^']
-    lines = ['-', '--']
+    markers = ['^', 'o']
+    lines = ['--', '-']
     fig, ax = plt.subplots(figsize=(10,6))
     ax2 = ax.twinx()
     if n == 2: 
@@ -318,8 +327,8 @@ def jet_lat_plot(exp, x, xlabel, name):
             ax2.errorbar(x, stj_lats[i], yerr=stj_lat_errs[i], fmt=markers[i], linewidth=1.5, capsize=7, color='#4D0099', linestyle=lines[i])
         ax.set_xticks(x)
         ax.set_xlim(-0.5,len(exp[0])-0.5)
-        legend_elements = [Line2D([0], [0], marker=markers[0], color='k', label='polar heat', markerfacecolor='k', markersize=10, linestyle=lines[0]),\
-                    Line2D([0], [0], marker=markers[1], color='k', label='no polar heat', markerfacecolor='k', markersize=10, linestyle=lines[1])]
+        legend_elements = [Line2D([0], [0], marker=markers[0], color='k', label='no polar heat', markerfacecolor='k', markersize=10, linestyle=lines[0]),\
+                    Line2D([0], [0], marker=markers[1], color='k', label='polar heat', markerfacecolor='k', markersize=10, linestyle=lines[1])]
         ax.legend(loc='upper left',handles=legend_elements, fontsize='xx-large', fancybox=False)
     else:
         # For polar heating experiments at fixed vortex strength
@@ -412,22 +421,22 @@ if __name__ == '__main__':
             lats = 60
             lab = 'SPV '
             n = len(exp)
-            if n == 2:
-                means = []
-                modes = []
-                SDs = []
-                errs = []
-                for i in range(n):
-                    me, mo, sd, e = plot_pdf('u', indir, exp[i], '_uz.nc', '', p, lats, labels, lab+r"zonal-mean zonal wind (m s$^{-1}$)", blues, basis+extension)[:4]
-                    means.append(me)
-                    modes.append(mo)
-                    SDs.append(sd)
-                    errs.append(e)
-                SPVvexp1(n, means, modes, SDs, errs, p, labels, xlabel, basis+extension)
-            else:
-                me, mo, sd, e, sk, k = plot_pdf('u', indir, exp, '_uz.nc', '', p, lats, labels, lab+r"zonal-mean zonal wind (m s$^{-1}$)", blues, basis+extension)
-                SPVvexp1(n, me, mo, sd, e, p, labels, xlabel, basis+extension)
-                #SPVvexp2(sk, k, p, labels, xlabel, basis+extension)
+        if n == 2:
+            means = []
+            modes = []
+            SDs = []
+            errs = []
+            for i in range(n):
+                me, mo, sd, e = plot_pdf('u', indir, exp[i], '_uz.nc', '', p, lats, labels, lab+r"zonal-mean zonal wind (m s$^{-1}$)", blues, basis+extension)[:4]
+                means.append(me)
+                modes.append(mo)
+                SDs.append(sd)
+                errs.append(e)
+            SPVvexp1(n, means, modes, SDs, errs, p, labels, xlabel, basis+extension)
+        else:
+            me, mo, sd, e, sk, k = plot_pdf('u', indir, exp, '_uz.nc', '', p, lats, labels, lab+r"zonal-mean zonal wind (m s$^{-1}$)", blues, basis+extension)
+            SPVvexp1(n, me, mo, sd, e, p, labels, xlabel, basis+extension)
+            #SPVvexp2(sk, k, p, labels, xlabel, basis+extension)
     elif level == 'd':
         p = 10 # pressure level at which we want to find the SPV (hPa)
         #User choice for plotting - type
@@ -440,7 +449,11 @@ if __name__ == '__main__':
             cols = 2
             plot_vtx(outdir, exp, labels, colors, style, cols, exp[0])
         elif plot_type == 'b':
-            windsvexp(outdir, labels, xlabel, str(p), basis+extension)
+            if extension == '_vtx':
+                name = basis+extension
+                windsvexp(outdir, labels, xlabel, str(p), [name+'_noheat', name+'_heat'])
+            else:
+                windsvexp(outdir, labels, xlabel, str(p), basis+extension)
         elif plot_type == 'c':
             SSWsvexp(outdir, exp, labels, xlabel, basis+extension)
             #SSWsvexp_multi(outdir, exp, labels, xlabel, legend, ['#B30000', '#00B300', '#0099CC', 'k'], basis+extension)
