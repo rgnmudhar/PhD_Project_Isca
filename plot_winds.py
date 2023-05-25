@@ -92,13 +92,13 @@ def SPVvexp1(n, mean, mode, sd, err, p, x, xlabel, name):
             ax2.plot(x, sd[i], marker=markers[i], linewidth=1.25, color='#4D0099', linestyle=lines[i], label='S.D.')
             legend_elements = [Line2D([0], [0], marker=markers[0], color='k', label='no polar heat', markerfacecolor='k', markersize=10, linestyle=lines[0]),\
                     Line2D([0], [0], marker=markers[1], color='k', label='polar heat', markerfacecolor='k', markersize=10, linestyle=lines[1])]
-            ax.legend(loc='upper left',handles=legend_elements, fontsize='xx-large', fancybox=False)
+            ax.legend(loc='upper left',handles=legend_elements, fontsize='x-large', fancybox=False, ncol=2)
     else:
-        ax.errorbar(x[1:], mean[1:], yerr=err[1:], fmt='o', linewidth=1.25, capsize=5, color='#B30000', linestyle=':', label='mean')
+        ax.errorbar(x[1:], mean[1:], yerr=err[1:], fmt=markers[1], linewidth=1.25, capsize=5, color='#B30000', linestyle=lines[1], label='mean')
         ax.set_xticks(x[1:])
-        ax.plot(x[1:], mode[1:], marker='o', linewidth=1.25, color='#B30000', linestyle='-.', label='mode')
+        ax.plot(x[1:], mode[1:], marker=markers[1], linewidth=1.25, color='#B30000', linestyle='-.', label='mode')
         plt.legend(loc='upper center' , bbox_to_anchor=(0.5, 1), fancybox=False, shadow=False, ncol=2, fontsize='xx-large')
-        ax2.plot(x[1:], sd[1:], marker='o', linewidth=1.25, color='#4D0099', linestyle='-', label='S.D.')
+        ax2.plot(x[1:], sd[1:], marker=markers[1], linewidth=1.25, color='#4D0099', linestyle=lines[1], label='S.D.')
         #ax2.axhline(sd[0], color='#4D0099', linewidth=0.5)
         #ax2.text(5.6, sd[0]-0.6, 'Control', color='#4D0099', fontsize='x-large') 
     ax.set_xlabel(xlabel, fontsize='xx-large')
@@ -138,7 +138,7 @@ def SPVvexp2(skew, kurt, p, labels, xlabel, name):
 
 def windsvexp(dir, x, xlabel, p, name):
     """
-    Uses jet_locator functions to find location and strength of maximum stratopsheric vortex (10 hPa).
+    Uses jet_locator functions to find location and strength of maximum stratopsheric vortex (10 hPa) or EDJ (850 hPa).
     Then plots this against experiment.
     """
     print(datetime.now(), " - plotting wind maxima vs experiment")
@@ -155,19 +155,19 @@ def windsvexp(dir, x, xlabel, p, name):
         ax.set_xticks(x)
         legend_elements = [Line2D([0], [0], marker=markers[0], color='k', label='no polar heat', markerfacecolor='k', markersize=10, linestyle=lines[0]),\
                     Line2D([0], [0], marker=markers[1], color='k', label='polar heat', markerfacecolor='k', markersize=10, linestyle=lines[1])]
-        ax.legend(loc='lower right',handles=legend_elements, fontsize='xx-large', fancybox=False)
+        ax.legend(loc='upper center',handles=legend_elements, fontsize='x-large', fancybox=False, ncol=2)
         name = name[i]
     else:
         ax.errorbar(x[1:], open_file(dir, name, 'maxwinds'+p)[1:], yerr=open_file(dir, name, 'maxwinds_sd'+p)[1:],\
-                    fmt=markers[0], linewidth=1.25, capsize=5, color='#B30000', linestyle=lines[0])
-        ax2.errorbar(x[1:], open_file(dir, name, 'maxlats'+p)[1:], yerr=open_file(dir, name, 'maxlats_sd'+p)[1:], fmt=markers[0],\
-                     linewidth=1.25, capsize=5, color='#4D0099', linestyle=lines[0]) 
+                    fmt=markers[1], linewidth=1.25, capsize=5, color='#B30000', linestyle=lines[1])
+        ax2.errorbar(x[1:], open_file(dir, name, 'maxlats'+p)[1:], yerr=open_file(dir, name, 'maxlats_sd'+p)[1:], fmt=markers[1],\
+                     linewidth=1.25, capsize=5, color='#4D0099', linestyle=lines[1]) 
         ax.set_xticks(x[1:])
-    ax.set_xlabel(xlabel, fontsize='x-large')
-    ax.set_ylabel(r'Strength of Max. U$_{10}$ (ms$^{-1}$)', color='#B30000', fontsize='x-large')
-    ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
-    ax2.set_ylabel(r'Laitude of Max. U$_{10}$ ($\degree$N)', color='#4D0099', fontsize='x-large')
-    ax2.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
+    ax.set_xlabel(xlabel, fontsize='xx-large')
+    ax.set_ylabel(r'Strength of Max. U$_{850}$ (ms$^{-1}$)', color='#B30000', fontsize='xx-large')
+    ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
+    ax2.set_ylabel(r'Laitude of Max. U$_{850}$ ($\degree$N)', color='#4D0099', fontsize='xx-large')
+    ax2.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
     plt.savefig(name+'_windsvexp'+p+'.pdf', bbox_inches = 'tight')
     return plt.close()
 
@@ -263,7 +263,7 @@ def SPV_report_plot(exp, x, xlabel, name):
             ax.errorbar(x, SSWs_full[i], yerr=errors[i], fmt=markers[i], linewidth=1.5, capsize=5, color='#B30000', linestyle=lines[i])
         legend_elements = [Line2D([0], [0], marker=markers[0], color='k', label='no polar heat', markerfacecolor='k', markersize=10, linestyle=lines[0]),\
                     Line2D([0], [0], marker=markers[1], color='k', label='polar heat', markerfacecolor='k', markersize=10, linestyle=lines[1])]
-        ax.legend(loc='best',handles=legend_elements, fontsize='xx-large', fancybox=False)
+        ax.legend(loc='lower right',handles=legend_elements, fontsize='x-large', fancybox=False, ncol=2)
         ax.set_ylim(min(min(SSWs_full[0])-0.05,0), max(SSWs_full[0])+0.2)
         ax.set_xlim(-0.5,len(exp[0])-0.5)
     else:
@@ -276,81 +276,26 @@ def SPV_report_plot(exp, x, xlabel, name):
             u = xr.open_dataset(indir+e+'_uz.nc', decode_times=False).ucomp.sel(lat=60, method='nearest').sel(pfull=10, method='nearest')
             sd.append(np.std(u))
         print(datetime.now(), " - plotting SSWs and SPV s.d. vs experiment")
-        ax.errorbar(x[1:], SSWs[1:], yerr=errors[1:], fmt=markers[0], linewidth=1.5, capsize=5, color='#B30000', linestyle=lines[0])
+        ax.errorbar(x[1:], SSWs[1:], yerr=errors[1:], fmt=markers[1], linewidth=1.5, capsize=5, color='#B30000', linestyle=lines[1])
         ax2 = ax.twinx()
-        ax2.plot(x[1:], sd[1:], marker=markers[0], linewidth=1.5, color='#4D0099', linestyle=lines[0], label='S.D.')
+        ax2.plot(x[1:], sd[1:], marker=markers[1], linewidth=1.5, color='#4D0099', linestyle=lines[1], label='S.D.')
         ax.set_xticks(x[1:])
         og = SSWs[0]
         og_err = errors[0]
-        ax.set_xlim(-0.5,4.5)
+        ax.set_xlim(-0.5,n+0.5)
         ax.axhline(og, color='#666666', linewidth=1.5, linestyle=':')
         ax.fill_between(range(-1,8), (og - og_err), (og + og_err), facecolor ='gainsboro', alpha = 0.4)
-        ax.text(3, og+0.01, 'control', color='#666666', fontsize='xx-large')
+        ax.text(n - 0.3, og+0.01, 'control', color='#666666', fontsize='x-large')
         ax.set_ylim(min(min(SSWs)-0.05,0), max(SSWs)+0.2)
         ax2.set_ylim(min(sd)-1, max(sd)+1)
         ax2.set_ylabel(r'U$_{10,60}$ S.D. (m s$^{-1}$)', color='#4D0099', fontsize='xx-large')
         ax2.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
     ax.axhline(obs, color='#0c56a0', linewidth=1.5, linestyle=':')
-    ax.text(3, obs+0.01, 'observations', color='#0c56a0', fontsize='xx-large')
+    ax.text(5.5, obs+0.01, 'observations', color='#0c56a0', fontsize='x-large')
     ax.set_xlabel(xlabel, fontsize='xx-large')
     ax.set_ylabel('SSW Frequency (per 100 days)', fontsize='xx-large', color='#B30000')
     ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
     plt.savefig(name+'_SSWs.pdf', bbox_inches = 'tight')
-    return plt.close()
-
-def jet_lat_plot(exp, x, xlabel, name):
-    """
-    Plots STJ and EDJ location against experiment.
-    """
-    print(datetime.now(), " - finding jets")
-    n = len(exp)
-    edj_lats = []
-    edj_lat_errs = []
-    stj_lats = []
-    stj_lat_errs = []
-    for i in range(n):
-        edj, edj_e, stj, stj_e = find_jets(indir, exp[i])
-        edj_lats.append(edj)
-        edj_lat_errs.append(edj_e)
-        stj_lats.append(stj)
-        stj_lat_errs.append(stj_e)
-
-    print(datetime.now(), " - plotting jet latitudes vs experiment")
-    markers = ['^', 'o']
-    lines = ['--', '-']
-    fig, ax = plt.subplots(figsize=(10,6))
-    ax2 = ax.twinx()
-    if n == 2: 
-        # For comparing vortex strength experiments with and without polar heating
-        for i in range(n):
-            ax.errorbar(x, edj_lats[i], yerr=edj_lat_errs[i], fmt=markers[i], linewidth=1.5, capsize=7, color='#B30000', linestyle=lines[i])
-            ax2.errorbar(x, stj_lats[i], yerr=stj_lat_errs[i], fmt=markers[i], linewidth=1.5, capsize=7, color='#4D0099', linestyle=lines[i])
-        ax.set_xticks(x)
-        ax.set_xlim(-0.5,len(exp[0])-0.5)
-        legend_elements = [Line2D([0], [0], marker=markers[0], color='k', label='no polar heat', markerfacecolor='k', markersize=10, linestyle=lines[0]),\
-                    Line2D([0], [0], marker=markers[1], color='k', label='polar heat', markerfacecolor='k', markersize=10, linestyle=lines[1])]
-        ax.legend(loc='upper left',handles=legend_elements, fontsize='xx-large', fancybox=False)
-    else:
-        # For polar heating experiments at fixed vortex strength
-        edj_lats, edj_lat_errs, stj_lats, stj__lat_errs = find_jets(indir, exp)
-        ax.errorbar(x[1:], edj_lats[1:], yerr=edj_lat_errs[1:], fmt=markers[0], linewidth=1.5, capsize=7, color='#B30000', linestyle=lines[0])
-        ax2.errorbar(x[1:], stj_lats[1:], yerr=stj_lat_errs[1:], fmt=markers[0], linewidth=1.5, capsize=7, color='#4D0099', linestyle=lines[0])
-        ax.set_xticks(x[1:])
-        edj_og = edj_lats[0]
-        stj_og = stj_lats[0]
-        ax.set_xlim(-0.5,n-0.5)
-        ax.axhline(edj_og, color='#B30000', linewidth=1.5, linestyle='--')
-        ax.text(-0.25, edj_og+0.1, 'EDJ control', color='#B30000', fontsize='xx-large')
-        ax2.axhline(stj_og, color='#4D0099', linewidth=1.5, linestyle='--')
-        ax2.text(len(exp)-2.5, stj_og+0.1, 'STJ control', color='#4D0099', fontsize='xx-large')
-    ax.set_xlabel(xlabel, fontsize='xx-large')
-    ax.set_ylim(min(edj_lats[1])-0.5, max(edj_lats[0])+0.5)
-    ax.set_ylabel(r'EDJ Latitude ($\degree$N)', fontsize='xx-large', color='#B30000')
-    ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
-    ax2.set_ylim(min(stj_lats[0])-0.5, max(stj_lats[1])+0.5)
-    ax2.set_ylabel(r'STJ Latitude ($\degree$N)', fontsize='xx-large', color='#4D0099')
-    ax2.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
-    plt.savefig(name+'_jetlats.pdf', bbox_inches = 'tight')
     return plt.close()
 
 if __name__ == '__main__': 
@@ -391,7 +336,7 @@ if __name__ == '__main__':
         cols = len(exp)
         plot_Xwinds(outdir, indir, exp, labels, colors, style, cols, exp[0], p)
     elif level == 'b':
-        alt = input("Plot a) top-down jet view or b) EDJ and STJ lat vs experiment? ")
+        alt = input("Plot a) top-down jet view or b) EDJ strength & lat vs experiment? ")
         if alt == "a":
             p = [850, 500] #hPa
             lvls = [np.arange(-25, 27.5, 2.5), np.arange(50, 55, 5)]
@@ -402,7 +347,11 @@ if __name__ == '__main__':
                     u = xr.open_dataset(indir+exp[i]+'_ut.nc', decode_times=False).ucomp[0]
                     show_jet(u, p[j], lvls[j], exp[i])
         elif alt == "b":
-            jet_lat_plot(exp, labels, xlabel, basis+extension)
+            p = 850 # hPa for EDJ
+            if extension == '_vtx':
+                windsvexp(outdir, labels, xlabel, str(p), [basis+extension+'_noheat', basis+extension+'_heat'])
+            else:
+                windsvexp(outdir, labels, xlabel, str(p), basis+extension)
     elif level == 'c':
         alt = input("Plot a) neck, b) 100 hPa SPV or c) 10 hPa SPV winds?")
         if alt == "a":
@@ -450,8 +399,7 @@ if __name__ == '__main__':
             plot_vtx(outdir, exp, labels, colors, style, cols, exp[0])
         elif plot_type == 'b':
             if extension == '_vtx':
-                name = basis+extension
-                windsvexp(outdir, labels, xlabel, str(p), [name+'_noheat', name+'_heat'])
+                windsvexp(outdir, labels, xlabel, str(p), [basis+extension+'_noheat', basis+extension+'_heat'])
             else:
                 windsvexp(outdir, labels, xlabel, str(p), basis+extension)
         elif plot_type == 'c':
