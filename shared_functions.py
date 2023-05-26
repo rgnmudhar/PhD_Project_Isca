@@ -27,9 +27,9 @@ def return_exp(extension):
         basis+'_w15a4p500f800g50'+perturb,\
         basis+'_w15a4p400f800g50'+perturb,\
         basis+'_w15a4p300f800g50'+perturb]
-        #labels = ['control', r'$p_{top}=900$ hPa', r'$p_{top}=800$ hPa', r'$p_{top}=700$ hPa',\
-        #           r'$p_{top}=600$ hPa', r'$p_{top}=500$ hPa', r'$p_{top}=400$ hPa', r'$p_{top}=300$ hPa']
-        labels = ['control', '900', '800', '700', '600', '500', '400', '300']
+        labels = ['control', r'$p_{top}=900$ hPa', r'$p_{top}=800$ hPa', r'$p_{top}=700$ hPa',\
+                   r'$p_{top}=600$ hPa', r'$p_{top}=500$ hPa', r'$p_{top}=400$ hPa', r'$p_{top}=300$ hPa']
+        #labels = ['control', '900', '800', '700', '600', '500', '400', '300']
         xlabel = r'Depth of Heating ($p_{top}$, hPa)'
     elif extension == '_width':
         perturb = '_q6m2y45_s'
@@ -50,9 +50,9 @@ def return_exp(extension):
         basis+'_w15a2p600f800g50'+perturb,\
         basis+'_w15a4p600f800g50'+perturb+'l800u200',\
         basis+'_w15a8p600f800g50'+perturb]
-        #labels = ['control', r'$A=0.5$ K day$^{-1}$', r'$A=1$ K day$^{-1}$', r'$A=2$ K day$^{-1}$',\
-        #           r'$A=4$ K day$^{-1}$', r'$A=8$ K day$^{-1}$']
-        labels = ['control', '0.5', '1', '2', '4', '8']
+        labels = ['control', r'$A=0.5$ K day$^{-1}$', r'$A=1$ K day$^{-1}$', r'$A=2$ K day$^{-1}$',\
+                   r'$A=4$ K day$^{-1}$', r'$A=8$ K day$^{-1}$']
+        #labels = ['control', '0.5', '1', '2', '4', '8']
         xlabel = r'Strength of Heating (K day$^{-1}$)'
     elif extension == '_loc':   
         perturb = '_q6m2y45_s'
@@ -61,7 +61,7 @@ def return_exp(extension):
             basis+'_a4x75y135w5v30p600'+perturb,\
             basis+'_a4x75y180w5v30p600'+perturb,\
             basis+'_a4x75y225w5v30p600'+perturb]
-        #labels = ['control', r'$\lambda=90\degree$E', r'$\lambda=135\degree$E', r'$\lambda=180\degree$E', r'$\lambda=225\degree$E']
+        labels = ['control', r'$\lambda=90\degree$E', r'$\lambda=135\degree$E', r'$\lambda=180\degree$E', r'$\lambda=225\degree$E']
         #labels = ['control', '90', '135', '180', '225']
         labels = ['control', r'$90\degree$E', r'$135\degree$E', r'$180\degree$E', r'$225\degree$E']
         xlabel = r'Longitude of heating ($\degree$E)'

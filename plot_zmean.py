@@ -73,16 +73,19 @@ def report_plot2(exp, lvls, variable, unit, labels, name):
         elif variable == 'Zonal Wind':
                 Xtz = xr.open_dataset(indir+exp[i] +'_utz.nc', decode_times=False).ucomp[0]
         X.append(Xtz)
-        ds = xr.open_dataset('/disco/share/rm811/isca_data/' + exp[i] + '/run0025/atmos_daily_interp.nc')
-        heat.append(ds.local_heating.sel(lon=180, method='nearest').mean('time'))
         if i == 0:
             ctrl = Xtz
         else:
             X_response.append(Xtz - ctrl)
+            h_name = exp[i][11:27]
+            h = xr.open_dataset('../Inputs/' + h_name + '.nc')
+            heat.append(h.mean('lon').variables[h_name])
 
     p = ctrl.pfull
     lat = ctrl.lat
-    h_lvls = np.arange(0, 7.5e-5, 5e-6)
+    h_p = h.pfull
+    h_lat = h.lat
+    h_lvls = np.arange(2.5e-6, 1e-4, 5e-6)
 
     print(datetime.now(), " - plotting")
     fig, axes = plt.subplots(1, 4, figsize=(20,7))
@@ -103,15 +106,14 @@ def report_plot2(exp, lvls, variable, unit, labels, name):
             csb = axes[i].contour(lat, p, X[i], colors='k', levels=lvls[2], linewidths=1.5, alpha=0.25)
             if variable == 'Zonal Wind':
                 csb.collections[list(lvls[2]).index(0)].set_linewidth(3)
-            h = axes[i].contour(lat, p, heat[i], alpha=0, colors='g', levels=h_lvls)
-            h.collections[list(h_lvls).index(1e-5)].set_alpha(0.5) # just show where heating is 1e-5 K/day
+            axes[i].contour(h_lat, h_p, heat[i-1], alpha=0.5, colors='g', levels=h_lvls)
 
     cb  = fig.colorbar(csa, ax=axes[1:], shrink=0.3, orientation='horizontal', extend='both', pad=0.15)
     cb.set_label(label='Response'+unit, size='xx-large')
     cb.ax.tick_params(labelsize='x-large')
 
     for i in range(len(axes)):
-        axes[i].text(2, 1.75, labels[i], color='k', weight='bold', fontsize='xx-large')
+        axes[i].text(2, 1.75, labels[i], color='k', fontsize='xx-large')
         axes[i].set_ylim(max(p), 1) #goes to ~1hPa
         axes[i].set_yscale('log')
         axes[i].set_xlabel(r'Latitude ($\degree$N)', fontsize='xx-large')
@@ -365,8 +367,8 @@ if __name__ == '__main__':
                 report_plot1(exp, u_lvls, 'Zonal Wind', r' (m s$^{-1}$)', labels, basis+extension+'_u')
             else:
                 # For polar heat experiments:
-                exp = [exp[0], exp[1], exp[3], exp[4]]
-                labels = [labels[0], labels[1], labels[3], labels[4]]
+                exp = [exp[0], exp[1], exp[4], exp[-1]]
+                labels = [labels[0], labels[1], labels[4], labels[-1]]
                 T_lvls = [np.arange(160, 330, 10), np.arange(-10, 25, 2.5), np.arange(160, 340, 20)]
                 u_lvls = [np.arange(-70, 100, 10), np.arange(-22.5, 17.5, 2.5), np.arange(-70, 100, 10)] #prev min u_lvls_response = -20
                 report_plot2(exp, T_lvls, 'Temperature', ' (K)', labels, basis+extension+'_T')
