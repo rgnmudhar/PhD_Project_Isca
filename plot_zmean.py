@@ -11,6 +11,55 @@ import matplotlib.colors as cm
 from shared_functions import *
 from datetime import datetime
 
+def zero_wind(exp, labels, name):
+    # Shows difference in zero wind line between no polar heat and with polar heat
+    print(datetime.now(), " - opening files")
+    X0 = []
+    X1 = []
+    n = len(exp[0])
+    for i in range(n):
+        Xtz0 = xr.open_dataset(indir+exp[0][i]+'_utz.nc', decode_times=False).ucomp[0]
+        Xtz1 = xr.open_dataset(indir+exp[1][i]+'_utz.nc', decode_times=False).ucomp[0]
+        X0.append(Xtz0)
+        X1.append(Xtz1)
+
+    p = Xtz0.pfull
+    lat = Xtz0.lat
+    lvls = np.arange(-60, 170, 10)
+
+    h_name = exp[1][0][11:27]
+    h = xr.open_dataset('../Inputs/' + h_name + '.nc')
+    heat = h.mean('lon').variables[h_name]
+    h_p = h.pfull
+    h_lat = h.lat
+    h_lvls = np.arange(2.5e-6, 1e-4, 5e-6)
+
+    print(datetime.now(), " - plotting")
+    fig, axes = plt.subplots(1, n, figsize=(n*5,7))
+    norm = cm.TwoSlopeNorm(vmin=min(lvls), vmax=max(lvls), vcenter=0)
+    axes[0].set_ylabel('Pressure (hPa)', fontsize='xx-large')
+    for i in range(n):
+        csa = axes[i].contourf(lat, p, X0[i], levels=lvls, norm=norm, cmap='RdBu_r', extend='both')
+        csa_l = axes[i].contour(lat, p, X0[i], levels=lvls, norm=norm, colors='r', alpha=0)
+        csb = axes[i].contour(lat, p, X1[i], colors='k', levels=lvls, linewidths=1.5, alpha=0.25)
+        csa_l.collections[list(lvls).index(0)].set_alpha(0.5)
+        csb.collections[list(lvls).index(0)].set_linewidth(3)
+        axes[i].contour(h_lat, h_p, heat, alpha=0.5, colors='g', levels=h_lvls)
+        axes[i].text(2, 1.75, labels[i], color='k', fontsize='xx-large')
+        axes[i].set_ylim(max(p), 1) #goes to ~1hPa
+        axes[i].set_yscale('log')
+        axes[i].set_xlabel(r'Latitude ($\degree$N)', fontsize='xx-large')
+        axes[i].set_xlim(0, max(lat))
+        axes[i].set_xticks([0, 20, 40, 60, 80], ['0', '20', '40', '60', '80'])
+        axes[i].tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
+        if i > 0:
+            axes[i].tick_params(axis='y',label1On=False)
+    cb  = fig.colorbar(csa, ax=axes[:], shrink=0.2, orientation='horizontal', extend='both', pad=0.15)
+    cb.set_label(label=r'Zonal Wind (m s$^{-1}$)', size='xx-large')
+    cb.ax.tick_params(labelsize='x-large')        
+    plt.savefig(name+'_0wind.pdf', bbox_inches = 'tight')
+    return plt.close()
+
 def report_plot1(exp, lvls, variable, unit, labels, name):
     # Plots difference between no polar heat and with polar heat
     print(datetime.now(), " - opening files")
@@ -28,12 +77,16 @@ def report_plot1(exp, lvls, variable, unit, labels, name):
             Xtz1 = xr.open_dataset(indir+exp[1][i]+'_utz.nc', decode_times=False).ucomp[0]
             X_response.append(Xtz1 - Xtz0)
             X.append(Xtz1)
-           
-    ds = xr.open_dataset('/disco/share/rm811/isca_data/' + exp[1][0] + '/run0025/atmos_daily_interp.nc')
-    heat = ds.local_heating.sel(lon=180, method='nearest').mean('time')
-    p = ds.pfull
-    lat = ds.lat
-    h_lvls = np.arange(0, 7.5e-5, 5e-6)
+
+    p = Xtz0.pfull
+    lat = Xtz0.lat
+
+    h_name = exp[1][0][11:27]
+    h = xr.open_dataset('../Inputs/' + h_name + '.nc')
+    heat = h.mean('lon').variables[h_name]
+    h_p = h.pfull
+    h_lat = h.lat
+    h_lvls = np.arange(2.5e-6, 1e-4, 5e-6)
 
     print(datetime.now(), " - plotting")
     fig, axes = plt.subplots(1, n, figsize=(n*5,7))
@@ -44,9 +97,8 @@ def report_plot1(exp, lvls, variable, unit, labels, name):
         csb = axes[i].contour(lat, p, X[i], colors='k', levels=lvls[0], linewidths=1.5, alpha=0.25)
         if variable == 'Zonal Wind':
             csb.collections[list(lvls[0]).index(0)].set_linewidth(3)
-        h = axes[i].contour(lat, p, heat, alpha=0, colors='g', levels=h_lvls)
-        h.collections[list(h_lvls).index(1e-5)].set_alpha(0.5) # just show where heating is 1e-5 K/day
-        axes[i].text(2, 1.75, labels[i], color='k', weight='bold', fontsize='xx-large')
+        axes[i].contour(h_lat, h_p, heat, alpha=0.5, colors='g', levels=h_lvls)
+        axes[i].text(2, 1.75, labels[i], color='k', fontsize='xx-large')
         axes[i].set_ylim(max(p), 1) #goes to ~1hPa
         axes[i].set_yscale('log')
         axes[i].set_xlabel(r'Latitude ($\degree$N)', fontsize='xx-large')
@@ -55,10 +107,10 @@ def report_plot1(exp, lvls, variable, unit, labels, name):
         axes[i].tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
         if i > 0:
             axes[i].tick_params(axis='y',label1On=False)
-    cb  = fig.colorbar(csa, ax=axes[:], shrink=0.3, orientation='horizontal', extend='both', pad=0.15)
+    cb  = fig.colorbar(csa, ax=axes[:], shrink=0.2, orientation='horizontal', extend='both', pad=0.15)
     cb.set_label(label='Response'+unit, size='xx-large')
     cb.ax.tick_params(labelsize='x-large')        
-    plt.savefig(name+'.pdf', bbox_inches = 'tight')
+    plt.savefig(name+'0.pdf', bbox_inches = 'tight')
     return plt.close()
 
 def report_plot2(exp, lvls, variable, unit, labels, name):
@@ -285,9 +337,9 @@ if __name__ == '__main__':
     #Set-up data to be read in
     indir = '/disco/share/rm811/processed/'
     basis = 'PK_e0v4z13'
-    plot_type = input("Plot a) individual experiments, b) difference vs. control, c) linear additions, d) meridional T gradients, e) tropopause, or f) paper plot?")
+    plot_type = input("Plot a) individual experiments, b) difference vs. control, c) linear additions, d) meridional T gradients, e) tropopause, f) zero wind check, or g) paper plot?")
    
-    if plot_type == 'a' or plot_type == 'b' or plot_type == 'd' or plot_type == 'e' or plot_type == 'f':
+    if plot_type == 'a' or plot_type == 'b' or plot_type == 'd' or plot_type == 'e' or plot_type == 'f' or plot_type == 'g':
         var_type = input("Plot a) depth, b) width, c) location, d) strength, e) vortex experiments or f) test?")
         if var_type == 'a':
             extension = '_depth'
@@ -359,6 +411,12 @@ if __name__ == '__main__':
             plt.close()
 
         elif plot_type == 'f':
+            if var_type == 'e':
+                zero_wind(exp, labels, basis+extension)
+            else:
+                print("Not set up to plot these experiments yet!")
+
+        elif plot_type == 'g':
             if var_type == 'e':
                 # For polar vortex experiments:
                 T_lvls = [np.arange(160, 330, 10), np.arange(-20, 30, 2.5)]
