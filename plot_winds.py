@@ -71,9 +71,8 @@ def plot_vtx(dir, exp, labels, colors, style, cols, fig_name):
     ax.set_ylabel(r'U$_{10,60}$ Mean (ms$^{-1}$)', color='k', fontsize='xx-large')
     ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
     #ax.set_xticks([10*(12*30), 20*(12*30), 30*(12*30), 40*(12*30)], [10*12, 20*12, 30*12, 40*12])
-    plt.legend(loc='lower center', fancybox=False, shadow=False, ncol=cols, fontsize='xx-large')
+    plt.legend(loc='lower center', fancybox=False, shadow=False, ncol=cols, fontsize='x-large')
     plt.savefig(fig_name+'_vtx.pdf', bbox_inches = 'tight')
-    plt.show()
     return plt.close()
 
 def SPVvexp1(n, mean, mode, sd, err, p, x, xlabel, name):
@@ -82,7 +81,7 @@ def SPVvexp1(n, mean, mode, sd, err, p, x, xlabel, name):
     """
     print(datetime.now(), " - plotting average and s.d. vs experiment at {:.0f} hPa".format(p))
     markers = ['^', 'o']
-    lines = ['--', '-']
+    lines = ['--', '-', '-.']
     fig, ax = plt.subplots(figsize=(10,6))
     ax2 = ax.twinx()
     if n == 2:
@@ -92,17 +91,19 @@ def SPVvexp1(n, mean, mode, sd, err, p, x, xlabel, name):
             ax2.plot(x, sd[i], marker=markers[i], linewidth=1.25, color='#4D0099', linestyle=lines[i], label='S.D.')
             legend_elements = [Line2D([0], [0], marker=markers[0], color='k', label='no polar heat', markerfacecolor='k', markersize=10, linestyle=lines[0]),\
                     Line2D([0], [0], marker=markers[1], color='k', label='polar heat', markerfacecolor='k', markersize=10, linestyle=lines[1])]
-            ax.legend(loc='upper left',handles=legend_elements, fontsize='x-large', fancybox=False, ncol=2)
+            ax.legend(loc='upper left', handles=legend_elements, fontsize='x-large', fancybox=False, ncol=2)
     else:
-        ax.errorbar(x[1:], mean[1:], yerr=err[1:], fmt=markers[1], linewidth=1.25, capsize=5, color='#B30000', linestyle=lines[1], label='mean')
+        ax.errorbar(x[1:], mean[1:], yerr=err[1:], fmt=markers[1], linewidth=1.25, capsize=5, color='#B30000', linestyle=lines[0], label='mean')
         ax.set_xticks(x[1:])
-        ax.plot(x[1:], mode[1:], marker=markers[1], linewidth=1.25, color='#B30000', linestyle='-.', label='mode')
-        plt.legend(loc='upper center' , bbox_to_anchor=(0.5, 1), fancybox=False, shadow=False, ncol=2, fontsize='xx-large')
+        ax.plot(x[1:], mode[1:], marker=markers[1], linewidth=1.25, color='#B30000', linestyle=lines[2], label='mode')
+        legend_elements = [Line2D([0], [0], marker=markers[1], color='#B30000', label='Mean', markerfacecolor='#B30000', markersize=5, linestyle=lines[0]),\
+                    Line2D([0], [0], marker=markers[1], color='#B30000', label='Mode', markerfacecolor='#B30000', markersize=5, linestyle=lines[2])]
+        ax.legend(loc='upper center', handles=legend_elements, fontsize='x-large', bbox_to_anchor=(0.5, 1), fancybox=False, shadow=False, ncol=2)
         ax2.plot(x[1:], sd[1:], marker=markers[1], linewidth=1.25, color='#4D0099', linestyle=lines[1], label='S.D.')
         #ax2.axhline(sd[0], color='#4D0099', linewidth=0.5)
         #ax2.text(5.6, sd[0]-0.6, 'Control', color='#4D0099', fontsize='x-large') 
     ax.set_xlabel(xlabel, fontsize='xx-large')
-    ax.set_ylabel(r'U$_{%s,60}$ average (m s$^{-1}$)'%(str(p)), fontsize='xx-large', color='#B30000')
+    ax.set_ylabel(r'U$_{%s,60}$ Average (m s$^{-1}$)'%(str(p)), fontsize='xx-large', color='#B30000')
     ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
     ax2.set_ylabel(r'U$_{%s,60}$ S.D. (m s$^{-1}$)'%(str(p)), color='#4D0099', fontsize='xx-large')
     ax2.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
@@ -282,16 +283,16 @@ def SPV_report_plot(exp, x, xlabel, name):
         ax.set_xticks(x[1:])
         og = SSWs[0]
         og_err = errors[0]
-        ax.set_xlim(-0.5,n+0.5)
+        ax.set_xlim(-0.5,6.5)
         ax.axhline(og, color='#666666', linewidth=1.5, linestyle=':')
         ax.fill_between(range(-1,8), (og - og_err), (og + og_err), facecolor ='gainsboro', alpha = 0.4)
-        ax.text(n - 0.3, og+0.01, 'control', color='#666666', fontsize='x-large')
+        ax.text(5, og+0.01, 'control', color='#666666', fontsize='x-large')
         ax.set_ylim(min(min(SSWs)-0.05,0), max(SSWs)+0.2)
         ax2.set_ylim(min(sd)-1, max(sd)+1)
         ax2.set_ylabel(r'U$_{10,60}$ S.D. (m s$^{-1}$)', color='#4D0099', fontsize='xx-large')
         ax2.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
     ax.axhline(obs, color='#0c56a0', linewidth=1.5, linestyle=':')
-    ax.text(5.5, obs+0.01, 'observations', color='#0c56a0', fontsize='x-large')
+    ax.text(5, obs+0.01, 'observations', color='#0c56a0', fontsize='x-large')
     ax.set_xlabel(xlabel, fontsize='xx-large')
     ax.set_ylabel('SSW Frequency (per 100 days)', fontsize='xx-large', color='#B30000')
     ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')

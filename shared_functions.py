@@ -27,9 +27,9 @@ def return_exp(extension):
         basis+'_w15a4p500f800g50'+perturb,\
         basis+'_w15a4p400f800g50'+perturb,\
         basis+'_w15a4p300f800g50'+perturb]
-        labels = ['control', r'$p_{top}=900$ hPa', r'$p_{top}=800$ hPa', r'$p_{top}=700$ hPa',\
-                   r'$p_{top}=600$ hPa', r'$p_{top}=500$ hPa', r'$p_{top}=400$ hPa', r'$p_{top}=300$ hPa']
-        #labels = ['control', '900', '800', '700', '600', '500', '400', '300']
+        #labels = ['control', r'$p_{top}=900$ hPa', r'$p_{top}=800$ hPa', r'$p_{top}=700$ hPa',\
+        #           r'$p_{top}=600$ hPa', r'$p_{top}=500$ hPa', r'$p_{top}=400$ hPa', r'$p_{top}=300$ hPa']
+        labels = ['control', '900', '800', '700', '600', '500', '400', '300']
         xlabel = r'Depth of Heating ($p_{top}$, hPa)'
     elif extension == '_width':
         perturb = '_q6m2y45_s'
@@ -50,10 +50,10 @@ def return_exp(extension):
         basis+'_w15a2p600f800g50'+perturb,\
         basis+'_w15a4p600f800g50'+perturb+'l800u200',\
         basis+'_w15a8p600f800g50'+perturb]
-        labels = ['control', r'$A=0.5$ K day$^{-1}$', r'$A=1$ K day$^{-1}$', r'$A=2$ K day$^{-1}$',\
-                   r'$A=4$ K day$^{-1}$', r'$A=8$ K day$^{-1}$']
-        #labels = ['control', '0.5', '1', '2', '4', '8']
-        xlabel = r'Strength of Heating (K day$^{-1}$)'
+        #labels = ['control', r'$A=0.5$ K day$^{-1}$', r'$A=1$ K day$^{-1}$', r'$A=2$ K day$^{-1}$',\
+        #           r'$A=4$ K day$^{-1}$', r'$A=8$ K day$^{-1}$']
+        labels = ['control', '0.5', '1', '2', '4', '8']
+        xlabel = r'Strength of Heating ($A$, K day$^{-1}$)'
     elif extension == '_loc':   
         perturb = '_q6m2y45_s'
         exp = [basis+'_q6m2y45l800u200',\
@@ -89,9 +89,9 @@ def return_exp(extension):
         'PK_e0v4z13'+perturb2,\
         'PK_e0v5z13'+perturb2,\
         'PK_e0v6z13'+perturb2]
-        #labels = [r'$\gamma = 1$ K km$^{-1}$', r'$\gamma = 2$ K km$^{-1}$', r'$\gamma = 3$ K km$^{-1}$',\
-        #          r'$\gamma = 4$ K km$^{-1}$', r'$\gamma = 5$ K km$^{-1}$', r'$\gamma = 6$ K km$^{-1}$']
-        labels = ['1', '2', '3', '4', '5', '6']
+        labels = [r'$\gamma = 1$ K km$^{-1}$', r'$\gamma = 2$ K km$^{-1}$', r'$\gamma = 3$ K km$^{-1}$',\
+                  r'$\gamma = 4$ K km$^{-1}$', r'$\gamma = 5$ K km$^{-1}$', r'$\gamma = 6$ K km$^{-1}$']
+        #labels = ['1', '2', '3', '4', '5', '6']
         xlabel = r'Vortex $\gamma$ (K km$^{-1}$)'
         exp = [exp1, exp2]
     elif extension == '_test':

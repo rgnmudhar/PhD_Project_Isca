@@ -110,7 +110,7 @@ def report_plot1(exp, lvls, variable, unit, labels, name):
     cb  = fig.colorbar(csa, ax=axes[:], shrink=0.2, orientation='horizontal', extend='both', pad=0.15)
     cb.set_label(label='Response'+unit, size='xx-large')
     cb.ax.tick_params(labelsize='x-large')        
-    plt.savefig(name+'0.pdf', bbox_inches = 'tight')
+    plt.savefig(name+'.pdf', bbox_inches = 'tight')
     return plt.close()
 
 def report_plot2(exp, lvls, variable, unit, labels, name):
