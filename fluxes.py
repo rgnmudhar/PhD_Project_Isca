@@ -680,7 +680,7 @@ if __name__ == '__main__':
                     utz, u0, v0, w0, T0 = open_data(indir, exp[0][i])
                     utz, u1, v1, w1, T1 = open_data(indir, exp[1][i])
                     uz.append(utz)
-                    print(datetime.now(), " - finding EP flux")
+                    print(datetime.now(), " - finding EP fluxes")
                     div_0, ep1_0, ep2_0 = calc_ep(u0, v0, w0, T0, k)
                     div_1, ep1_1, ep2_1 = calc_ep(u1, v1, w1, T1, k)
                     div_response.append(div_1 - div_0)
