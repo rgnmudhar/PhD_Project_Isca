@@ -299,6 +299,56 @@ def SPV_report_plot(exp, x, xlabel, name):
     plt.savefig(name+'_SSWs.pdf', bbox_inches = 'tight')
     return plt.close()
 
+def SSW_comp(indir, outdir, exp):
+    # Set-up polar cap pressure anomaly dataset 
+    var = input('a) GPH or b) temperature anomaly? ')
+    print(datetime.now(), " - finding polar cap anomalies")
+    polarcap = slice(60,90)
+    if var == 'a':
+        ds = xr.open_dataset(indir+exp+'_h.nc', decode_times=False).height
+        ds_polarcap = ds.sel(lat=polarcap).mean('lat')
+        ds_polarcap_z = ds_polarcap.mean('lon')
+        unit = 'GPH anomaly (m)'
+    elif var == 'b':
+        ds = xr.open_dataset(indir+exp+'_Tz.nc', decode_times=False).temp
+        ds_polarcap_z = ds.sel(lat=polarcap).mean('lat')
+    ds_polarcap_mean = ds_polarcap_z.mean('time')
+    ds_polarcap_anom = ds_polarcap_z - ds_polarcap_mean
+    
+    # Find indices of SSW days in the timeseries
+    print(datetime.now(), " - finding SSW dates")
+    SPV = open_file(outdir, exp, 'u10')
+    SPV_flag = np.select([SPV<0, SPV>0], [True, False], True)
+    indices = []
+    for k in range(len(SPV)):
+        if SPV[k] < 0:
+            if SPV[k-1] > 0:
+                subset = SPV_flag[k-20:k]
+                if True not in subset:
+                    indices.append(k)
+    
+    print(datetime.now(), " - finding SSW windows")
+    SSW_windows = []
+    days = np.arange(-20, 61, 1) # Want a window from -20 to + 60 days
+    for idx in indices:
+        SSW_windows.append(ds_polarcap_anom[idx+min(days):idx+max(days)+1].assign_coords({'time' : days})) # Common time coordinates
+    composite = xr.concat(SSW_windows, 'window').mean('window').transpose()
+    
+    print(datetime.now(), " - plotting")
+    fig, axes = plt.subplots(1, 1, figsize=(10,6))
+    csa = axes.contourf(composite.time, composite.pfull, composite, cmap='RdBu_r', levels=11)
+    cb  = fig.colorbar(csa)
+    cb.set_label(label=unit, size='xx-large')
+    cb.ax.tick_params(labelsize='x-large')
+    axes.set_xlabel('Lag (Days)', fontsize='xx-large')
+    axes.set_ylabel('Pressure (hPa)', fontsize='xx-large')
+    axes.set_ylim(max(composite.pfull), 1)
+    axes.set_yscale('log')
+    axes.axvline(0, color='w')
+    axes.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
+    plt.savefig('test.pdf', bbox_inches = 'tight')
+    return plt.close()
+
 if __name__ == '__main__': 
     #Set-up data to be read in
     indir = '/disco/share/rm811/processed/'
@@ -390,7 +440,7 @@ if __name__ == '__main__':
     elif level == 'd':
         p = 10 # pressure level at which we want to find the SPV (hPa)
         #User choice for plotting - type
-        plot_type = input('Plot a) SPV over time, b) 10 hPa max. wind/lats, c) SSW frequencies, d) lat-p s.d., or e) paper plot?')
+        plot_type = input('Plot a) SPV over time, b) 10 hPa max. wind/lats, c) SSW frequencies, d) lat-p s.d., e) paper plot, or f) SSW composites?')
         if plot_type == 'a':
             exp = [exp[1], exp[-1]]
             labels = [labels[1], labels[-1]]
@@ -428,6 +478,8 @@ if __name__ == '__main__':
                             r'zonal-mean zonal wind S.D. (ms$^{-1}$)', exp[i]+'_usd_diff.pdf')
         elif plot_type == 'e':
             SPV_report_plot(exp, labels, xlabel, basis+extension)
+        elif plot_type == 'f':
+            SSW_comp(indir, outdir, basis+'_q6m2y45l800u200')
     elif level == 'e':
         n = len(exp)
         u10_full = []
