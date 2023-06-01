@@ -3,10 +3,13 @@ Script for functions involving winds - near-surface, tropospheric jet and strato
 """
 
 from glob import glob
+import imageio
+import os
 import xarray as xr
 import numpy as np
 import scipy.stats as sps
 import matplotlib.pyplot as plt
+import matplotlib.colors as cm
 from matplotlib.lines import Line2D
 import cartopy.crs as ccrs
 from datetime import datetime
@@ -299,19 +302,40 @@ def SPV_report_plot(exp, x, xlabel, name):
     plt.savefig(name+'_SSWs.pdf', bbox_inches = 'tight')
     return plt.close()
 
+def plot_SSW_comp(x, unit, name, lvls):
+    norm = cm.TwoSlopeNorm(vmin=min(lvls), vmax=max(lvls), vcenter=0)
+    fig, axes = plt.subplots(1, 1, figsize=(10,6))
+    csa = axes.contourf(x.time, x.pfull, x, cmap='RdBu_r', norm=norm, extend='both', levels=lvls)
+    cb  = fig.colorbar(csa, extend='both')
+    cb.set_label(label=unit, size='xx-large')
+    cb.ax.tick_params(labelsize='x-large')
+    axes.set_xlabel('Lag (Days)', fontsize='xx-large')
+    axes.set_ylabel('Pressure (hPa)', fontsize='xx-large')
+    axes.set_ylim(max(x.pfull), 1)
+    axes.set_yscale('log')
+    axes.axvline(0, color='w')
+    axes.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
+    plt.savefig(name, bbox_inches = 'tight')
+    return plt.close()
+
 def SSW_comp(indir, outdir, exp):
     # Set-up polar cap pressure anomaly dataset 
     var = input('a) GPH or b) temperature anomaly? ')
     print(datetime.now(), " - finding polar cap anomalies")
-    polarcap = slice(60,90)
+    polarcap = slice(65,90)
     if var == 'a':
         ds = xr.open_dataset(indir+exp+'_h.nc', decode_times=False).height
         ds_polarcap = ds.sel(lat=polarcap).mean('lat')
         ds_polarcap_z = ds_polarcap.mean('lon')
         unit = 'GPH anomaly (m)'
+        addon = '-h'
+        lvls = np.arange(-2000, 7500, 500)
     elif var == 'b':
         ds = xr.open_dataset(indir+exp+'_Tz.nc', decode_times=False).temp
         ds_polarcap_z = ds.sel(lat=polarcap).mean('lat')
+        unit = 'Temperature anomaly (K)'
+        addon = '-T'
+        lvls = np.arange(-40, 65, 5)
     ds_polarcap_mean = ds_polarcap_z.mean('time')
     ds_polarcap_anom = ds_polarcap_z - ds_polarcap_mean
     
@@ -331,23 +355,28 @@ def SSW_comp(indir, outdir, exp):
     SSW_windows = []
     days = np.arange(-20, 61, 1) # Want a window from -20 to + 60 days
     for idx in indices:
-        SSW_windows.append(ds_polarcap_anom[idx+min(days):idx+max(days)+1].assign_coords({'time' : days})) # Common time coordinates
-    composite = xr.concat(SSW_windows, 'window').mean('window').transpose()
+        SSW_windows.append(ds_polarcap_anom[idx+min(days):idx+max(days)+1].assign_coords({'time' : days}).transpose()) # Common time coordinates
+    composite = xr.concat(SSW_windows, 'window').mean('window')
     
-    print(datetime.now(), " - plotting")
-    fig, axes = plt.subplots(1, 1, figsize=(10,6))
-    csa = axes.contourf(composite.time, composite.pfull, composite, cmap='RdBu_r', levels=11)
-    cb  = fig.colorbar(csa)
-    cb.set_label(label=unit, size='xx-large')
-    cb.ax.tick_params(labelsize='x-large')
-    axes.set_xlabel('Lag (Days)', fontsize='xx-large')
-    axes.set_ylabel('Pressure (hPa)', fontsize='xx-large')
-    axes.set_ylim(max(composite.pfull), 1)
-    axes.set_yscale('log')
-    axes.axvline(0, color='w')
-    axes.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
-    plt.savefig('test.pdf', bbox_inches = 'tight')
-    return plt.close()
+    print(datetime.now(), " - plotting mean")
+    plot_SSW_comp(composite, unit, 'SSWcomp'+addon+'.pdf', lvls)
+
+    print(datetime.now(), " - making gif")
+    for w in range(len(SSW_windows)):
+        plot_SSW_comp(SSW_windows[w], unit, 'SSWcomp'+addon+'_'+str(w)+'.png', lvls)
+    # Merge all plots into a GIF for visualisation
+    images = glob('SSWcomp'+addon+'_*.png')
+    list.sort(images, key = lambda x: int(x.split('_')[1].split('.png')[0]))
+    IMAGES = []
+    for w in range(len(SSW_windows)):
+        IMAGES.append(imageio.imread(images[w]))
+    imageio.mimsave('SSWcomp'+addon+'.gif', IMAGES, 'GIF', duration = 1/2)
+
+    # Delete all temporary plots from working directory
+    for w in range(len(SSW_windows)):
+        os.remove(images[w])
+
+    return 
 
 if __name__ == '__main__': 
     #Set-up data to be read in
@@ -479,7 +508,7 @@ if __name__ == '__main__':
         elif plot_type == 'e':
             SPV_report_plot(exp, labels, xlabel, basis+extension)
         elif plot_type == 'f':
-            SSW_comp(indir, outdir, basis+'_q6m2y45l800u200')
+            SSW_comp(indir, outdir, 'PK_e0v5z13_w15a4p600f800g50_q6m2y45l800u200')
     elif level == 'e':
         n = len(exp)
         u10_full = []
