@@ -346,7 +346,7 @@ if __name__ == '__main__':
         elif var_type == 'b':
             extension = '_width'
         elif var_type == 'c':
-            extension = '_loc'
+            extension = '_loc2'
         elif var_type == 'd':
             extension = '_strength'
         elif var_type == 'e':
@@ -411,7 +411,7 @@ if __name__ == '__main__':
             plt.close()
 
         elif plot_type == 'f':
-            if var_type == 'e':
+            if extension == '_vtx' or '_loc2':
                 zero_wind(exp, labels, basis+extension)
             else:
                 print("Not set up to plot these experiments yet!")

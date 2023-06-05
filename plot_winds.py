@@ -302,7 +302,15 @@ def SPV_report_plot(exp, x, xlabel, name):
     plt.savefig(name+'_SSWs.pdf', bbox_inches = 'tight')
     return plt.close()
 
-def plot_SSW_comp(x, unit, name, lvls):
+def standardise(full, mean, time, pressure):
+    print(datetime.now(), " - standardising")
+    std = mean
+    for t in range(len(time)):
+        for p in range(len(pressure)):
+            std[p,t] = mean[p,t] / np.std(full[:,p,t])
+    return std
+
+def plot_SSW_comp(x, unit, name, lvls, n):
     norm = cm.TwoSlopeNorm(vmin=min(lvls), vmax=max(lvls), vcenter=0)
     fig, axes = plt.subplots(1, 1, figsize=(10,6))
     csa = axes.contourf(x.time, x.pfull, x, cmap='RdBu_r', norm=norm, extend='both', levels=lvls)
@@ -314,6 +322,8 @@ def plot_SSW_comp(x, unit, name, lvls):
     axes.set_ylim(max(x.pfull), 1)
     axes.set_yscale('log')
     axes.axvline(0, color='w')
+    axes.axhline(300, color='w')
+    axes.text(55, 9, n, color='#0c56a0', fontsize='x-large')
     axes.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
     plt.savefig(name, bbox_inches = 'tight')
     return plt.close()
@@ -327,15 +337,15 @@ def SSW_comp(indir, outdir, exp):
         ds = xr.open_dataset(indir+exp+'_h.nc', decode_times=False).height
         ds_polarcap = ds.sel(lat=polarcap).mean('lat')
         ds_polarcap_z = ds_polarcap.mean('lon')
-        unit = 'GPH anomaly (m)'
+        unit = 'Standardised PCH Anomaly (m)'
         addon = '-h'
-        lvls = np.arange(-2000, 7500, 500)
+        lvls = np.arange(-1.5, 5.5, 0.5)
     elif var == 'b':
         ds = xr.open_dataset(indir+exp+'_Tz.nc', decode_times=False).temp
         ds_polarcap_z = ds.sel(lat=polarcap).mean('lat')
-        unit = 'Temperature anomaly (K)'
+        unit = 'Standardised PCT Anomaly (K)'
         addon = '-T'
-        lvls = np.arange(-40, 65, 5)
+        lvls = np.arange(-3, 3.5, 0.5)
     ds_polarcap_mean = ds_polarcap_z.mean('time')
     ds_polarcap_anom = ds_polarcap_z - ds_polarcap_mean
     
@@ -356,14 +366,14 @@ def SSW_comp(indir, outdir, exp):
     days = np.arange(-20, 61, 1) # Want a window from -20 to + 60 days
     for idx in indices:
         SSW_windows.append(ds_polarcap_anom[idx+min(days):idx+max(days)+1].assign_coords({'time' : days}).transpose()) # Common time coordinates
-    composite = xr.concat(SSW_windows, 'window').mean('window')
-    
-    print(datetime.now(), " - plotting mean")
-    plot_SSW_comp(composite, unit, 'SSWcomp'+addon+'.pdf', lvls)
+    composite = xr.concat(SSW_windows, 'window')
 
-    print(datetime.now(), " - making gif")
+    SSW_windows_std = []    
     for w in range(len(SSW_windows)):
-        plot_SSW_comp(SSW_windows[w], unit, 'SSWcomp'+addon+'_'+str(w)+'.png', lvls)
+        window_std = standardise(composite, SSW_windows[w], days, ds.pfull)
+        SSW_windows_std.append(window_std)
+        plot_SSW_comp(window_std, unit, 'SSWcomp'+addon+'_'+str(w)+'.png', lvls, w)
+    print(datetime.now(), " - making gif")
     # Merge all plots into a GIF for visualisation
     images = glob('SSWcomp'+addon+'_*.png')
     list.sort(images, key = lambda x: int(x.split('_')[1].split('.png')[0]))
@@ -371,12 +381,16 @@ def SSW_comp(indir, outdir, exp):
     for w in range(len(SSW_windows)):
         IMAGES.append(imageio.imread(images[w]))
     imageio.mimsave('SSWcomp'+addon+'.gif', IMAGES, 'GIF', duration = 1/2)
-
     # Delete all temporary plots from working directory
     for w in range(len(SSW_windows)):
         os.remove(images[w])
+        composite_mean = composite.mean('window')
+    composite_std = standardise(composite, composite_mean, days, ds.pfull)
+    
+    print(datetime.now(), " - plotting mean")
+    composite_std = xr.concat(SSW_windows_std, 'window').mean('window')
+    plot_SSW_comp(composite_std, unit, 'SSWcomp'+addon+'.pdf', lvls, '')
 
-    return 
 
 if __name__ == '__main__': 
     #Set-up data to be read in
@@ -389,7 +403,7 @@ if __name__ == '__main__':
     elif var_type == 'b':
         extension = '_width'
     elif var_type == 'c':
-        extension = '_loc'
+        extension = '_loc2'
     elif var_type == 'd':
         extension = '_strength'
     elif var_type == 'e':
@@ -428,7 +442,7 @@ if __name__ == '__main__':
                     show_jet(u, p[j], lvls[j], exp[i])
         elif alt == "b":
             p = 850 # hPa for EDJ
-            if extension == '_vtx':
+            if extension == '_vtx' or '_loc2':
                 windsvexp(outdir, labels, xlabel, str(p), [basis+extension+'_noheat', basis+extension+'_heat'])
             else:
                 windsvexp(outdir, labels, xlabel, str(p), basis+extension)
@@ -478,7 +492,7 @@ if __name__ == '__main__':
             cols = 2
             plot_vtx(outdir, exp, labels, colors, style, cols, exp[0])
         elif plot_type == 'b':
-            if extension == '_vtx':
+            if extension == '_vtx' or '_loc2':
                 windsvexp(outdir, labels, xlabel, str(p), [basis+extension+'_noheat', basis+extension+'_heat'])
             else:
                 windsvexp(outdir, labels, xlabel, str(p), basis+extension)

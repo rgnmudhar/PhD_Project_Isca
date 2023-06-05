@@ -437,7 +437,7 @@ def plot_n2_2(exp, k, name):
 
 def plot_EP_1(u, div_response, ep1_response, ep2_response, n, heat, name):
     # Plots difference between no polar heat and with polar heat
-    lvls = np.arange(-12,13,1)
+    lvls = np.arange(-6,7,1)
     p = u[0].pfull
     lat = u[0].lat
     h_lvls = np.arange(2.5e-6, 1e-4, 5e-6)

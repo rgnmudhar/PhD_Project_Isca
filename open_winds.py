@@ -231,7 +231,7 @@ if __name__ == '__main__':
     indir = '/disco/share/rm811/processed/'
     outdir = '../Files/'
     basis = 'PK_e0v4z13'
-    var_type = input("Run a) depth, b) width, c) location, d) strength or e) vortex experiments?")
+    var_type = 0 #input("Run a) depth, b) width, c) location, d) strength or e) vortex experiments?")
     if var_type == 'a':
         extension = '_depth'
     elif var_type == 'b':
@@ -243,14 +243,17 @@ if __name__ == '__main__':
     elif var_type == 'e':
         basis = 'PK_e0vXz13'
         extension = '_vtx'
-    exp = return_exp(extension)[0]
-    #exp = ['PK_e0v6z13_w15a4p600f800g50_q6m2y45l800u200']
-    
+    #exp = return_exp(extension)[0]
+    exp = ['PK_e0v4z13_a4x45y90w5v15p800_q6m2y45_s', 'PK_e0v4z13_a4x45y180w5v15p800_q6m2y45_s', 'PK_e0v4z13_a4x45y90w5v15p800_s', 'PK_e0v4z13_a4x45y180w5v15p800_s']
+
     #Ro = []
     #for i in range(len(exp)):
         #Ro.append(calc_Ro(indir, exp[i], p))
     #print(Ro)
 
-    #find_SPV(indir, outdir, exp)
-    p = 850 #10
+    extension = '_offpole'
+    find_SPV(indir, outdir, exp)
+    p = 850
+    winds_errs(indir, outdir, exp, p, basis+extension)
+    p = 10
     winds_errs(indir, outdir, exp, p, basis+extension)

@@ -54,7 +54,7 @@ def return_exp(extension):
         #           r'$A=4$ K day$^{-1}$', r'$A=8$ K day$^{-1}$']
         labels = ['control', '0.5', '1', '2', '4', '8']
         xlabel = r'Strength of Heating ($A$, K day$^{-1}$)'
-    elif extension == '_loc':   
+    elif extension == '_loc1':   
         perturb = '_q6m2y45_s'
         exp = [basis+'_q6m2y45l800u200',\
             basis+'_a4x75y90w5v30p600'+perturb,\
@@ -63,8 +63,15 @@ def return_exp(extension):
             basis+'_a4x75y225w5v30p600'+perturb]
         labels = ['control', r'$\lambda=90\degree$E', r'$\lambda=135\degree$E', r'$\lambda=180\degree$E', r'$\lambda=225\degree$E']
         #labels = ['control', '90', '135', '180', '225']
-        labels = ['control', r'$90\degree$E', r'$135\degree$E', r'$180\degree$E', r'$225\degree$E']
         xlabel = r'Longitude of heating ($\degree$E)'
+    elif extension == '_loc2':
+        perturb1 = '_q6m2y45l800u200' 
+        perturb2 = '_w15a4p600f800g50_q6m2y45l800u200'
+        exp1 = ['PK_e0v4z13_a4x45y180w5v15p800_s', 'PK_e0v4z13_a4x45y90w5v15p800_s']
+        exp2 = ['PK_e0v4z13_a4x45y180w5v15p800_q6m2y45_s', 'PK_e0v4z13_a4x45y90w5v15p800_q6m2y45_s']
+        labels = [r'$\lambda=180\degree$E', r'$\lambda=90\degree$E']
+        xlabel = r'Longitude of heating ($\degree$E)'
+        exp = [exp1, exp2]
     elif extension == '_topo':
         topo = '_h4000m2l25u65'
         exp = [basis+topo,\

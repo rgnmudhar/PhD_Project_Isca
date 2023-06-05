@@ -225,8 +225,7 @@ if __name__ == '__main__':
     elif var_type == 'f':
         extension = '_test'
     exp = return_exp(extension)[0]
-    #exp = [basis+'_a4x75y0w5v30p800_q6m2y45_s']
-
+    
     # For EOFs follow Sheshadri & Plumb 2017, use p>100hPa, lat>20degN
     p_min = 100  # hPa
     lat_min = 20  # degrees
