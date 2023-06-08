@@ -302,12 +302,12 @@ def SPV_report_plot(exp, x, xlabel, name):
     plt.savefig(name+'_SSWs.pdf', bbox_inches = 'tight')
     return plt.close()
 
-def standardise(full, mean, time, pressure):
-    print(datetime.now(), " - standardising")
-    std = mean
-    for t in range(len(time)):
-        for p in range(len(pressure)):
-            std[p,t] = mean[p,t] / np.std(full[:,p,t])
+def standardise(full, og, pressure, time):
+    std = og
+    for p in range(len(pressure)):
+        sd = np.std(full[p])
+        for t in range(len(time)):
+            std[p,t] = og[p,t] / sd
     return std
 
 def plot_SSW_comp(x, unit, name, lvls, n):
@@ -323,32 +323,12 @@ def plot_SSW_comp(x, unit, name, lvls, n):
     axes.set_yscale('log')
     axes.axvline(0, color='w')
     axes.axhline(300, color='w')
-    axes.text(55, 9, n, color='#0c56a0', fontsize='x-large')
+    axes.text(55, 2, n, color='#0c56a0', fontsize='x-large')
     axes.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
     plt.savefig(name, bbox_inches = 'tight')
     return plt.close()
 
 def SSW_comp(indir, outdir, exp):
-    # Set-up polar cap pressure anomaly dataset 
-    var = input('a) GPH or b) temperature anomaly? ')
-    print(datetime.now(), " - finding polar cap anomalies")
-    polarcap = slice(65,90)
-    if var == 'a':
-        ds = xr.open_dataset(indir+exp+'_h.nc', decode_times=False).height
-        ds_polarcap = ds.sel(lat=polarcap).mean('lat')
-        ds_polarcap_z = ds_polarcap.mean('lon')
-        unit = 'Standardised PCH Anomaly (m)'
-        addon = '-h'
-        lvls = np.arange(-1.5, 5.5, 0.5)
-    elif var == 'b':
-        ds = xr.open_dataset(indir+exp+'_Tz.nc', decode_times=False).temp
-        ds_polarcap_z = ds.sel(lat=polarcap).mean('lat')
-        unit = 'Standardised PCT Anomaly (K)'
-        addon = '-T'
-        lvls = np.arange(-3, 3.5, 0.5)
-    ds_polarcap_mean = ds_polarcap_z.mean('time')
-    ds_polarcap_anom = ds_polarcap_z - ds_polarcap_mean
-    
     # Find indices of SSW days in the timeseries
     print(datetime.now(), " - finding SSW dates")
     SPV = open_file(outdir, exp, 'u10')
@@ -360,17 +340,38 @@ def SSW_comp(indir, outdir, exp):
                 subset = SPV_flag[k-20:k]
                 if True not in subset:
                     indices.append(k)
+
+    # Set-up polar cap pressure anomaly dataset 
+    var = input('a) GPH or b) temperature anomaly? ')
+    print(datetime.now(), " - finding polar cap anomalies")
+    polarcap = slice(65,90)
+    if var == 'a':
+        ds = xr.open_dataset(indir+exp+'_h.nc', decode_times=False).height
+        ds_polarcap = ds.sel(lat=polarcap).mean('lat')
+        ds_polarcap_z = ds_polarcap.mean('lon')
+        unit = 'Standardised PCH Anomaly (m)'
+        addon = '-h'
+        lvls = np.arange(-1, 3.5, 0.5)
+    elif var == 'b':
+        ds = xr.open_dataset(indir+exp+'_Tz.nc', decode_times=False).temp
+        ds_polarcap_z = ds.sel(lat=polarcap).mean('lat')
+        unit = 'Standardised PCT Anomaly (K)'
+        addon = '-T'
+        lvls = np.arange(-3, 3.5, 0.5)
+    ds_polarcap_mean = ds_polarcap_z.mean('time')
+    ds_polarcap_anom = ds_polarcap_z - ds_polarcap_mean
     
     print(datetime.now(), " - finding SSW windows")
     SSW_windows = []
     days = np.arange(-20, 61, 1) # Want a window from -20 to + 60 days
     for idx in indices:
         SSW_windows.append(ds_polarcap_anom[idx+min(days):idx+max(days)+1].assign_coords({'time' : days}).transpose()) # Common time coordinates
-    composite = xr.concat(SSW_windows, 'window')
-
-    SSW_windows_std = []    
+    
+    print(datetime.now(), " - standardising")
+    SSW_windows_std = []
     for w in range(len(SSW_windows)):
-        window_std = standardise(composite, SSW_windows[w], days, ds.pfull)
+        print(datetime.now(), " - {0:.0f}/{1:.0f} windows".format(w+1, len(SSW_windows)))
+        window_std = standardise(ds_polarcap_z.transpose(), SSW_windows[w], ds.pfull, days)
         SSW_windows_std.append(window_std)
         plot_SSW_comp(window_std, unit, 'SSWcomp'+addon+'_'+str(w)+'.png', lvls, w)
     print(datetime.now(), " - making gif")
