@@ -198,6 +198,20 @@ def find_SSWs(dir, exp):
         h_err_list.append(h_err)
     return h_list, h_err_list
 
+def identify_SSWs(outdir, exp):
+    # Simply finds dates that SSWs occur by finding indices of SSW days in the timeseries
+    print(datetime.now(), " - finding SSW dates")
+    SPV = open_file(outdir, exp, 'u10')
+    SPV_flag = np.select([SPV<0, SPV>0], [True, False], True)
+    indices = []
+    for k in range(len(SPV)):
+        if SPV[k] < 0:
+            if SPV[k-1] > 0:
+                subset = SPV_flag[k-20:k]
+                if True not in subset:
+                    indices.append(k)
+    return(indices)
+
 def SSWsperrun(dir, exp):
     SPV = open_file(dir, exp, 'u10')
     years = np.arange(5, int(len(SPV)/360)+5, 5)

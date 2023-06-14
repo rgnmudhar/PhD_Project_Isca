@@ -671,11 +671,10 @@ if __name__ == '__main__':
                 heat = h.mean('lon').variables[h_name]
                 h_p = h.pfull
                 h_lat = h.lat
-                for i in range(n):
+                for i in range(len(exp[0])):
                     print(datetime.now(), " - opening files ({0:.0f}/{1:.0f})".format(i+1, len(exp[0])))
                     utz, u0, v0, w0, T0 = open_data(indir, exp[0][i])
                     utz, u1, v1, w1, T1 = open_data(indir, exp[1][i])
-                    print(datetime.now(), " - finding EP fluxes")
                     div_0, ep1_0, ep2_0 = calc_ep(u0, v0, w0, T0, k)
                     div_1, ep1_1, ep2_1 = calc_ep(u1, v1, w1, T1, k)
                     div_response = div_1 - div_0

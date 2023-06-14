@@ -310,7 +310,7 @@ def standardise(full, og, pressure, time):
             std[p,t] = og[p,t] / sd
     return std
 
-def plot_SSW_comp(x, unit, name, lvls, n):
+def plot_SSW_comp(x, unit, name, lvls, label):
     norm = cm.TwoSlopeNorm(vmin=min(lvls), vmax=max(lvls), vcenter=0)
     fig, axes = plt.subplots(1, 1, figsize=(10,6))
     csa = axes.contourf(x.time, x.pfull, x, cmap='RdBu_r', norm=norm, extend='both', levels=lvls)
@@ -323,74 +323,78 @@ def plot_SSW_comp(x, unit, name, lvls, n):
     axes.set_yscale('log')
     axes.axvline(0, color='w')
     axes.axhline(300, color='w')
-    axes.text(55, 2, n, color='#0c56a0', fontsize='x-large')
+    axes.text(-17, 1.75, label, color='k', fontsize='xx-large')
     axes.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
     plt.savefig(name, bbox_inches = 'tight')
     return plt.close()
 
-def SSW_comp(indir, outdir, exp):
-    # Find indices of SSW days in the timeseries
-    print(datetime.now(), " - finding SSW dates")
-    SPV = open_file(outdir, exp, 'u10')
-    SPV_flag = np.select([SPV<0, SPV>0], [True, False], True)
-    indices = []
-    for k in range(len(SPV)):
-        if SPV[k] < 0:
-            if SPV[k-1] > 0:
-                subset = SPV_flag[k-20:k]
-                if True not in subset:
-                    indices.append(k)
-
-    # Set-up polar cap pressure anomaly dataset 
-    var = input('a) GPH or b) temperature anomaly? ')
-    print(datetime.now(), " - finding polar cap anomalies")
-    polarcap = slice(65,90)
-    if var == 'a':
-        ds = xr.open_dataset(indir+exp+'_h.nc', decode_times=False).height
-        ds_polarcap = ds.sel(lat=polarcap).mean('lat')
-        ds_polarcap_z = ds_polarcap.mean('lon')
-        unit = 'Standardised PCH Anomaly (m)'
-        addon = '-h'
-        lvls = np.arange(-1, 3.5, 0.5)
-    elif var == 'b':
-        ds = xr.open_dataset(indir+exp+'_Tz.nc', decode_times=False).temp
-        ds_polarcap_z = ds.sel(lat=polarcap).mean('lat')
-        unit = 'Standardised PCT Anomaly (K)'
-        addon = '-T'
-        lvls = np.arange(-3, 3.5, 0.5)
-    ds_polarcap_mean = ds_polarcap_z.mean('time')
-    ds_polarcap_anom = ds_polarcap_z - ds_polarcap_mean
-    
-    print(datetime.now(), " - finding SSW windows")
-    SSW_windows = []
+def SSW_comp(indir, outdir, exp, labels, unit, addon, lvls):
+    polarcap = slice(65,90) # 65 to 90 N
     days = np.arange(-20, 61, 1) # Want a window from -20 to + 60 days
-    for idx in indices:
-        SSW_windows.append(ds_polarcap_anom[idx+min(days):idx+max(days)+1].assign_coords({'time' : days}).transpose()) # Common time coordinates
+    for i in range(len(exp)):
+        print(datetime.now(), " - {0:.0f}/{1:.0f} experiments".format(i+1, len(exp)))
+        indices = identify_SSWs(outdir, exp[i])
+        # Set-up polar cap pressure anomaly dataset 
+        print(datetime.now(), " - finding polar cap anomalies")
+        if var == 'a':
+            ds = xr.open_dataset(indir+exp[i]+'_h.nc', decode_times=False).height
+            ds_polarcap = ds.sel(lat=polarcap).mean('lat')
+            ds_polarcap_z = ds_polarcap.mean('lon')
+        elif var == 'b':
+            ds = xr.open_dataset(indir+exp[i]+'_Tz.nc', decode_times=False).temp
+            ds_polarcap_z = ds.sel(lat=polarcap).mean('lat')
+        ds_polarcap_mean = ds_polarcap_z.mean('time')
+        ds_polarcap_anom = ds_polarcap_z - ds_polarcap_mean
     
-    print(datetime.now(), " - standardising")
-    SSW_windows_std = []
-    for w in range(len(SSW_windows)):
-        print(datetime.now(), " - {0:.0f}/{1:.0f} windows".format(w+1, len(SSW_windows)))
-        window_std = standardise(ds_polarcap_z.transpose(), SSW_windows[w], ds.pfull, days)
-        SSW_windows_std.append(window_std)
-        plot_SSW_comp(window_std, unit, 'SSWcomp'+addon+'_'+str(w)+'.png', lvls, w)
-    print(datetime.now(), " - making gif")
-    # Merge all plots into a GIF for visualisation
-    images = glob('SSWcomp'+addon+'_*.png')
-    list.sort(images, key = lambda x: int(x.split('_')[1].split('.png')[0]))
-    IMAGES = []
-    for w in range(len(SSW_windows)):
-        IMAGES.append(imageio.imread(images[w]))
-    imageio.mimsave('SSWcomp'+addon+'.gif', IMAGES, 'GIF', duration = 1/2)
-    # Delete all temporary plots from working directory
-    for w in range(len(SSW_windows)):
-        os.remove(images[w])
-        composite_mean = composite.mean('window')
-    composite_std = standardise(composite, composite_mean, days, ds.pfull)
+        print(datetime.now(), " - finding SSW windows")
+        SSW_windows = []
+        for idx in indices:
+            if idx + min(days) < 0:
+                start = 0
+                end = idx + max(days) + 1
+                new_days = np.arange(min(days) - (idx + min(days)), max(days)+1, 1)
+                window = ds_polarcap_anom[start:end].assign_coords({'time' : new_days}).transpose()
+                empty = xr.zeros_like(ds_polarcap_anom[:abs(idx + min(days))]).assign_coords({'time' : np.arange(min(days), min(window.time))})
+                empty = xr.where(empty==0, np.nan, empty)
+                window = xr.concat([empty, window], 'time')
+            elif idx+max(days) > len(ds.time):
+                excess = idx+max(days) - len(ds.time)
+                start = idx + min(days)
+                end = len(ds.time)-1
+                new_days = np.arange(min(days), len(ds.time) - idx-1, 1)
+                window = ds_polarcap_anom[start:end].assign_coords({'time' : new_days}).transpose()
+                empty = xr.zeros_like(ds_polarcap_anom[:len(days)+1 - (end - start)]).assign_coords({'time' : np.arange(max(window.time), max(days)+1)})
+                empty = xr.where(empty==0, np.nan, empty)
+                window = xr.concat([window, empty], 'time')
+            else:
+                start = idx + min(days)
+                end = idx + max(days) + 1
+                window = ds_polarcap_anom[start:end].assign_coords({'time' : days}).transpose()
+            SSW_windows.append(window) # Common time coordinates
     
-    print(datetime.now(), " - plotting mean")
-    composite_std = xr.concat(SSW_windows_std, 'window').mean('window')
-    plot_SSW_comp(composite_std, unit, 'SSWcomp'+addon+'.pdf', lvls, '')
+        print(datetime.now(), " - standardising")
+        SSW_windows_std = []
+        for w in range(len(SSW_windows)):
+            print(datetime.now(), " - {0:.0f}/{1:.0f} windows".format(w+1, len(SSW_windows)))
+            window_std = standardise(ds_polarcap_z.transpose(), SSW_windows[w], ds.pfull, days)
+            SSW_windows_std.append(window_std)
+            plot_SSW_comp(window_std, unit, 'SSWcomp_'+str(w+1)+'.png', lvls, w+1)
+
+        print(datetime.now(), " - making gif")
+        # Merge all plots into a GIF for visualisation
+        image_list = glob('SSWcomp_*.png')
+        list.sort(image_list, key = lambda x: int(x.split('_')[1].split('.png')[0]))
+        IMAGES = []
+        for w in range(len(SSW_windows)):
+            IMAGES.append(imageio.imread(image_list[w]))
+        imageio.mimsave(exp[i]+'_SSWcomp'+addon+'.gif', IMAGES, 'GIF', duration = 1/2)
+        # Delete all temporary plots from working directory
+        for w in range(len(SSW_windows)):
+            os.remove(image_list[w])
+        
+        print(datetime.now(), " - plotting composite")
+        composite_std = xr.concat(SSW_windows_std, 'window').mean('window')
+        plot_SSW_comp(composite_std, unit, exp[i]+'_SSWcomp'+addon+'.pdf', lvls, labels[i])
 
 
 if __name__ == '__main__': 
@@ -523,7 +527,16 @@ if __name__ == '__main__':
         elif plot_type == 'e':
             SPV_report_plot(exp, labels, xlabel, basis+extension)
         elif plot_type == 'f':
-            SSW_comp(indir, outdir, 'PK_e0v5z13_w15a4p600f800g50_q6m2y45l800u200')
+            var = input('a) GPH or b) temperature anomaly? ')
+            if var == 'a':
+                unit = 'Standardised PCH Anomaly (m)'
+                addon = '-h'
+                lvls = np.arange(-1, 3.25, 0.25)
+            elif var == 'b':
+                unit = 'Standardised PCT Anomaly (K)'
+                addon = '-T'
+                lvls = np.arange(-2, 2.25, 0.25)
+            SSW_comp(indir, outdir, exp, labels, unit, addon, lvls)
     elif level == 'e':
         n = len(exp)
         u10_full = []
