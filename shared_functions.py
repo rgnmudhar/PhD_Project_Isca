@@ -96,9 +96,9 @@ def return_exp(extension):
         'PK_e0v4z13'+perturb2,\
         'PK_e0v5z13'+perturb2,\
         'PK_e0v6z13'+perturb2]
-        labels = [r'$\gamma = 1$ K km$^{-1}$', r'$\gamma = 2$ K km$^{-1}$', r'$\gamma = 3$ K km$^{-1}$',\
-                  r'$\gamma = 4$ K km$^{-1}$', r'$\gamma = 5$ K km$^{-1}$', r'$\gamma = 6$ K km$^{-1}$']
-        #labels = ['1', '2', '3', '4', '5', '6']
+        #labels = [r'$\gamma = 1$ K km$^{-1}$', r'$\gamma = 2$ K km$^{-1}$', r'$\gamma = 3$ K km$^{-1}$',\
+        #          r'$\gamma = 4$ K km$^{-1}$', r'$\gamma = 5$ K km$^{-1}$', r'$\gamma = 6$ K km$^{-1}$']
+        labels = ['1', '2', '3', '4', '5', '6']
         xlabel = r'Vortex $\gamma$ (K km$^{-1}$)'
         exp = [exp1, exp2]
     elif extension == '_test':
