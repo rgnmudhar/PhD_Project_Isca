@@ -115,7 +115,7 @@ if __name__ == '__main__':
     blues = ['k', '#dbe9f6', '#bbd6eb', '#88bedc', '#549ecd',  '#2a7aba', '#0c56a0', '#08306b']
     ulvls = np.arange(-200, 210, 10)
 
-    plot_type = input('Plot a) gph lat-p, b) gph @ 60N and PDFs @ 10 & 100 hPa, or c) linear add? ')
+    plot_type = input('Plot a) gph lat-p, b) gph @ 60N and PDFs @ 10 & 100 hPa, c) linear add, or d) tilt? ')
 
     if plot_type == 'c':
         exp = [basis+polar, basis+perturb+'l800u200', basis+polar+perturb+'l800u200']
@@ -164,6 +164,28 @@ if __name__ == '__main__':
                 plt.savefig(names[k]+'_'+str(p[j])+'gph.pdf', bbox_inches = 'tight')
                 plt.close()
 
+    elif plot_type == 'd':
+        extension = '_loc2'
+        exp, labels, xlabel = return_exp(extension)
+        exp = exp[1]
+        for i in range(len(exp)):
+            print(datetime.now(), ' - opening files {0:.0f}/{1:.0f} - '.format(i+1, len(exp)), exp[i])
+            gph = xr.open_dataset(indir+exp[i]+'_h.nc', decode_times=False).height
+            print(datetime.now(), ' - wave decomposition')
+            waves = climate.GetWavesXr(gph)
+            wav = np.abs(waves.sel(k=k)).mean('lon')
+            
+            gph_lat = gph.sel(lat=45, method='nearest')
+            print(datetime.now(), ' - finding anomaly')
+            gph_lat_mean = gph_lat.mean('time')
+            gph_lat_anom = gph_lat - gph_lat_mean
+            gph_lat_anom = gph_lat_anom.mean('time')
+            print(datetime.now(), ' - plotting')
+            plt.contourf(gph.lon, gph.pfull, gph_lat_anom, levels=11, cmap='RdBu_r')
+            plt.colorbar()
+            plt.ylim(max(gph.pfull), 100)
+            plt.yscale('log')
+            plt.show()
     else:
         var_type = input("Plot a) depth, b) width, c) location, d) strength or e) topography experiments, or f) test?")
         if var_type == 'a':
@@ -236,7 +258,7 @@ if __name__ == '__main__':
             print(datetime.now(), ' - plotting PDFs')
             plot_pdf('gph', indir, exp, '', mags10, 10, 0, labels, 'zonal-mean 10 hPa '+lab+' wave-{0:.0f} absolute magnitude'.format(k), blues, exp[0]+extension+'_wavemag_k{0:.0f}.pdf'.format(k))
             plot_pdf('gph', indir, exp, '', mags100, 100, 0, labels, 'zonal-mean 100 hPa '+lab+' wave-{0:.0f} absolute magnitude'.format(k), blues, exp[0]+extension+'_wavemag_k{0:.0f}.pdf'.format(k))
-
+        
 """
     lons = [0, 90, 180, 270]
     p_lvls_diff = [np.arange(-150, 170, 20), np.arange(-200, 220, 20), np.arange(-250, 270, 20)]

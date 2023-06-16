@@ -356,20 +356,20 @@ def SSW_comp(indir, outdir, exp, labels, unit, addon, lvls):
                 window = ds_polarcap_anom[start:end].assign_coords({'time' : new_days}).transpose()
                 empty = xr.zeros_like(ds_polarcap_anom[:abs(idx + min(days))]).assign_coords({'time' : np.arange(min(days), min(window.time))})
                 empty = xr.where(empty==0, np.nan, empty)
-                window = xr.concat([empty, window], 'time')
+                window = xr.concat([empty, window], 'time').transpose('pfull', 'time')
             elif idx+max(days) > len(ds.time):
                 excess = idx+max(days) - len(ds.time)
                 start = idx + min(days)
                 end = len(ds.time)-1
                 new_days = np.arange(min(days), len(ds.time) - idx-1, 1)
                 window = ds_polarcap_anom[start:end].assign_coords({'time' : new_days}).transpose()
-                empty = xr.zeros_like(ds_polarcap_anom[:len(days)+1 - (end - start)]).assign_coords({'time' : np.arange(max(window.time), max(days)+1)})
+                empty = xr.zeros_like(ds_polarcap_anom[:len(days) - (end - start)]).assign_coords({'time' : np.arange(max(window.time)+1, max(days)+1)})
                 empty = xr.where(empty==0, np.nan, empty)
-                window = xr.concat([window, empty], 'time')
+                window = xr.concat([window, empty], 'time').transpose('pfull', 'time')
             else:
                 start = idx + min(days)
                 end = idx + max(days) + 1
-                window = ds_polarcap_anom[start:end].assign_coords({'time' : days}).transpose()
+                window = ds_polarcap_anom[start:end].assign_coords({'time' : days}).transpose('pfull', 'time')
             SSW_windows.append(window) # Common time coordinates
     
         print(datetime.now(), " - standardising")
@@ -378,6 +378,7 @@ def SSW_comp(indir, outdir, exp, labels, unit, addon, lvls):
             print(datetime.now(), " - {0:.0f}/{1:.0f} windows".format(w+1, len(SSW_windows)))
             window_std = standardise(ds_polarcap_z.transpose(), SSW_windows[w], ds.pfull, days)
             SSW_windows_std.append(window_std)
+        """
             plot_SSW_comp(window_std, unit, 'SSWcomp_'+str(w+1)+'.png', lvls, w+1)
 
         print(datetime.now(), " - making gif")
@@ -391,7 +392,7 @@ def SSW_comp(indir, outdir, exp, labels, unit, addon, lvls):
         # Delete all temporary plots from working directory
         for w in range(len(SSW_windows)):
             os.remove(image_list[w])
-        
+        """
         print(datetime.now(), " - plotting composite")
         composite_std = xr.concat(SSW_windows_std, 'window').mean('window')
         plot_SSW_comp(composite_std, unit, exp[i]+'_SSWcomp'+addon+'.pdf', lvls, labels[i])
