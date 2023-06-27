@@ -151,7 +151,6 @@ def delete_data(indir, exp):
         os.chdir(indir + e)
         os.rename('keep_'+folder_keep, folder_keep)
     
-
 def postprocess(exp):
     print(datetime.now(), ' - ', exp)
     os.chdir(indir + exp)
@@ -159,12 +158,12 @@ def postprocess(exp):
     n = len(runs) - 1
     
     # ignore X years of spin-up
-    print(datetime.now(), ' - ignore spin-up')
-    X = 2
-    n = 0
-    while n < (X * 12):
-        os.rename(runs[n], 'spinup'+str(n))
-        n += 1
+    #print(datetime.now(), ' - ignore spin-up')
+    #X = 2
+    #n = 0
+    #while n < (X * 12):
+    #    os.rename(runs[n], 'spinup'+str(n))
+    #    n += 1
     
     # concatenate all
     print(datetime.now(), ' - concatenate')
@@ -242,7 +241,7 @@ if __name__ == '__main__':
 
     func = input('Do you want to a) postprocess, b) remove uninterpolated files, c) find TKE, d) back-calculate w, e) retrospectively extract variables, or f) delete spin-up data?')
 
-    exp = ['PK_e0v1z13', 'PK_e0v2z13', 'PK_e0v3z13', 'PK_e0v5z13', 'PK_e0v6z13'] 
+    exp = ['PK_e0v1z13'] #['PK_e0v2z13', 'PK_e0v3z13', 'PK_e0v5z13'] #['PK_e0v6z13'] 
     
     if func == 'b':
         remove_uninterp(indir, exp)    
