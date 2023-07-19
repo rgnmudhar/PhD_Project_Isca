@@ -89,7 +89,7 @@ def report_plot1(exp, lvls, variable, unit, labels, name):
     h_lvls = np.arange(2.5e-6, 1e-4, 5e-6)
 
     print(datetime.now(), " - plotting")
-    fig, axes = plt.subplots(1, n, figsize=(n*5,7))
+    fig, axes = plt.subplots(1, n, figsize=(n*4.5,5), layout="constrained")
     norm = cm.TwoSlopeNorm(vmin=min(lvls[1]), vmax=max(lvls[1]), vcenter=0)
     axes[0].set_ylabel('Pressure (hPa)', fontsize='xx-large')
     for i in range(n):
@@ -107,9 +107,11 @@ def report_plot1(exp, lvls, variable, unit, labels, name):
         axes[i].tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
         if i > 0:
             axes[i].tick_params(axis='y',label1On=False)
-    cb  = fig.colorbar(csa, ax=axes[:], shrink=0.2, orientation='horizontal', extend='both', pad=0.15)
-    cb.set_label(label='Response'+unit, size='xx-large')
-    cb.ax.tick_params(labelsize='x-large')        
+    #cb  = fig.colorbar(csa, ax=axes[:], shrink=0.2, orientation='horizontal', extend='both', pad=0.15)
+    cb  = fig.colorbar(csa, orientation='vertical', extend='both', pad=0.1)
+    cb.set_label(label=variable+' Response'+unit, size='xx-large')
+    cb.ax.tick_params(labelsize='x-large')
+    #fig.get_layout_engine()
     plt.savefig(name+'.pdf', bbox_inches = 'tight')
     return plt.close()
 
@@ -140,13 +142,13 @@ def report_plot2(exp, lvls, variable, unit, labels, name):
     h_lvls = np.arange(2.5e-6, 1e-4, 5e-6)
 
     print(datetime.now(), " - plotting")
-    fig, axes = plt.subplots(1, 4, figsize=(20,7))
+    fig, axes = plt.subplots(1, 4, figsize=(4*4,6), layout="constrained")
     if variable == 'Temperature':
         csa_ctrl = axes[0].contourf(lat, p, ctrl, levels=lvls[0], cmap='Blues_r')
     elif variable == 'Zonal Wind':
         norm = cm.TwoSlopeNorm(vmin=min(lvls[0]), vmax=max(lvls[0]), vcenter=0)
         csa_ctrl = axes[0].contourf(lat, p, ctrl, levels=lvls[0], norm=norm, cmap='RdBu_r')
-    cb_ctrl  = fig.colorbar(csa_ctrl, ax=axes[0], orientation='horizontal', extend='both', pad=0.15)
+    cb_ctrl  = fig.colorbar(csa_ctrl, ax=axes[0], orientation='horizontal', extend='both')
     cb_ctrl.set_label(label=variable+unit, size='xx-large')
     cb_ctrl.ax.tick_params(labelsize='x-large')
     axes[0].set_ylabel('Pressure (hPa)', fontsize='xx-large')
@@ -160,7 +162,7 @@ def report_plot2(exp, lvls, variable, unit, labels, name):
                 csb.collections[list(lvls[2]).index(0)].set_linewidth(3)
             axes[i].contour(h_lat, h_p, heat[i-1], alpha=0.5, colors='g', levels=h_lvls)
 
-    cb  = fig.colorbar(csa, ax=axes[1:], shrink=0.3, orientation='horizontal', extend='both', pad=0.15)
+    cb  = fig.colorbar(csa, ax=axes[1:], shrink=0.3, orientation='horizontal', extend='both')
     cb.set_label(label='Response'+unit, size='xx-large')
     cb.ax.tick_params(labelsize='x-large')
 
@@ -421,12 +423,14 @@ if __name__ == '__main__':
                 # For polar vortex experiments:
                 T_lvls = [np.arange(160, 330, 10), np.arange(-20, 30, 2.5)]
                 u_lvls = [np.arange(-70, 100, 10), np.arange(-40, 30, 5)]
+                exp = [[exp[0][1], exp[0][3], exp[0][-1]], [exp[1][1], exp[1][3], exp[1][-1]]]
+                labels = [labels[1], labels[3], labels[-1]]
                 report_plot1(exp, T_lvls, 'Temperature', ' (K)', labels, basis+extension+'_T')
                 report_plot1(exp, u_lvls, 'Zonal Wind', r' (m s$^{-1}$)', labels, basis+extension+'_u')
             else:
                 # For polar heat experiments:
-                exp = [exp[0], exp[1], exp[4], exp[-1]]
-                labels = [labels[0], labels[1], labels[4], labels[-1]]
+                exp = [exp[0], exp[1], exp[3], exp[-2]]
+                labels = [labels[0], labels[1], labels[3], labels[-2]]
                 T_lvls = [np.arange(160, 330, 10), np.arange(-10, 25, 2.5), np.arange(160, 340, 20)]
                 u_lvls = [np.arange(-70, 100, 10), np.arange(-22.5, 17.5, 2.5), np.arange(-70, 100, 10)] #prev min u_lvls_response = -20
                 report_plot2(exp, T_lvls, 'Temperature', ' (K)', labels, basis+extension+'_T')

@@ -328,7 +328,7 @@ def refractive_index(u, T, k):
     return n2
 
 def plot_n2_1(dir, exp, k, name):
-    # Plots difference between no polar heat and with polar heat
+    # Plots vortex experiments
     print(datetime.now(), " - opening files")
     u = []
     n2 = []
@@ -343,13 +343,12 @@ def plot_n2_1(dir, exp, k, name):
     p = utz.pfull
     lat = utz.lat
 
-    h_name = exp[0][11:27]
-    h = xr.open_dataset('../Inputs/' + h_name + '.nc')
-    heat = h.mean('lon').variables[h_name]
-    h_p = h.pfull
-    h_lat = h.lat
-    h_lvls = np.arange(2.5e-6, 1e-4, 5e-6)
-
+    #h_name = exp[0][11:27]
+    #h = xr.open_dataset('../Inputs/' + h_name + '.nc')
+    #heat = h.mean('lon').variables[h_name]
+    #h_p = h.pfull
+    #h_lat = h.lat
+    #h_lvls = np.arange(2.5e-6, 1e-4, 5e-6)
 
     print(datetime.now(), " - plotting")
     colors = ['#bbd6eb', '#88bedc', '#549ecd',  '#2a7aba', '#0c56a0', '#08306b']
@@ -359,13 +358,13 @@ def plot_n2_1(dir, exp, k, name):
     cmap.set_over('w')
     norm = cm.Normalize(vmin=0,vmax=100)
 
-    fig, axes = plt.subplots(1, n, figsize=(n*5,7))
+    fig, axes = plt.subplots(1, n, figsize=(n*4,6), layout="constrained")
     axes[0].set_ylabel('Pressure (hPa)', fontsize='xx-large')
     for i in range(n):
         csa = axes[i].contourf(lat, p, n2[i], levels=nlvls, extend='both', cmap=cmap)
         csb = axes[i].contour(lat, p, u[i], colors='k', levels=ulvls, linewidths=1.5, alpha=0.25)
         csb.collections[list(ulvls).index(0)].set_linewidth(3)
-        axes[i].contour(h_lat, h_p, heat, alpha=0.5, colors='g', levels=h_lvls)
+        #axes[i].contour(h_lat, h_p, heat, alpha=0.5, colors='g', levels=h_lvls)
         axes[i].text(2, 1.75, labels[i], color='k', fontsize='xx-large')
         axes[i].set_ylim(max(p), 1) #goes to ~1hPa
         axes[i].set_yscale('log')
@@ -375,7 +374,7 @@ def plot_n2_1(dir, exp, k, name):
         axes[i].tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
         if i > 0:
             axes[i].tick_params(axis='y',label1On=False)
-    cb  = fig.colorbar(csa, ax=axes[:], shrink=0.2, orientation='horizontal', extend='both', pad=0.15)
+    cb  = fig.colorbar(csa, ax=axes[:], shrink=0.4, orientation='horizontal', extend='both')
     cb.set_label(label=r'Refractive Index Squared, $n^{2}$', size='x-large')
     cb.ax.tick_params(labelsize='x-large')        
     plt.savefig(name+'_n2_k{0:.0f}.pdf'.format(k), bbox_inches = 'tight')
@@ -411,7 +410,7 @@ def plot_n2_2(exp, k, name):
     norm = cm.Normalize(vmin=0,vmax=100)
 
     print(datetime.now(), " - plotting")
-    fig, axes = plt.subplots(1, 4, figsize=(20,7))
+    fig, axes = plt.subplots(1, 4, figsize=(4*4,6), layout="constrained")
     for i in range(len(exp)):
         csa = axes[i].contourf(lat, p, n2[i], levels=nlvls, extend='both', cmap=cmap)
         csb = axes[i].contour(lat, p, u[i], colors='k', levels=ulvls, linewidths=1.5, alpha=0.25)
@@ -429,7 +428,7 @@ def plot_n2_2(exp, k, name):
             axes[i].contour(h_lat, h_p, heat[i-1], alpha=0.5, colors='g', levels=h_lvls)
             axes[i].tick_params(axis='y',label1On=False)
 
-    cb  = fig.colorbar(csa, ax=axes[0:], shrink=0.3, orientation='horizontal', extend='both', pad=0.15)
+    cb  = fig.colorbar(csa, ax=axes[0:], shrink=0.3, orientation='horizontal', extend='both')
     cb.set_label(label=r'Refractive Index Squared, $n^{2}$', size='x-large')
     cb.ax.tick_params(labelsize='x-large')
     plt.savefig(name+'_n2_k{0:.0f}.pdf'.format(k), bbox_inches = 'tight')
@@ -442,7 +441,7 @@ def plot_EP_1(u, div_response, ep1_response, ep2_response, label, heat, name):
     lat = u.lat
     lvls = np.arange(-6,7,1)
     h_lvls = np.arange(2.5e-6, 1e-4, 5e-6)
-    fig, axes = plt.subplots(1, 1, figsize=(5,7))
+    fig, axes = plt.subplots(1, 1, figsize=(4,6))
     csa = axes.contourf(lat, p, div_response, levels=lvls, extend='both', cmap='RdBu_r')
     csb = axes.contour(lat, p, u, colors='k', levels=ulvls, linewidths=1.5, alpha=0.25)
     csb.collections[list(ulvls).index(0)].set_linewidth(3)
@@ -470,9 +469,9 @@ def plot_EP_2(u, div_ctrl, ep1_ctrl, ep2_ctrl, div_response, ep1_response, ep2_r
     h_lvls = np.arange(2.5e-6, 1e-4, 5e-6)
 
     print(datetime.now(), " - plotting control")
-    fig, axes = plt.subplots(1, 4, figsize=(20,7))
+    fig, axes = plt.subplots(1, 4, figsize=(4*4,6), layout="constrained")
     csa_ctrl = axes[0].contourf(lat, p, div_ctrl, levels=lvls[0], cmap='RdBu_r', extend='both')
-    cb_ctrl  = fig.colorbar(csa_ctrl, ax=axes[0], orientation='horizontal', extend='both', pad=0.15)
+    cb_ctrl  = fig.colorbar(csa_ctrl, ax=axes[0], orientation='horizontal', extend='both')
     cb_ctrl.set_label(label=r'Divergence (m s$^{-1}$ day$^{-1}$)', size='xx-large')
     cb_ctrl.ax.tick_params(labelsize='x-large')
     csb_ctrl = axes[0].contour(lat, p, u[0], colors='k', levels=ulvls, linewidths=1.5, alpha=0.25)
@@ -488,7 +487,7 @@ def plot_EP_2(u, div_ctrl, ep1_ctrl, ep2_ctrl, div_response, ep1_response, ep2_r
             csb.collections[list(ulvls).index(0)].set_linewidth(3)
             axes[i].contour(h_lat, h_p, heat[i-1], colors='g', linewidths=1.5, alpha=0.5, levels=h_lvls)
 
-    cb  = fig.colorbar(csa, ax=axes[1:], shrink=0.3, orientation='horizontal', extend='both', pad=0.15)
+    cb  = fig.colorbar(csa, ax=axes[1:], shrink=0.3, orientation='horizontal', extend='both')
     cb.set_label(label=r'Response (m s$^{-1}$ day$^{-1}$)', size='xx-large')
     cb.ax.tick_params(labelsize='x-large')
 
@@ -659,10 +658,13 @@ if __name__ == '__main__':
         variable = input('Plot a) n2 or b) EP Flux?')
         if variable == 'a':
             if extension == '_vtx':
-                plot_n2_1(indir, exp[1], k, basis+extension+'_heat')
+                i = 0
+                exp = [exp[i][1], exp[i][3], exp[i][-1]]
+                labels = [labels[1], labels[3], labels[-1]]
+                plot_n2_1(indir, exp, k, basis+extension+'_heat')
             else:
-                exp = [exp[0], exp[1], exp[3], exp[4]]
-                labels = [labels[0], labels[1], labels[3], labels[4]]
+                exp = [exp[0], exp[1], exp[4], exp[-1]]
+                labels = [labels[0], labels[1], labels[4], labels[-1]]
                 plot_n2_2(exp, k, basis+extension)
         elif variable == 'b':
             if extension == '_vtx':
