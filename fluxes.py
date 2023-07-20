@@ -555,11 +555,20 @@ if __name__ == '__main__':
     k = int(input('Which wave no.? (i.e. 0 for all, 1, 2, etc.)'))
 
     if flux == 'a':
-        for i in range(len(exp)):
-            print(datetime.now(), " - opening files ({0:.0f}/{1:.0f})".format(i+1, len(exp)))
-            utz, u, v, w, T = open_data1(indir, exp[i])
-            print(datetime.now(), " - finding EP flux")
-            calc_ep(exp[i], u, v, w, T, k)
+        n = len(exp)
+        if n == 2:
+            for j in range(n):
+                for i in range(len(exp[j])):
+                    print(datetime.now(), " - opening files ({0:.0f}/{1:.0f})".format(i+1, len(exp[j])))
+                    utz, u, v, w, T = open_data1(indir, exp[j][i])
+                    print(datetime.now(), " - finding EP flux")
+                    calc_ep(exp[j][i], u, v, w, T, k)
+        else:
+            for i in range(len(exp)):
+                print(datetime.now(), " - opening files ({0:.0f}/{1:.0f})".format(i+1, len(exp)))
+                utz, u, v, w, T = open_data1(indir, exp[i])
+                print(datetime.now(), " - finding EP flux")
+                calc_ep(exp[i], u, v, w, T, k)
 
     elif flux == 'b':
         p = int(input('At which pressure level? (i.e. 10 or 100 hPa) '))
@@ -678,17 +687,19 @@ if __name__ == '__main__':
                 heat = h.mean('lon').variables[h_name]
                 h_p = h.pfull
                 h_lat = h.lat
+                exp = [[exp[0][1], exp[0][3], exp[0][-1]], [exp[1][1], exp[1][3], exp[1][-1]]]
+                labels = [labels[1], labels[3], labels[-1]]
                 for i in range(len(exp[0])):
                     print(datetime.now(), " - opening files ({0:.0f}/{1:.0f})".format(i+1, len(exp[0])))
                     utz = open_data1(indir, exp[1][i])[0]
-                    div_0 = open_data2(exp[0][i], "div")
-                    div_1 = open_data2(exp[1][i], "div")
+                    div_0 = open_data2(exp[0][i], "div").div
+                    div_1 = open_data2(exp[1][i], "div").div
                     div_response = div_1 - div_0
-                    ep1_0 = open_data2(exp[0][i], "ep1")
-                    ep1_1 = open_data2(exp[1][i], "ep1")
+                    ep1_0 = open_data2(exp[0][i], "ep1").ep1
+                    ep1_1 = open_data2(exp[1][i], "ep1").ep1
                     ep1_response = ep1_1 - ep1_0
-                    ep2_0 = open_data2(exp[0][i], "ep2")
-                    ep2_1 = open_data2(exp[1][i], "ep2")
+                    ep2_0 = open_data2(exp[0][i], "ep2").ep2
+                    ep2_1 = open_data2(exp[1][i], "ep2").ep2
                     ep2_response = ep2_1 - ep2_0
                     plot_EP_1(utz, div_response, ep1_response, ep2_response, labels[i], heat, exp[1][i])     
             else:
@@ -704,9 +715,9 @@ if __name__ == '__main__':
                     utz = open_data1(indir, exp[i])[0]
                     uz.append(utz)
                     print(datetime.now(), " - finding EP flux")
-                    div = open_data2(exp[i], "div")
-                    ep1 = open_data2(exp[i], "ep1")
-                    ep2 = open_data2(exp[i], "ep2")
+                    div = open_data2(exp[i], "div").div
+                    ep1 = open_data2(exp[i], "ep1").ep1
+                    ep2 = open_data2(exp[i], "ep2").ep2
                     if i == 0:
                         div_ctrl = div
                         ep1_ctrl = ep1

@@ -6,6 +6,7 @@ from glob import glob
 import xarray as xr
 import numpy as np
 from datetime import datetime
+import matplotlib.pyplot as plt
 from shared_functions import *
 
 def calc_jet_lat_quad(u, lat, p):
@@ -45,6 +46,37 @@ def jet_timeseries(u, lat, p):
         jet_lats.append(jet_lat)
 
     return jet_lats, jet_maxima
+
+def winds_per_exp():
+    """
+    As per Gerber & Polvani (2009) plot vtx_gamma vs. U_1060 and EDJ latitude
+    """
+    perturb = '_q6m2y45l800u200' 
+    #exp = ['PK_e0v2z13', 'PK_e0v3z13', 'PK_e0v4z13', 'PK_e0v5z13', 'PK_e0v6z13']
+    exp = ['PK_e0v1z13'+perturb, 'PK_e0v2z13'+perturb,'PK_e0v3z13'+perturb, 'PK_e0v4z13'+perturb,'PK_e0v5z13'+perturb, 'PK_e0v6z13'+perturb]
+    vals = np.arange(1,7,1)
+
+    print(datetime.now(), " - finding values")
+    edj_lats = []
+    vtx = []
+    for e in exp:
+        edj_lats.append(find_EDJ('/disco/share/rm811/processed/', e)[1])
+        vtx.append(np.mean(open_file('../Files/', e, 'u10')))
+    
+    print(datetime.now(), " - plotting")
+    markers = ['^', 'o']
+    lines = ['--', '-']
+    fig, ax = plt.subplots(figsize=(6,6))
+    ax2 = ax.twinx()
+    ax.plot(vals, vtx, marker=markers[0], linewidth=1.25, color='#B30000', linestyle=lines[0])
+    ax2.plot(vals, edj_lats, marker=markers[1], linewidth=1.25, color='#4D0099', linestyle=lines[1])
+    ax.set_xlabel(r'Polar Vortex Lapse Rate, $\gamma$ (K km$^{-1}$)', fontsize='xx-large')
+    ax.set_ylabel(r'U$_{10,60}$ Average (m s$^{-1}$)', fontsize='xx-large', color='#B30000')
+    ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
+    ax2.set_ylabel(r'Laitude of Max. U$_{850}$ ($\degree$N)', color='#4D0099', fontsize='xx-large')
+    ax2.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
+    plt.savefig('GB09_check.pdf', bbox_inches = 'tight')
+    return plt.close()
 
 def winds_errs(indir, outdir, exp, p, name):
     """
@@ -258,16 +290,17 @@ if __name__ == '__main__':
         basis = 'PK_e0vXz13'
         extension = '_vtx'
     #exp = return_exp(extension)[0]
-    exp = ['PK_e0v4z13_a4x45y90w5v15p800_q6m2y45_s', 'PK_e0v4z13_a4x45y180w5v15p800_q6m2y45_s', 'PK_e0v4z13_a4x45y90w5v15p800_s', 'PK_e0v4z13_a4x45y180w5v15p800_s']
+
+    winds_per_exp()
 
     #Ro = []
     #for i in range(len(exp)):
         #Ro.append(calc_Ro(indir, exp[i], p))
     #print(Ro)
 
-    extension = '_offpole'
-    find_SPV(indir, outdir, exp)
-    p = 850
-    winds_errs(indir, outdir, exp, p, basis+extension)
-    p = 10
-    winds_errs(indir, outdir, exp, p, basis+extension)
+    #extension = '_offpole'
+    #find_SPV(indir, outdir, exp)
+    #p = 850
+    #winds_errs(indir, outdir, exp, p, basis+extension)
+    #p = 10
+    #winds_errs(indir, outdir, exp, p, basis+extension)
