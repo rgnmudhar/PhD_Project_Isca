@@ -116,7 +116,7 @@ def PlotEPfluxArrows(x,y,ep1,ep2,fig,ax,xlim=None,ylim=None,xscale='linear',ysca
 	else:
 		return Fphi*dx,Fp*dy
 
-def open_data(dir, exp):
+def open_data1(dir, exp):
     u = xr.open_dataset(dir+exp+'_u.nc', decode_times=False).ucomp
     v = xr.open_dataset(dir+exp+'_v.nc', decode_times=False).vcomp
     w = xr.open_dataset(dir+exp+'_w.nc', decode_times=False).omega/100 # Pa --> hPa
@@ -124,8 +124,28 @@ def open_data(dir, exp):
     utz = xr.open_dataset(dir+exp+'_utz.nc', decode_times=False).ucomp[0]
     return utz, u, v, w, T
 
-def calc_ep(u, v, w, t, k):
-    print(datetime.now(), ' - finding EP Fluxes')
+def open_data2(exp, extension):
+    path = '/disco/share/rm811/'
+    folder = 'epflux/'
+    filename = exp + '_' + extension
+    variable = xr.open_dataset(path + folder + filename + '.nc', decode_times=False)
+    return variable
+
+def save_variable(variable, exp, extension):
+    print(datetime.now(), " - saving "+extension)
+    path = '/disco/share/rm811/'
+    folder = 'epflux/'
+    filename = exp + '_' + extension
+    coord_list = ["pfull", "lat"]
+    coords = variable.coords
+    variable = xr.Dataset(data_vars=dict(variable = (coord_list, variable.transpose("pfull","lat").values)), coords=coords)
+    variable = variable.rename({"variable" : extension})
+    variable.to_netcdf(path + folder + filename + '.nc', format="NETCDF3_CLASSIC",
+            encoding = {extension: {"dtype": 'float32', '_FillValue': None},
+                "lat": {'_FillValue': None}, "pfull": {'_FillValue': None}})
+    
+def calc_ep(exp, u, v, w, t, k):
+    print(datetime.now(), " - finding ep fluxes")
     ep1, ep2, div1, div2 = climate.ComputeEPfluxDivXr(u, v, t, 'lon', 'lat', 'pfull', 'time', w=w, do_ubar=True, wave=k) # default w=None and do_ubar=False for QG approx.
     # take time mean of relevant quantities
     print(datetime.now(), ' - taking time mean')
@@ -133,7 +153,10 @@ def calc_ep(u, v, w, t, k):
     div = div.mean(dim='time')
     ep1 = ep1.mean(dim='time')
     ep2 = ep2.mean(dim='time')
-    return div, ep1, ep2
+
+    save_variable(div, exp, "div")
+    save_variable(ep1, exp, "ep1")
+    save_variable(ep2, exp, "ep2")
 
 def plot_ep(uz, div, ep1, ep2, k, exp_name, heat, type):
     print(datetime.now(), " - plotting EP Fluxes")
@@ -510,7 +533,7 @@ if __name__ == '__main__':
     #Set-up data to be read in
     indir = '/disco/share/rm811/processed/'
     basis = 'PK_e0v4z13'
-    flux = input("Plot a) EP flux divergence, b) upward EP Flux, c) v'T', d) vs. MERRA2, or e) report plot?")
+    flux = input("a) calculate ep fluxes or ... plot b) upward EP Flux, c) v'T', d) vs. MERRA2, or e) report plot?")
     var_type = input("Plot a) depth, b) width, c) location, d) strength, e) vortex experiments? or f) test?")
     if var_type == 'a':
         extension = '_depth'
@@ -534,27 +557,9 @@ if __name__ == '__main__':
     if flux == 'a':
         for i in range(len(exp)):
             print(datetime.now(), " - opening files ({0:.0f}/{1:.0f})".format(i+1, len(exp)))
-            utz, u, v, w, T = open_data(indir, exp[i])
+            utz, u, v, w, T = open_data1(indir, exp[i])
             print(datetime.now(), " - finding EP flux")
-            div, ep1, ep2 = calc_ep(u, v, w, T, k)
-            if i == 0:
-                print("skipping control")
-                div_og = div
-                ep1_og = ep1
-                ep2_og = ep2
-            elif i != 0:
-                # Read in data to plot polar heat contours
-                file = '/disco/share/rm811/isca_data/' + exp[i] + '/run0100/atmos_daily_interp.nc'
-                ds = xr.open_dataset(file)
-                heat = ds.local_heating.sel(lon=180, method='nearest').mean(dim='time')  
-                print(datetime.now(), " - plotting")
-                plot_ep(utz, div, ep1, ep2, k, exp[i], heat, 'single')
-
-                print(datetime.now(), " - taking differences")
-                div_diff = div - div_og
-                ep1_diff = ep1 - ep1_og
-                ep2_diff = ep2 - ep2_og
-                plot_ep(utz, div_diff, ep1_diff, ep2_diff, k, exp[i], heat, 'diff')
+            calc_ep(exp[i], u, v, w, T, k)
 
     elif flux == 'b':
         p = int(input('At which pressure level? (i.e. 10 or 100 hPa) '))
@@ -675,12 +680,15 @@ if __name__ == '__main__':
                 h_lat = h.lat
                 for i in range(len(exp[0])):
                     print(datetime.now(), " - opening files ({0:.0f}/{1:.0f})".format(i+1, len(exp[0])))
-                    utz, u0, v0, w0, T0 = open_data(indir, exp[0][i])
-                    utz, u1, v1, w1, T1 = open_data(indir, exp[1][i])
-                    div_0, ep1_0, ep2_0 = calc_ep(u0, v0, w0, T0, k)
-                    div_1, ep1_1, ep2_1 = calc_ep(u1, v1, w1, T1, k)
+                    utz = open_data1(indir, exp[1][i])[0]
+                    div_0 = open_data2(exp[0][i], "div")
+                    div_1 = open_data2(exp[1][i], "div")
                     div_response = div_1 - div_0
+                    ep1_0 = open_data2(exp[0][i], "ep1")
+                    ep1_1 = open_data2(exp[1][i], "ep1")
                     ep1_response = ep1_1 - ep1_0
+                    ep2_0 = open_data2(exp[0][i], "ep2")
+                    ep2_1 = open_data2(exp[1][i], "ep2")
                     ep2_response = ep2_1 - ep2_0
                     plot_EP_1(utz, div_response, ep1_response, ep2_response, labels[i], heat, exp[1][i])     
             else:
@@ -693,10 +701,12 @@ if __name__ == '__main__':
                 heat = []
                 for i in range(len(exp)):
                     print(datetime.now(), " - opening files")
-                    utz, u, v, w, T = open_data(indir, exp[i])
+                    utz = open_data1(indir, exp[i])[0]
                     uz.append(utz)
                     print(datetime.now(), " - finding EP flux")
-                    div, ep1, ep2 = calc_ep(u, v, w, T, k)
+                    div = open_data2(exp[i], "div")
+                    ep1 = open_data2(exp[i], "ep1")
+                    ep2 = open_data2(exp[i], "ep2")
                     if i == 0:
                         div_ctrl = div
                         ep1_ctrl = ep1
