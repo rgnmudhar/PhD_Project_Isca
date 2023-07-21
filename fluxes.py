@@ -457,31 +457,36 @@ def plot_n2_2(exp, k, name):
     plt.savefig(name+'_n2_k{0:.0f}.pdf'.format(k), bbox_inches = 'tight')
     return plt.close()
 
-def plot_EP_1(u, div_response, ep1_response, ep2_response, label, heat, name):
-    # Plots difference between no polar heat and with polar heat - one experiment at a time though
+def plot_EP_1(u, div_response, ep1_response, ep2_response, labels, heat, name, n):
+    # Plots difference between no polar heat and with polar heat
     print(datetime.now(), " - plotting")
-    p = u.pfull
-    lat = u.lat
+    p = u[0].pfull
+    lat = u[0].lat
     lvls = np.arange(-6,7,1)
     h_lvls = np.arange(2.5e-6, 1e-4, 5e-6)
-    fig, axes = plt.subplots(1, 1, figsize=(4,6))
-    csa = axes.contourf(lat, p, div_response, levels=lvls, extend='both', cmap='RdBu_r')
-    csb = axes.contour(lat, p, u, colors='k', levels=ulvls, linewidths=1.5, alpha=0.25)
-    csb.collections[list(ulvls).index(0)].set_linewidth(3)
-    PlotEPfluxArrows(lat, p, ep1_response, ep2_response, fig, axes, yscale='log')
-    axes.contour(h_lat, h_p, heat, alpha=0.5, colors='g', levels=h_lvls)
-    axes.text(2, 1.75, label, color='k', fontsize='xx-large')
-    axes.set_ylabel('Pressure (hPa)', fontsize='xx-large')
-    axes.set_ylim(max(p), 1) #goes to ~1hPa
-    axes.set_yscale('log')
-    axes.set_xlabel(r'Latitude ($\degree$N)', fontsize='xx-large')
-    axes.set_xlim(0, max(lat))
-    axes.set_xticks([0, 20, 40, 60, 80], ['0', '20', '40', '60', '80'])
-    axes.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in') 
-    cb  = fig.colorbar(csa, ax=axes, shrink=0.2, orientation='horizontal', extend='both', pad=0.15)
-    cb.set_label(label=r'Response (m s$^{-1}$ day$^{-1}$)', size='x-large')
-    cb.ax.tick_params(labelsize='x-large')        
-    plt.savefig(name+'_EP.pdf'.format(k), bbox_inches = 'tight')
+
+    fig, axes = plt.subplots(1, n, figsize=(n*4,5), layout="constrained")
+    axes[0].set_ylabel('Pressure (hPa)', fontsize='xx-large')
+    for i in range(len(axes)):
+        csa = axes[i].contourf(lat, p, div_response[i], levels=lvls, extend='both', cmap='RdBu_r')
+        csb = axes[i].contour(lat, p, u[i], colors='k', levels=ulvls, linewidths=1.5, alpha=0.25)
+        csb.collections[list(ulvls).index(0)].set_linewidth(3)
+        axes[i].contour(h_lat, h_p, heat, alpha=0.5, colors='w', levels=h_lvls)
+        PlotEPfluxArrows(lat, p, ep1_response[i], ep2_response[i], fig, axes[i], yscale='log')
+        axes[i].text(2, 1.75, labels[i], color='k', fontsize='xx-large')
+        axes[i].set_ylim(max(p), 1) #goes to ~1hPa
+        axes[i].set_yscale('log')
+        axes[i].set_xlabel(r'Latitude ($\degree$N)', fontsize='xx-large')
+        axes[i].set_xlim(0, max(lat))
+        axes[i].set_xticks([0, 20, 40, 60, 80], ['0', '20', '40', '60', '80'])
+        axes[i].tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
+        if i > 0:
+            axes[i].tick_params(axis='y',label1On=False)
+
+    cb  = fig.colorbar(csa, orientation='vertical', extend='both', pad=0.1)
+    cb.set_label(label=r'Divergence Response (m s$^{-1}$ day$^{-1}$)', size='x-large')
+    cb.ax.tick_params(labelsize='x-large')
+    plt.savefig(name+'_EP.pdf', bbox_inches = 'tight')
     return plt.close()
 
 def plot_EP_2(u, div_ctrl, ep1_ctrl, ep2_ctrl, div_response, ep1_response, ep2_response, heat, name):
@@ -672,10 +677,10 @@ if __name__ == '__main__':
         variable = input('Plot a) n2 or b) EP Flux?')
         if variable == 'a':
             if extension == '_vtx':
-                i = 0
+                i = 1
                 exp = [exp[i][1], exp[i][3], exp[i][-1]]
                 labels = [labels[1], labels[3], labels[-1]]
-                plot_n2_1(indir, exp, k, basis+extension+'_heat')
+                plot_n2_1(indir, exp[i], k, basis+extension+'_heat')
             else:
                 exp = [exp[0], exp[1], exp[4], exp[-1]]
                 labels = [labels[0], labels[1], labels[4], labels[-1]]
@@ -689,19 +694,25 @@ if __name__ == '__main__':
                 h_lat = h.lat
                 exp = [[exp[0][1], exp[0][3], exp[0][-1]], [exp[1][1], exp[1][3], exp[1][-1]]]
                 labels = [labels[1], labels[3], labels[-1]]
-                for i in range(len(exp[0])):
+                
+                n = len(exp[0])
+                utz = []
+                div_response = []
+                ep1_response = []
+                ep2_response = []
+                for i in range(n):
                     print(datetime.now(), " - opening files ({0:.0f}/{1:.0f})".format(i+1, len(exp[0])))
-                    utz = open_data1(indir, exp[1][i])[0]
+                    utz.append(open_data1(indir, exp[1][i])[0])
                     div_0 = open_data2(exp[0][i], "div").div
                     div_1 = open_data2(exp[1][i], "div").div
-                    div_response = div_1 - div_0
+                    div_response.append(div_1 - div_0)
                     ep1_0 = open_data2(exp[0][i], "ep1").ep1
                     ep1_1 = open_data2(exp[1][i], "ep1").ep1
-                    ep1_response = ep1_1 - ep1_0
+                    ep1_response.append(ep1_1 - ep1_0)
                     ep2_0 = open_data2(exp[0][i], "ep2").ep2
                     ep2_1 = open_data2(exp[1][i], "ep2").ep2
-                    ep2_response = ep2_1 - ep2_0
-                    plot_EP_1(utz, div_response, ep1_response, ep2_response, labels[i], heat, exp[1][i])     
+                    ep2_response.append(ep2_1 - ep2_0)
+                plot_EP_1(utz, div_response, ep1_response, ep2_response, labels, heat, basis+extension, n)     
             else:
                 exp = [exp[0], exp[1], exp[4], exp[-1]]
                 labels = [labels[0], labels[1], labels[4], labels[-1]]
