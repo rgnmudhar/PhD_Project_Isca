@@ -103,6 +103,37 @@ def plot_waves1(exp, wav, k, name, type):
     plt.savefig(name+'_wavemag1_k{0:.0f}_{1}.pdf'.format(k,type), bbox_inches = 'tight')
     return plt.close()
 
+def find_tilt(indir, exp, chosen_lat, given_lon):
+    print(datetime.now(), " - opening heat files")
+    h_name = exp[11:]
+    h = xr.open_dataset('../Inputs/' + h_name + '.nc')
+    heat = h.sel(lat=chosen_lat, method='nearest').variables[h_name]
+    h_lvls = 11
+    
+    print(datetime.now(), " - finding anomaly")
+    ds_t = xr.open_dataset(indir+exp+'_ht.nc', decode_times=False).height[0]
+    ds_tz = xr.open_dataset(indir+exp+'_htz.nc', decode_times=False).height[0]
+    ds_anom = ds_t - ds_tz
+    ds_anom_45 = ds_anom.sel(lat=chosen_lat, method='nearest')
+
+    print(datetime.now(), " - plotting")
+    lvls=np.arange(-300, 700, 100)
+    norm = cm.TwoSlopeNorm(vmin=min(lvls), vmax=max(lvls), vcenter=0)
+    fig, ax = plt.subplots(figsize=(10,6))
+    cs = plt.contourf(ds_t.lon, ds_t.pfull, ds_anom_45, cmap='RdBu_r', levels=lvls, norm=norm, extend='both')
+    cb = plt.colorbar(cs, extend='both')
+    cb.set_label(label='GPH Anomaly (m)', size='xx-large')
+    cb.ax.tick_params(labelsize='x-large')
+    ax.contour(h.lon, h.pfull, heat, alpha=0.5, colors='g', levels=h_lvls)
+    ax.set_ylim(max(ds_t.pfull), 1) #goes to ~1hPa
+    ax.set_yscale('log')
+    ax.set_ylabel('Pressure (hPa)', fontsize='xx-large')
+    ax.set_xlabel(r'Longitude ($\degree$E)', fontsize='xx-large')
+    ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
+    ax.text(5, 1.75, r'$\lambda=$'+str(given_lon)+r'$\degree$E', color='k', fontsize='xx-large')
+    plt.savefig(exp+'_tilt.pdf', bbox_inches = 'tight')
+    return plt.close()
+
 if __name__ == '__main__': 
     #Set-up data to be read in
     indir = '/disco/share/rm811/processed/'
@@ -165,27 +196,10 @@ if __name__ == '__main__':
                 plt.close()
 
     elif plot_type == 'd':
-        extension = '_loc2'
-        exp, labels, xlabel = return_exp(extension)
-        exp = exp[1]
-        for i in range(len(exp)):
-            print(datetime.now(), ' - opening files {0:.0f}/{1:.0f} - '.format(i+1, len(exp)), exp[i])
-            gph = xr.open_dataset(indir+exp[i]+'_h.nc', decode_times=False).height
-            print(datetime.now(), ' - wave decomposition')
-            waves = climate.GetWavesXr(gph)
-            wav = np.abs(waves.sel(k=k)).mean('lon')
-            
-            gph_lat = gph.sel(lat=45, method='nearest')
-            print(datetime.now(), ' - finding anomaly')
-            gph_lat_mean = gph_lat.mean('time')
-            gph_lat_anom = gph_lat - gph_lat_mean
-            gph_lat_anom = gph_lat_anom.mean('time')
-            print(datetime.now(), ' - plotting')
-            plt.contourf(gph.lon, gph.pfull, gph_lat_anom, levels=11, cmap='RdBu_r')
-            plt.colorbar()
-            plt.ylim(max(gph.pfull), 100)
-            plt.yscale('log')
-            plt.show()
+        exp = 'PK_e0v4z13_a4x45y90w5v15p800_q6m2y45_s'
+        lat = int(exp.partition("x")[2][:2])
+        lon = int(exp.partition("y")[2][:2])
+        find_tilt(indir, exp, lat, lon)
     else:
         var_type = input("Plot a) depth, b) width, c) location, d) strength or e) topography experiments, or f) test?")
         if var_type == 'a':
