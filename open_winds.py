@@ -47,13 +47,10 @@ def jet_timeseries(u, lat, p):
 
     return jet_lats, jet_maxima
 
-def winds_per_exp():
+def winds_per_exp(exp):
     """
     As per Gerber & Polvani (2009) plot vtx_gamma vs. U_1060 and EDJ latitude
     """
-    perturb = '_q6m2y45l800u200' 
-    #exp = ['PK_e0v2z13', 'PK_e0v3z13', 'PK_e0v4z13', 'PK_e0v5z13', 'PK_e0v6z13']
-    exp = ['PK_e0v1z13'+perturb, 'PK_e0v2z13'+perturb,'PK_e0v3z13'+perturb, 'PK_e0v4z13'+perturb,'PK_e0v5z13'+perturb, 'PK_e0v6z13'+perturb]
     vals = np.arange(1,7,1)
 
     print(datetime.now(), " - finding values")
@@ -75,7 +72,7 @@ def winds_per_exp():
     ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
     ax2.set_ylabel(r'Laitude of Max. U$_{850}$ ($\degree$N)', color='#4D0099', fontsize='xx-large')
     ax2.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
-    plt.savefig('GB09_check.pdf', bbox_inches = 'tight')
+    plt.savefig('GP09_check.pdf', bbox_inches = 'tight')
     return plt.close()
 
 def winds_errs(indir, outdir, exp, p, name):
@@ -290,8 +287,10 @@ if __name__ == '__main__':
         basis = 'PK_e0vXz13'
         extension = '_vtx'
     #exp = return_exp(extension)[0]
-
-    winds_per_exp()
+    perturb = '_q6m2y45l800u200' 
+    exp = ['PK_e0v1z13', 'PK_e0v2z13', 'PK_e0v3z13', 'PK_e0v4z13', 'PK_e0v5z13', 'PK_e0v6z13']
+    #exp = ['PK_e0v1z13'+perturb, 'PK_e0v2z13'+perturb,'PK_e0v3z13'+perturb, 'PK_e0v4z13'+perturb,'PK_e0v5z13'+perturb, 'PK_e0v6z13'+perturb]
+    winds_per_exp(exp)
 
     #Ro = []
     #for i in range(len(exp)):
