@@ -67,6 +67,7 @@ def plot_vtx(dir, exp, labels, colors, style, cols, fig_name):
     for i in range(len(exp)):
         SPV = open_file(dir, exp[i], 'u10')
         ax.plot(SPV, color=colors[i], linewidth=1.5, linestyle=style[i], label=labels[i])
+        ax.axhline(np.mean(SPV), color=colors[i], linewidth=1.5, linestyle=':')
     ax.axhline(0, color='k', linewidth=0.5)
     ax.set_xlim(1, 2999)
     ax.set_xlabel('Days Simulated', fontsize='xx-large')
