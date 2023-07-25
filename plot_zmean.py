@@ -98,6 +98,7 @@ def report_plot1(exp, lvls, variable, unit, labels, name):
         if variable == 'Zonal Wind':
             csb.collections[list(lvls[0]).index(0)].set_linewidth(3)
         axes[i].contour(h_lat, h_p, heat, alpha=0.5, colors='g', levels=h_lvls)
+        axes[i].scatter(60, 10, marker='x', color='k')
         axes[i].text(2, 1.75, labels[i], color='k', fontsize='xx-large')
         axes[i].set_ylim(max(p), 1) #goes to ~1hPa
         axes[i].set_yscale('log')
@@ -167,6 +168,7 @@ def report_plot2(exp, lvls, variable, unit, labels, name):
     cb.ax.tick_params(labelsize='x-large')
 
     for i in range(len(axes)):
+        axes[i].scatter(60, 10, marker='x', color='k')
         axes[i].text(2, 1.75, labels[i], color='k', fontsize='xx-large')
         axes[i].set_ylim(max(p), 1) #goes to ~1hPa
         axes[i].set_yscale('log')
@@ -429,8 +431,8 @@ if __name__ == '__main__':
                 report_plot1(exp, u_lvls, 'Zonal Wind', r' (m s$^{-1}$)', labels, basis+extension+'_u')
             else:
                 # For polar heat experiments:
-                exp = [exp[0], exp[1], exp[3], exp[-2]]
-                labels = [labels[0], labels[1], labels[3], labels[-2]]
+                exp = [exp[0], exp[1], exp[4], exp[-1]]
+                labels = [labels[0], labels[1], labels[4], labels[-1]]
                 T_lvls = [np.arange(160, 330, 10), np.arange(-10, 25, 2.5), np.arange(160, 340, 20)]
                 u_lvls = [np.arange(-70, 100, 10), np.arange(-22.5, 17.5, 2.5), np.arange(-70, 100, 10)] #prev min u_lvls_response = -20
                 report_plot2(exp, T_lvls, 'Temperature', ' (K)', labels, basis+extension+'_T')
