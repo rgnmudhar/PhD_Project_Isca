@@ -141,6 +141,34 @@ def SPVvexp2(skew, kurt, p, labels, xlabel, name):
     plt.savefig(name+'_{:.0f}stats2.pdf'.format(p), bbox_inches = 'tight')
     return plt.close()
 
+def GP09(exp):
+    """
+    As per Gerber & Polvani (2009) plot vtx_gamma vs. U_1060 and EDJ latitude
+    """
+    vals = np.arange(1,7,1)
+
+    print(datetime.now(), " - finding values")
+    edj_lats = []
+    vtx = []
+    for e in exp:
+        edj_lats.append(find_EDJ('/disco/share/rm811/processed/', e)[1])
+        vtx.append(np.mean(open_file('../Files/', e, 'u10')))
+    
+    print(datetime.now(), " - plotting")
+    markers = ['^', 'o']
+    lines = ['--', '-']
+    fig, ax = plt.subplots(figsize=(6,6))
+    ax2 = ax.twinx()
+    ax.plot(vals, vtx, marker=markers[0], linewidth=1.25, color='#B30000', linestyle=lines[0])
+    ax2.plot(vals, edj_lats, marker=markers[1], linewidth=1.25, color='#4D0099', linestyle=lines[1])
+    ax.set_xlabel(r'Polar Vortex Lapse Rate, $\gamma$ (K km$^{-1}$)', fontsize='xx-large')
+    ax.set_ylabel(r'U$_{10,60}$ Average (m s$^{-1}$)', fontsize='xx-large', color='#B30000')
+    ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
+    ax2.set_ylabel(r'Latitude of Max. U$_{850}$ ($\degree$N)', color='#4D0099', fontsize='xx-large')
+    ax2.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
+    plt.savefig('GP09_check.pdf', bbox_inches = 'tight')
+    return plt.close()
+
 def windsvexp(dir, x, xlabel, p, name):
     """
     Uses jet_locator functions to find location and strength of maximum stratopsheric vortex (10 hPa) or EDJ (850 hPa).
@@ -174,6 +202,58 @@ def windsvexp(dir, x, xlabel, p, name):
     ax2.set_ylabel(r'Laitude of Max. U$_{850}$ ($\degree$N)', color='#4D0099', fontsize='xx-large')
     ax2.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
     plt.savefig(name+'_windsvexp'+p+'.pdf', bbox_inches = 'tight')
+    return plt.close()
+
+def EDJ_loc():
+    """
+    Track impact of polar heating on EDJ location with and without an SPV
+    """
+    heat = '_w15a4p600f800g50'
+    perturb = '_q6m2y45l800u200'
+    combo = heat+perturb
+    # Without a polar vortex
+    exp_noheat = [['PK_v0_DTy20', 'PK_v0_DTy40', 'PK_v0_DTy60', 'PK_v0_DTy80', 'PK_v0_DTy100'],\
+                   ['PK_e0v1z13'+perturb, 'PK_e0v2z13'+perturb,'PK_e0v3z13'+perturb, 'PK_e0v4z13'+perturb,'PK_e0v5z13'+perturb, 'PK_e0v6z13'+perturb]]
+    exp_heat = [['PK_v0_DTy20'+heat, 'PK_v0_DTy40'+heat, 'PK_v0_DTy60'+heat, 'PK_v0_DTy80'+heat, 'PK_v0_DTy100'+heat],\
+                ['PK_e0v1z13'+combo, 'PK_e0v2z13'+combo,'PK_e0v3z13'+combo, 'PK_e0v4z13'+combo,'PK_e0v5z13'+combo, 'PK_e0v6z13'+combo]]
+    n = len(exp_heat)
+
+    print(datetime.now(), " - finding locations")
+    edj_loc_noheat = []
+    for i in exp_noheat:
+        edj_lats = []
+        for j in i:
+            edj_lats.append(find_EDJ('/disco/share/rm811/processed/', j)[1])
+        edj_loc_noheat.append(edj_lats)
+
+    edj_loc_heat = []
+    for i in exp_heat:
+        edj_lats = []
+        for j in i:
+            edj_lats.append(find_EDJ('/disco/share/rm811/processed/', j)[1])
+        edj_loc_heat.append(edj_lats)
+    
+    print(datetime.now(), " - finding response")
+    edj_loc_shift = []
+    for i in range(n):
+        shifts = []
+        for j in range(len(edj_loc_heat[i])):
+            shifts.append(edj_loc_heat[i][j] - edj_loc_noheat[i][j])
+        edj_loc_shift.append(shifts)
+    
+    print(datetime.now(), " - plotting")
+    markers = ['^', 'o']
+    colours = ['#B30000', '#0099CC']
+    fig, ax = plt.subplots(figsize=(10,6))
+    ax.scatter(edj_loc_noheat[0], edj_loc_shift[0], marker=markers[0], color=colours[0], label='Without SPV')
+    #ax.plot(np.unique(edj_loc_noheat[0]), np.poly1d(np.polyfit(edj_loc_noheat[0], edj_loc_shift[0], 1))(np.unique(edj_loc_noheat[0])), color=colours[0], linewidth=1.25)
+    ax.scatter(edj_loc_noheat[1], edj_loc_shift[1], marker=markers[1], color=colours[1], label='With SPV')
+    #ax.plot(np.unique(edj_loc_noheat[1]), np.poly1d(np.polyfit(edj_loc_noheat[1], edj_loc_shift[1], 1))(np.unique(edj_loc_noheat[1])), color=colours[1], linewidth=1.25)
+    ax.set_xlabel(r'EDJ Location ($\degree$N)', fontsize='xx-large')
+    ax.set_ylabel(r'EDJ Location Response ($\degree$N)', fontsize='xx-large')
+    ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
+    ax.legend(loc='upper center', fontsize='xx-large', fancybox=False, ncol=2)
+    plt.savefig('EDJ_location_response.pdf', bbox_inches = 'tight')
     return plt.close()
 
 def SSWsvexp(dir, exp, x, xlabel, fig_name):
@@ -437,7 +517,7 @@ if __name__ == '__main__':
         cols = len(exp)
         plot_Xwinds(outdir, indir, exp, labels, colors, style, cols, exp[0], p)
     elif level == 'b':
-        alt = input("Plot a) top-down jet view or b) EDJ strength & lat vs experiment? ")
+        alt = input("Plot a) top-down jet view, b) EDJ strength & lat vs experiment, c) recreate Gerber & Polvani 2009, or d) check EDJ response to polar heating? ")
         if alt == "a":
             p = [850, 500] #hPa
             lvls = [np.arange(-25, 27.5, 2.5), np.arange(50, 55, 5)]
@@ -453,6 +533,13 @@ if __name__ == '__main__':
                 windsvexp(outdir, labels, xlabel, str(p), [basis+extension+'_noheat', basis+extension+'_heat'])
             else:
                 windsvexp(outdir, labels, xlabel, str(p), basis+extension)
+        elif alt == "c":
+            perturb = '_q6m2y45l800u200' 
+            exp = ['PK_e0v1z13', 'PK_e0v2z13', 'PK_e0v3z13', 'PK_e0v4z13', 'PK_e0v5z13', 'PK_e0v6z13']
+            #exp = ['PK_e0v1z13'+perturb, 'PK_e0v2z13'+perturb,'PK_e0v3z13'+perturb, 'PK_e0v4z13'+perturb,'PK_e0v5z13'+perturb, 'PK_e0v6z13'+perturb]
+            GP09(exp)
+        elif alt == "d":
+            EDJ_loc()
     elif level == 'c':
         alt = input("Plot a) neck, b) 100 hPa SPV or c) 10 hPa SPV winds?")
         if alt == "a":
