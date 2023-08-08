@@ -11,6 +11,7 @@ import scipy.stats as sps
 import matplotlib.pyplot as plt
 import matplotlib.colors as cm
 from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
 import cartopy.crs as ccrs
 from datetime import datetime
 from open_winds import *
@@ -246,9 +247,9 @@ def EDJ_loc():
     colours = ['#B30000', '#0099CC']
     fig, ax = plt.subplots(figsize=(10,6))
     ax.scatter(edj_loc_noheat[0], edj_loc_shift[0], marker=markers[0], color=colours[0], label='Without SPV')
-    #ax.plot(np.unique(edj_loc_noheat[0]), np.poly1d(np.polyfit(edj_loc_noheat[0], edj_loc_shift[0], 1))(np.unique(edj_loc_noheat[0])), color=colours[0], linewidth=1.25)
+    ax.plot(np.unique(edj_loc_noheat[0]), np.poly1d(np.polyfit(edj_loc_noheat[0], edj_loc_shift[0], 1))(np.unique(edj_loc_noheat[0])), color=colours[0], linewidth=1.25)
     ax.scatter(edj_loc_noheat[1], edj_loc_shift[1], marker=markers[1], color=colours[1], label='With SPV')
-    #ax.plot(np.unique(edj_loc_noheat[1]), np.poly1d(np.polyfit(edj_loc_noheat[1], edj_loc_shift[1], 1))(np.unique(edj_loc_noheat[1])), color=colours[1], linewidth=1.25)
+    ax.plot(np.unique(edj_loc_noheat[1]), np.poly1d(np.polyfit(edj_loc_noheat[1], edj_loc_shift[1], 1))(np.unique(edj_loc_noheat[1])), color=colours[1], linewidth=1.25)
     ax.set_xlabel(r'EDJ Location ($\degree$N)', fontsize='xx-large')
     ax.set_ylabel(r'EDJ Location Response ($\degree$N)', fontsize='xx-large')
     ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
@@ -478,6 +479,101 @@ def SSW_comp(indir, outdir, exp, labels, unit, addon, lvls):
         composite_std = xr.concat(SSW_windows_std, 'window').mean('window')
         plot_SSW_comp(composite_std, unit, exp[i]+'_SSWcomp'+addon+'.pdf', lvls, labels[i])
 
+def find_responses1(extension):
+    exp, labels, xlabel = return_exp(extension)
+    labels = labels[1:]
+    neck_response = []
+    SPV_response = []
+    for i in range(len(exp)):
+        utz = xr.open_dataset(indir+exp[i]+'_utz.nc', decode_times=False).ucomp[0]
+        if i == 0:
+            neck_ctrl = calc_winds(utz, 70, 45, 55)
+            SPV_ctrl = calc_winds(utz, 10, 60, 75)
+        else:
+            neck_exp = calc_winds(utz, 70, 45, 55)
+            neck_response.append(neck_exp - neck_ctrl)
+            SPV_exp = calc_winds(utz, 10, 60, 75)
+            SPV_response.append(SPV_exp - SPV_ctrl)
+    return labels, neck_response, SPV_response
+
+def find_responses2(extension):
+    exp, labels, xlabel = return_exp(extension)
+    neck = []
+    neck_response = []
+    SPV_response = []
+    for j in range(len(exp[0])):
+        utz = xr.open_dataset(indir+exp[0][j]+'_utz.nc', decode_times=False).ucomp[0]
+        neck_noheat = calc_winds(utz, 70, 45, 55)
+        SPV_noheat = calc_winds(utz, 10, 60, 75)
+
+        utz = xr.open_dataset(indir+exp[1][j]+'_utz.nc', decode_times=False).ucomp[0]
+        neck_heat = calc_winds(utz, 70, 45, 55)
+        SPV_heat = calc_winds(utz, 10, 60, 75)
+        neck_response.append(neck_heat - neck_noheat)
+        SPV_response.append(SPV_heat - SPV_noheat)
+        #neck.append(neck_noheat)
+
+    return labels, xlabel, neck_response, SPV_response
+
+def neck_winds(exp_type, colours):
+    if exp_type == 'heat':
+        neck_response = []
+        SPV_response = []
+        labels = []
+        xlabels = [r'$p_{top}$ (hPa)', r'A (K day$^{-1}$)', r'$\phi_w$ ($\degree$)']
+
+        extension = '_depth'
+        l, n, S = find_responses1(extension)
+        neck_response.append(n)
+        SPV_response.append(S)
+        labels.append(l)
+        
+        extension = '_strength'
+        l, n, S = find_responses1(extension)
+        neck_response.append(n)
+        SPV_response.append(S)
+        labels.append(l)
+
+        extension = '_width'
+        l, n, S = find_responses1(extension)
+        neck_response.append(n)
+        SPV_response.append(S)
+        labels.append(l)
+
+        fig, ax = plt.subplots(figsize=(8,8))        
+        colours = colours[1:]
+        markers = ['o', 's', '^']
+        for i in range(len(neck_response)):
+            for j in range(len(neck_response[i])):
+                ax.scatter(x=neck_response[i][j], y=SPV_response[i][j], marker=markers[i], s=100, c=colours[j], label=labels[i][j])
+        #ax.plot(np.unique(neck_response), np.poly1d(np.polyfit(neck_response, SPV_response, 1))(np.unique(neck_response)),\
+        #    color='k', linewidth=1.5, linestyle='--')
+        #ax.axhline(0, color='k', linewidth=0.5)
+        ax.set_xlabel(r'Change in neck winds: 70hPa, 45N-55N (m s$^{-1}$)', fontsize='xx-large')
+        ax.set_ylabel(r'Change in SPV strength: 10hPa, 60N-75N (m s$^{-1}$)', fontsize='xx-large')
+        legend_elements = [Line2D([0], [0], marker=markers[0], color='w', label=xlabels[0], markerfacecolor='k', markersize=15),\
+                    Line2D([0], [0], marker=markers[1], color='w', label=xlabels[1], markerfacecolor='k', markersize=15),\
+                    Line2D([0], [0], marker=markers[2], color='w', label=xlabels[2], markerfacecolor='k', markersize=15)]
+        ax.legend(loc='upper left', handles=legend_elements, fontsize='xx-large', fancybox=False, shadow=False, ncol=1)
+        ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
+        plt.savefig(exp_type+'_neckcheck.pdf', bbox_inches = 'tight')
+
+    elif exp_type == 'vtx':
+        labels, xlabel, neck_response, SPV_response = find_responses2('_vtx')
+        colours = colours[1:]
+        fig, ax = plt.subplots(figsize=(8,8))        
+        for i in range(len(neck_response)):
+            ax.scatter(x=neck_response[i], y=SPV_response[i], marker='o', s=100, c=colours[i], label=labels[i])
+        ax.plot(np.unique(neck_response), np.poly1d(np.polyfit(neck_response, SPV_response, 1))(np.unique(neck_response)),\
+            color='k', linewidth=1.5, linestyle='--')
+        ax.axhline(0, color='k', linewidth=0.5)
+        ax.set_xlabel(r'Change in neck winds: 70hPa, 45N-55N (m s$^{-1}$)', fontsize='xx-large')
+        ax.set_ylabel(r'Change in SPV strength: 10hPa, 60N-75N (m s$^{-1}$)', fontsize='xx-large')
+        ax.legend(title=xlabel, title_fontsize='xx-large', fontsize='xx-large', fancybox=False, shadow=False, ncol=1)
+        ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
+        plt.savefig(exp_type+'_neckcheck.pdf', bbox_inches = 'tight')
+
+    return plt.close()
 
 if __name__ == '__main__': 
     #Set-up data to be read in
@@ -547,6 +643,7 @@ if __name__ == '__main__':
             p = 70
             lats = slice(45,55)
             lab = 'neck '
+            neck_winds('vtx', blues)
         elif alt == "b":
             #lower SPV winds @ 60N, 100 hPa
             p = 100
@@ -558,6 +655,7 @@ if __name__ == '__main__':
             lats = 60
             lab = 'SPV '
             n = len(exp)
+        """
         if n == 2:
             means = []
             modes = []
@@ -574,6 +672,7 @@ if __name__ == '__main__':
             me, mo, sd, e, sk, k = plot_pdf('u', indir, exp, '_uz.nc', '', p, lats, labels, lab+r"zonal-mean zonal wind (m s$^{-1}$)", blues, basis+extension)
             SPVvexp1(n, me, mo, sd, e, p, labels, xlabel, basis+extension)
             #SPVvexp2(sk, k, p, labels, xlabel, basis+extension)
+        """
     elif level == 'd':
         p = 10 # pressure level at which we want to find the SPV (hPa)
         #User choice for plotting - type

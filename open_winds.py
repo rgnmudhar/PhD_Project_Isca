@@ -9,6 +9,10 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 from shared_functions import *
 
+def calc_winds(u, p, lat_min, lat_max):
+    winds = u.sel(pfull = p, method='nearest').sel(lat = slice(lat_min,lat_max)).mean(dim='lat')
+    return winds
+
 def calc_jet_lat_quad(u, lat, p):
     """
     Function for finding location and strength of maximum given zonal wind u(lat) field.
@@ -258,7 +262,7 @@ if __name__ == '__main__':
     elif var_type == 'e':
         basis = 'PK_e0vXz13'
         extension = '_vtx'
-    exp = return_exp(extension)[0]
+    exp = ['test'] #return_exp(extension)[0]
 
     #Ro = []
     #for i in range(len(exp)):
