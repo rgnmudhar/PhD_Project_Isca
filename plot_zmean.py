@@ -189,7 +189,7 @@ def plot_combo(u, T, lvls, perturb, lat, p, exp_name, vertical):
     if vertical == "a":
         csa = ax.contourf(lat, p, T, levels=lvls[0], cmap='Blues_r')
         csb = ax.contour(lat, p, u, colors='k', levels=lvls[1], linewidths=1)
-        plt.contour(lat, p, perturb, colors='g', linewidths=1, alpha=0.4, levels=11)
+        #plt.contour(lat, p, perturb, colors='g', linewidths=1, alpha=0.4, levels=11)
         plt.ylabel('Pressure (hPa)', fontsize='x-large')
         plt.ylim(max(p), upper_p) #goes to ~1hPa
         plt.yscale('log')

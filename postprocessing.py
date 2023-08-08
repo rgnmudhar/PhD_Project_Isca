@@ -159,11 +159,11 @@ def postprocess(exp):
     
     # ignore X years of spin-up
     #print(datetime.now(), ' - ignore spin-up')
-    #X = 2
-    #n = 0
-    #while n < (X * 12):
-    #    os.rename(runs[n], 'spinup'+str(n))
-    #    n += 1
+    X = 2
+    n = 0
+    while n < (X * 12):
+        os.rename(runs[n], 'spinup'+str(n))
+        n += 1
     
     # concatenate all
     print(datetime.now(), ' - concatenate')
@@ -212,7 +212,7 @@ def postprocess(exp):
         try:
             os.rename(f, outdir+f)
         except OSError as e:
-            print(e.strerror, ':', f)   
+            print(e.strerror, ':', f)
 
     # in original folder remove everything but restarts and run0025 folders
     print(datetime.now(), ' - remove surplus data')
@@ -241,7 +241,9 @@ if __name__ == '__main__':
 
     func = input('Do you want to a) postprocess, b) remove uninterpolated files, c) find TKE, d) back-calculate w, e) retrospectively extract variables, or f) delete spin-up data?')
 
-    exp = ['PK_e0v1z13'] #['PK_e0v2z13', 'PK_e0v3z13', 'PK_e0v5z13'] #['PK_e0v6z13'] 
+    heat = '_w15a4p600f800g50'
+    exp = ['test2', 'test3']
+    #exp = ['PK_v0_DTy20'+heat, 'PK_v0_DTy40'+heat, 'PK_v0_DTy60'+heat, 'PK_v0_DTy80'+heat, 'PK_v0_DTy100'+heat]
     
     if func == 'b':
         remove_uninterp(indir, exp)    
