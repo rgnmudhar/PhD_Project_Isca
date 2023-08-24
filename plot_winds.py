@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as cm
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
+from matplotlib.legend_handler import HandlerTuple
 import cartopy.crs as ccrs
 from datetime import datetime
 from open_winds import *
@@ -499,6 +500,7 @@ def find_responses1(extension):
 def find_responses2(extension):
     exp, labels, xlabel = return_exp(extension)
     neck = []
+    SPV = []
     neck_response = []
     SPV_response = []
     for j in range(len(exp[0])):
@@ -511,11 +513,12 @@ def find_responses2(extension):
         SPV_heat = calc_winds(utz, 10, 60, 75)
         neck_response.append(neck_heat - neck_noheat)
         SPV_response.append(SPV_heat - SPV_noheat)
-        #neck.append(neck_noheat)
+        neck.append(neck_noheat)
+        SPV.append(SPV_noheat)
 
-    return labels, xlabel, neck_response, SPV_response
+    return labels, xlabel, neck_response, SPV_response, neck, SPV
 
-def neck_winds(exp_type, colours):
+def neck_winds(exp_type):
     if exp_type == 'heat':
         neck_response = []
         SPV_response = []
@@ -545,7 +548,7 @@ def neck_winds(exp_type, colours):
         markers = ['o', 's', '^']
         for i in range(len(neck_response)):
             for j in range(len(neck_response[i])):
-                ax.scatter(x=neck_response[i][j], y=SPV_response[i][j], marker=markers[i], s=100, c=colours[j], label=labels[i][j])
+                ax.scatter(x=neck_response[i][j], y=SPV_response[i][j], marker=markers[i], s=100, c=reds[j], label=labels[i][j])
         #ax.plot(np.unique(neck_response), np.poly1d(np.polyfit(neck_response, SPV_response, 1))(np.unique(neck_response)),\
         #    color='k', linewidth=1.5, linestyle='--')
         #ax.axhline(0, color='k', linewidth=0.5)
@@ -559,19 +562,46 @@ def neck_winds(exp_type, colours):
         plt.savefig(exp_type+'_neckcheck.pdf', bbox_inches = 'tight')
 
     elif exp_type == 'vtx':
-        labels, xlabel, neck_response, SPV_response = find_responses2('_vtx')
-        colours = colours[1:]
+        labels, xlabel, neck_response, SPV_response, neck, SPV = find_responses2('_vtx')
+        colours1 = blues[1:]
         fig, ax = plt.subplots(figsize=(8,8))        
         for i in range(len(neck_response)):
-            ax.scatter(x=neck_response[i], y=SPV_response[i], marker='o', s=100, c=colours[i], label=labels[i])
+            ax.scatter(x=neck_response[i], y=SPV_response[i], marker='D', s=100, c=colours1[i], label=labels[i])
         ax.plot(np.unique(neck_response), np.poly1d(np.polyfit(neck_response, SPV_response, 1))(np.unique(neck_response)),\
             color='k', linewidth=1.5, linestyle='--')
         ax.axhline(0, color='k', linewidth=0.5)
         ax.set_xlabel(r'Change in neck winds: 70hPa, 45N-55N (m s$^{-1}$)', fontsize='xx-large')
-        ax.set_ylabel(r'Change in SPV strength: 10hPa, 60N-75N (m s$^{-1}$)', fontsize='xx-large')
+        ax.set_ylabel(r'Change in SPV winds: 10hPa, 60N-75N (m s$^{-1}$)', fontsize='xx-large')
         ax.legend(title=xlabel, title_fontsize='xx-large', fontsize='xx-large', fancybox=False, shadow=False, ncol=1)
         ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
         plt.savefig(exp_type+'_neckcheck.pdf', bbox_inches = 'tight')
+        plt.close()
+
+        fig, ax = plt.subplots(figsize=(10,8))
+        colours2 = reds[1:]
+        greys = ['#dedede', '#c6c6c6', '#a7a7a7', '#868686', '#686868', '#484848']
+        ax2 = ax.twiny()
+        for i in range(len(neck)):
+            ax.scatter(x=neck[i], y=SPV_response[i], marker='D', s=100, c=colours1[i], label=labels[i])
+        ax.plot(np.unique(neck), np.poly1d(np.polyfit(neck, SPV_response, 1))(np.unique(neck)),\
+            color=colours1[-2], linewidth=1.5, linestyle='--')
+        ax.axhline(0, color='k', linewidth=0.5)
+        ax.set_xlabel(r'Climatological neck winds: 70hPa, 45N-55N (m s$^{-1}$)', fontsize='xx-large', color=colours1[-2])
+        ax.set_ylabel(r'Change in SPV winds: 10hPa, 60N-75N (m s$^{-1}$)', fontsize='xx-large')
+        ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in', labelcolor=colours1[-2])
+        ax.tick_params(axis='y', labelcolor='k')
+        for i in range(len(SPV)):
+            ax2.scatter(x=SPV[i], y=SPV_response[i], marker='o', s=100, c=colours2[i], label=labels[i])
+        ax2.plot(np.unique(SPV), np.poly1d(np.polyfit(SPV, SPV_response, 1))(np.unique(SPV)),\
+            color=colours2[-2], linewidth=1.5, linestyle=':')
+        ax2.set_xlabel(r'Climatological SPV winds: 10hPa, 60N-75N (m s$^{-1}$)', fontsize='xx-large', color=colours2[-2])
+        ax2.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in', labelcolor=colours2[-2])
+        legend_elements = []
+        for i in range(len(labels)):
+            legend_elements.append(Line2D([0], [0], marker='s', color='w', label=labels[i], markerfacecolor=greys[i], markersize=15))
+        ax.legend(handles=legend_elements, title=xlabel, title_fontsize='xx-large', fontsize='xx-large',\
+                  fancybox=False, shadow=False, ncol=1, handler_map={tuple: HandlerTuple(ndivide=None)})
+        plt.savefig(exp_type+'_climatologycheck.pdf', bbox_inches = 'tight')
 
     return plt.close()
 
@@ -643,7 +673,7 @@ if __name__ == '__main__':
             p = 70
             lats = slice(45,55)
             lab = 'neck '
-            neck_winds('vtx', blues)
+            neck_winds('vtx')
         elif alt == "b":
             #lower SPV winds @ 60N, 100 hPa
             p = 100
