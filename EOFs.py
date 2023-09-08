@@ -124,7 +124,7 @@ def plot_single(uz, utz, p_min, lat_min, exp_name):
     eofs = leading_eofs(solver)
     pcs = leading_pcs(solver)
     variance_fractions = variance(solver)
-    lags = 50 
+    lags = 100 
     tau1, tau2 = AM_times(pcs, lags)
 
     # Set-up coordinates
@@ -210,7 +210,7 @@ if __name__ == '__main__':
     #Set-up data to be read in
     indir = '/disco/share/rm811/processed/'
     basis = 'PK_e0v4z13'
-    var_type = 0 #input("Plot a) depth, b) width, c) location, d) strength, e) vortex experiments or f) test?")
+    var_type = input("Plot a) depth, b) width, c) location, d) strength, e) vortex experiments or f) test?")
     if var_type == 'a':
         extension = '_depth'
     elif var_type == 'b':
@@ -224,7 +224,7 @@ if __name__ == '__main__':
         extension = '_vtx'
     elif var_type == 'f':
         extension = '_test'
-    exp = ['test', 'test2', 'test3'] #return_exp(extension)[0]
+    exp = return_exp(extension)[0]
     
     # For EOFs follow Sheshadri & Plumb 2017, use p>100hPa, lat>20degN
     p_min = 100  # hPa

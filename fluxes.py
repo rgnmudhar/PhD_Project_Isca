@@ -350,7 +350,7 @@ def refractive_index(u, T, k):
     n2 = climate.ComputeRefractiveIndexXr(u,T,k,'lat','pfull')
     return n2
 
-def plot_n2_1(dir, exp, k, name):
+def plot_n2_1(exp, k, name):
     # Plots vortex experiments
     print(datetime.now(), " - opening files")
     u = []
@@ -680,7 +680,7 @@ if __name__ == '__main__':
                 i = 1
                 exp = [exp[i][1], exp[i][3], exp[i][-1]]
                 labels = [labels[1], labels[3], labels[-1]]
-                plot_n2_1(indir, exp[i], k, basis+extension+'_heat')
+                plot_n2_1(exp[i], k, basis+extension+'_heat')
             else:
                 exp = [exp[0], exp[1], exp[4], exp[-1]]
                 labels = [labels[0], labels[1], labels[4], labels[-1]]

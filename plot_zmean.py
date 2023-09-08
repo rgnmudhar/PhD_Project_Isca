@@ -425,8 +425,8 @@ if __name__ == '__main__':
                 # For polar vortex experiments:
                 T_lvls = [np.arange(160, 330, 10), np.arange(-20, 30, 2.5)]
                 u_lvls = [np.arange(-70, 100, 10), np.arange(-40, 30, 5)]
-                exp = [[exp[0][1], exp[0][3], exp[0][-1]], [exp[1][1], exp[1][3], exp[1][-1]]]
-                labels = [labels[1], labels[3], labels[-1]]
+                #exp = [[exp[0][1], exp[0][3], exp[0][-1]], [exp[1][1], exp[1][3], exp[1][-1]]]
+                #labels = [labels[1], labels[3], labels[-1]]
                 report_plot1(exp, T_lvls, 'Temperature', ' (K)', labels, basis+extension+'_T')
                 report_plot1(exp, u_lvls, 'Zonal Wind', r' (m s$^{-1}$)', labels, basis+extension+'_u')
             else:
@@ -456,7 +456,7 @@ if __name__ == '__main__':
                 #Read in data to plot polar heat contours
                 file = '/disco/share/rm811/isca_data/' + exp[i] + '/run0025/atmos_daily_interp.nc'
                 ds = xr.open_dataset(file)
-                perturb = ds.local_heating.sel(lon=180, method='nearest').mean(dim='time')  
+                perturb = 0 #ds.local_heating.sel(lon=180, method='nearest').mean(dim='time')  
                 if plot_type =='a':
                     plot_combo(uz, Tz, lvls, perturb, lat, p, exp[i], vertical)
                 elif plot_type == 'b':

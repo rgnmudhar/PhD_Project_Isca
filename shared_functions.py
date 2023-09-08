@@ -100,10 +100,26 @@ def return_exp(extension):
         xlabel = r'$\gamma$ (K km$^{-1}$)'
         exp = [exp1, exp2]
     elif extension == '_test':
-        exp = ['PK_e0v3z13_q4m2y45l800u200',\
-            'PK_e0v4z13_h3000m2l25u65']
-        labels = [r'$\gamma = 3, q = 4$', r'$\gamma = 4, h = 3000$']
-        xlabel = ''
+        heat = '_w15a4p600f800g50'
+        perturb = '_q6m2y45l800u200' 
+        exp1 = ['PK_e0v1z13'+perturb,\
+        'PK_e0v4z13'+perturb,\
+        'PK_e0v6z13'+perturb]
+        exp2 = ['PK_vtx1_q6m2y45_w15a4p600_t4x0z300',\
+            'PK_vtx4_q6m2y45_w15a4p600_t4x0z300',\
+            'PK_vtx6_q6m2y45_w15a4p600_t4x0z300']
+        #exp1 = ['PK_e0v0z13_a0b0p2',\
+        #    'PK_e0v0z13_a5b4p1',\
+        #    'PK_e0v0z13_a5b20p1']
+        #exp2 = ['PK_e0v4z13_a0b0p2'+heat,\
+        #    'PK_e0v4z13_a5b4p1'+heat,\
+        #    'PK_e0v4z13_a5b20p1'+heat]
+        #labels = [r'$\gamma = 1$ K km$^{-1}$', r'$\gamma = 4$ K km$^{-1}$', r'$\gamma = 6$ K km$^{-1}$']
+        labels = ['1', '4', '6']
+        xlabel = r'$\gamma$ (K km$^{-1}$)'
+        #labels = ['J30', 'J40', 'J50']
+        #xlabel = 'Experiment'
+        exp = [exp1, exp2]        
     return exp, labels, xlabel
 
 def add_phalf(exp_name, file_name):

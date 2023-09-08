@@ -214,9 +214,9 @@ def EDJ_loc():
     perturb = '_q6m2y45l800u200'
     combo = heat+perturb
     # Without a polar vortex
-    exp_noheat = [['PK_v0_DTy20', 'PK_v0_DTy40', 'PK_v0_DTy60', 'PK_v0_DTy80', 'PK_v0_DTy100'],\
+    exp_noheat = [['PK_e0v4z13_a0b0p2', 'PK_e0v4z13_a5b4p1', 'PK_e0v4z13_a5b20p1'],\
                    ['PK_e0v1z13'+perturb, 'PK_e0v2z13'+perturb,'PK_e0v3z13'+perturb, 'PK_e0v4z13'+perturb,'PK_e0v5z13'+perturb, 'PK_e0v6z13'+perturb]]
-    exp_heat = [['PK_v0_DTy20'+heat, 'PK_v0_DTy40'+heat, 'PK_v0_DTy60'+heat, 'PK_v0_DTy80'+heat, 'PK_v0_DTy100'+heat],\
+    exp_heat = [['PK_e0v4z13_a0b0p2'+heat, 'PK_e0v4z13_a5b4p1'+heat, 'PK_e0v4z13_a5b20p1'+heat],\
                 ['PK_e0v1z13'+combo, 'PK_e0v2z13'+combo,'PK_e0v3z13'+combo, 'PK_e0v4z13'+combo,'PK_e0v5z13'+combo, 'PK_e0v6z13'+combo]]
     n = len(exp_heat)
 
@@ -247,10 +247,10 @@ def EDJ_loc():
     markers = ['^', 'o']
     colours = ['#B30000', '#0099CC']
     fig, ax = plt.subplots(figsize=(10,6))
-    ax.scatter(edj_loc_noheat[0], edj_loc_shift[0], marker=markers[0], color=colours[0], label='Without SPV')
-    ax.plot(np.unique(edj_loc_noheat[0]), np.poly1d(np.polyfit(edj_loc_noheat[0], edj_loc_shift[0], 1))(np.unique(edj_loc_noheat[0])), color=colours[0], linewidth=1.25)
-    ax.scatter(edj_loc_noheat[1], edj_loc_shift[1], marker=markers[1], color=colours[1], label='With SPV')
-    ax.plot(np.unique(edj_loc_noheat[1]), np.poly1d(np.polyfit(edj_loc_noheat[1], edj_loc_shift[1], 1))(np.unique(edj_loc_noheat[1])), color=colours[1], linewidth=1.25)
+    ax.scatter(edj_loc_noheat[0], edj_loc_shift[0], marker=markers[0], color=colours[0], label='Jet Fix')
+    #ax.plot(np.unique(edj_loc_noheat[0]), np.poly1d(np.polyfit(edj_loc_noheat[0], edj_loc_shift[0], 1))(np.unique(edj_loc_noheat[0])), color=colours[0], linewidth=1.25)
+    ax.scatter(edj_loc_noheat[1], edj_loc_shift[1], marker=markers[1], color=colours[1], label='Original')
+    #ax.plot(np.unique(edj_loc_noheat[1]), np.poly1d(np.polyfit(edj_loc_noheat[1], edj_loc_shift[1], 1))(np.unique(edj_loc_noheat[1])), color=colours[1], linewidth=1.25)
     ax.set_xlabel(r'EDJ Location ($\degree$N)', fontsize='xx-large')
     ax.set_ylabel(r'EDJ Location Response ($\degree$N)', fontsize='xx-large')
     ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
@@ -561,8 +561,8 @@ def neck_winds(exp_type):
         ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
         plt.savefig(exp_type+'_neckcheck.pdf', bbox_inches = 'tight')
 
-    elif exp_type == 'vtx':
-        labels, xlabel, neck_response, SPV_response, neck, SPV = find_responses2('_vtx')
+    elif exp_type == 'test': #'vtx':
+        labels, xlabel, neck_response, SPV_response, neck, SPV = find_responses2('_test') #'_vtx')
         colours1 = blues[1:]
         fig, ax = plt.subplots(figsize=(8,8))        
         for i in range(len(neck_response)):
@@ -580,7 +580,7 @@ def neck_winds(exp_type):
         fig, ax = plt.subplots(figsize=(10,8))
         colours2 = reds[1:]
         greys = ['#dedede', '#c6c6c6', '#a7a7a7', '#868686', '#686868', '#484848']
-        ax2 = ax.twiny()
+        #ax2 = ax.twiny()
         for i in range(len(neck)):
             ax.scatter(x=neck[i], y=SPV_response[i], marker='D', s=100, c=colours1[i], label=labels[i])
         ax.plot(np.unique(neck), np.poly1d(np.polyfit(neck, SPV_response, 1))(np.unique(neck)),\
@@ -590,17 +590,18 @@ def neck_winds(exp_type):
         ax.set_ylabel(r'Change in SPV winds: 10hPa, 60N-75N (m s$^{-1}$)', fontsize='xx-large')
         ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in', labelcolor=colours1[-2])
         ax.tick_params(axis='y', labelcolor='k')
-        for i in range(len(SPV)):
-            ax2.scatter(x=SPV[i], y=SPV_response[i], marker='o', s=100, c=colours2[i], label=labels[i])
-        ax2.plot(np.unique(SPV), np.poly1d(np.polyfit(SPV, SPV_response, 1))(np.unique(SPV)),\
-            color=colours2[-2], linewidth=1.5, linestyle=':')
-        ax2.set_xlabel(r'Climatological SPV winds: 10hPa, 60N-75N (m s$^{-1}$)', fontsize='xx-large', color=colours2[-2])
-        ax2.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in', labelcolor=colours2[-2])
-        legend_elements = []
-        for i in range(len(labels)):
-            legend_elements.append(Line2D([0], [0], marker='s', color='w', label=labels[i], markerfacecolor=greys[i], markersize=15))
-        ax.legend(handles=legend_elements, title=xlabel, title_fontsize='xx-large', fontsize='xx-large',\
-                  fancybox=False, shadow=False, ncol=1, handler_map={tuple: HandlerTuple(ndivide=None)})
+        ax.legend(title=xlabel, title_fontsize='xx-large', fontsize='xx-large', fancybox=False, shadow=False, ncol=1)
+        #for i in range(len(SPV)):
+        #    ax2.scatter(x=SPV[i], y=SPV_response[i], marker='o', s=100, c=colours2[i], label=labels[i])
+        #ax2.plot(np.unique(SPV), np.poly1d(np.polyfit(SPV, SPV_response, 1))(np.unique(SPV)),\
+        #    color=colours2[-2], linewidth=1.5, linestyle=':')
+        #ax2.set_xlabel(r'Climatological SPV winds: 10hPa, 60N-75N (m s$^{-1}$)', fontsize='xx-large', color=colours2[-2])
+        #ax2.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in', labelcolor=colours2[-2])
+        #legend_elements = []
+        #for i in range(len(labels)):
+        #    legend_elements.append(Line2D([0], [0], marker='s', color='w', label=labels[i], markerfacecolor=greys[i], markersize=15))
+        #ax.legend(handles=legend_elements, title=xlabel, title_fontsize='xx-large', fontsize='xx-large',\
+        #          fancybox=False, shadow=False, ncol=1, handler_map={tuple: HandlerTuple(ndivide=None)})
         plt.savefig(exp_type+'_climatologycheck.pdf', bbox_inches = 'tight')
 
     return plt.close()
@@ -624,7 +625,6 @@ if __name__ == '__main__':
         extension = '_vtx'
     elif var_type == 'f':
         extension = '_test'
-        basis = 'PK_e0vXz13'
     exp, labels, xlabel = return_exp(extension)
     n = len(exp)
 
@@ -658,7 +658,7 @@ if __name__ == '__main__':
             if extension == '_vtx' or '_loc2':
                 windsvexp(outdir, labels, xlabel, str(p), [basis+extension+'_noheat', basis+extension+'_heat'])
             else:
-                windsvexp(outdir, labels, xlabel, str(p), basis+extension)
+                windsvexp(outdir, labels, xlabel, str(p), 'PK_e0v0z13_noheat')
         elif alt == "c":
             perturb = '_q6m2y45l800u200' 
             exp = ['PK_e0v1z13', 'PK_e0v2z13', 'PK_e0v3z13', 'PK_e0v4z13', 'PK_e0v5z13', 'PK_e0v6z13']
@@ -673,7 +673,7 @@ if __name__ == '__main__':
             p = 70
             lats = slice(45,55)
             lab = 'neck '
-            neck_winds('vtx')
+            neck_winds('test') #vtx')
         elif alt == "b":
             #lower SPV winds @ 60N, 100 hPa
             p = 100
