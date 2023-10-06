@@ -214,9 +214,9 @@ def EDJ_loc():
     perturb = '_q6m2y45l800u200'
     combo = heat+perturb
     # Without a polar vortex
-    exp_noheat = [['PK_e0v4z13_a0b0p2', 'PK_e0v4z13_a5b4p1', 'PK_e0v4z13_a5b20p1'],\
+    exp_noheat = [['PK_e0v1z13_a0b0p2'+perturb,'PK_e0v1z13_a0b10p2'+perturb, 'PK_e0v1z13_a5b4p1'+perturb, 'PK_e0v1z13_a5b12p1'+perturb, 'PK_e0v1z13_a5b20p1'+perturb],\
                    ['PK_e0v1z13'+perturb, 'PK_e0v2z13'+perturb,'PK_e0v3z13'+perturb, 'PK_e0v4z13'+perturb,'PK_e0v5z13'+perturb, 'PK_e0v6z13'+perturb]]
-    exp_heat = [['PK_e0v4z13_a0b0p2'+heat, 'PK_e0v4z13_a5b4p1'+heat, 'PK_e0v4z13_a5b20p1'+heat],\
+    exp_heat = [['PK_e0v1z13_a0b0p2'+heat+perturb, 'PK_e0v1z13_a0b10p2'+heat+perturb, 'PK_e0v1z13_a5b4p1'+heat+perturb, 'PK_e0v1z13_a5b12p1'+heat+perturb, 'PK_e0v1z13_a5b20p1'+heat+perturb],\
                 ['PK_e0v1z13'+combo, 'PK_e0v2z13'+combo,'PK_e0v3z13'+combo, 'PK_e0v4z13'+combo,'PK_e0v5z13'+combo, 'PK_e0v6z13'+combo]]
     n = len(exp_heat)
 
@@ -245,17 +245,17 @@ def EDJ_loc():
     
     print(datetime.now(), " - plotting")
     markers = ['^', 'o']
-    colours = ['#B30000', '#0099CC']
+    colours = ['#B30000', '#4D0099']
     fig, ax = plt.subplots(figsize=(10,6))
-    ax.scatter(edj_loc_noheat[0], edj_loc_shift[0], marker=markers[0], color=colours[0], label='Jet Fix')
-    #ax.plot(np.unique(edj_loc_noheat[0]), np.poly1d(np.polyfit(edj_loc_noheat[0], edj_loc_shift[0], 1))(np.unique(edj_loc_noheat[0])), color=colours[0], linewidth=1.25)
-    ax.scatter(edj_loc_noheat[1], edj_loc_shift[1], marker=markers[1], color=colours[1], label='Original')
-    #ax.plot(np.unique(edj_loc_noheat[1]), np.poly1d(np.polyfit(edj_loc_noheat[1], edj_loc_shift[1], 1))(np.unique(edj_loc_noheat[1])), color=colours[1], linewidth=1.25)
-    ax.set_xlabel(r'EDJ Location ($\degree$N)', fontsize='xx-large')
+    ax.scatter(edj_loc_noheat[0], edj_loc_shift[0], marker=markers[0], s=50, color=colours[0], label=r'Modify $T_{eq}$')
+    ax.plot(np.unique(edj_loc_noheat[0]), np.poly1d(np.polyfit(edj_loc_noheat[0], edj_loc_shift[0], 1))(np.unique(edj_loc_noheat[0])), color=colours[0], linewidth=1.25, linestyle='--')
+    ax.scatter(edj_loc_noheat[1], edj_loc_shift[1], marker=markers[1], s=50, color=colours[1], label=r'Modify $\gamma$')
+    ax.plot(np.unique(edj_loc_noheat[1]), np.poly1d(np.polyfit(edj_loc_noheat[1], edj_loc_shift[1], 1))(np.unique(edj_loc_noheat[1])), color=colours[1], linewidth=1.25, linestyle='--')
+    ax.set_xlabel(r'Climatological EDJ Location ($\degree$N)', fontsize='xx-large')
     ax.set_ylabel(r'EDJ Location Response ($\degree$N)', fontsize='xx-large')
     ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
-    ax.legend(loc='upper center', fontsize='xx-large', fancybox=False, ncol=2)
-    plt.savefig('EDJ_location_response.pdf', bbox_inches = 'tight')
+    ax.legend(loc='lower left', fontsize='xx-large', fancybox=False, ncol=1)
+    plt.savefig('EDJ_location_response_v1+perturb.pdf', bbox_inches = 'tight')
     return plt.close()
 
 def SSWsvexp(dir, exp, x, xlabel, fig_name):
@@ -656,7 +656,7 @@ if __name__ == '__main__':
         elif alt == "b":
             p = 850 # hPa for EDJ
             if extension == '_vtx' or '_loc2':
-                windsvexp(outdir, labels, xlabel, str(p), [basis+extension+'_noheat', basis+extension+'_heat'])
+                windsvexp(outdir, labels, xlabel, str(p), [basis+extension+'_noperturb', basis+extension+'_perturb'])
             else:
                 windsvexp(outdir, labels, xlabel, str(p), 'PK_e0v0z13_noheat')
         elif alt == "c":

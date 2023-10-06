@@ -81,7 +81,7 @@ def report_plot1(exp, lvls, variable, unit, labels, name):
     p = Xtz0.pfull
     lat = Xtz0.lat
 
-    h_name = exp[1][0][11:27]
+    h_name = 'w15a4p600f800g50' #exp[1][0][11:27]
     h = xr.open_dataset('../Inputs/' + h_name + '.nc')
     heat = h.mean('lon').variables[h_name]
     h_p = h.pfull
@@ -421,7 +421,7 @@ if __name__ == '__main__':
                 print("Not set up to plot these experiments yet!")
 
         elif plot_type == 'g':
-            if var_type == 'e':
+            if var_type == 'f':
                 # For polar vortex experiments:
                 T_lvls = [np.arange(160, 330, 10), np.arange(-20, 30, 2.5)]
                 u_lvls = [np.arange(-70, 100, 10), np.arange(-40, 30, 5)]

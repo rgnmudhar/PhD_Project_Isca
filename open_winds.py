@@ -61,6 +61,7 @@ def winds_errs(indir, outdir, exp, p, name):
     maxwinds_sd = []
     print(datetime.now(), " - calculating standard deviation errors")
     for i in range(len(exp)):
+        print(exp[i])
         ds = xr.open_dataset(indir+exp[i]+'_uz.nc', decode_times=False)
         lat = ds.coords['lat'].data
         u = ds.ucomp
@@ -265,7 +266,8 @@ if __name__ == '__main__':
     elif var_type == 'f':
         extension = '_test'
     exp =  return_exp(extension)[0]
-    name = 'PK_e0vXz13_w15a4p600_t4x0z300'
+    name = 'PK_e0v1z13_jetfix_'
+    #name = basis+'_perturb'
 
     #Ro = []
     #for i in range(len(exp)):
@@ -274,7 +276,7 @@ if __name__ == '__main__':
 
     #extension = '_offpole'
     find_SPV(indir, outdir, exp)
-    p = 850
-    winds_errs(indir, outdir, exp, p, name)
+    #p = 850
+    #winds_errs(indir, outdir, exp, p, name)
     p = 10
     winds_errs(indir, outdir, exp, p, name)
