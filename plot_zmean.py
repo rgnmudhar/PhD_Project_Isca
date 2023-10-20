@@ -439,31 +439,55 @@ if __name__ == '__main__':
                 report_plot2(exp, u_lvls, 'Zonal Wind', r' (m s$^{-1}$)', labels, basis+extension+'_u')
 
         else:
-            vertical = input("Plot vs. a) log pressure or b) pseudo-altitude?")
-            for i in range(len(exp)):
-                print(datetime.now(), " - opening files ({0:.0f}/{1:.0f})".format(i+1, len(exp)))
-                uz = xr.open_dataset(indir+exp[i]+'_utz.nc', decode_times=False).ucomp[0]
-                Tz = xr.open_dataset(indir+exp[i]+'_Ttz.nc', decode_times=False).temp[0]
-                lat = uz.coords['lat'].data
-                p = uz.coords['pfull'].data
-                #MSF = calc_streamfn(xr.open_dataset(indir+exp[0]+'_vtz.nc', decode_times=False).vcomp[0], p, lat)  # Meridional Stream Function
-                #MSF_xr = xr.DataArray(MSF, coords=[p,lat], dims=['pfull','lat'])  # Make into an xarray DataArray
-                #MSF_xr.attrs['units']=r'kgs$^{-1}$'
+            polarcap = input("Calculate polar cap temperature response? y/n ")
+            if polarcap == "y":
+                if var_type == 'e':
+                    for i in range(len(exp[0])):
+                        Tz_0 = xr.open_dataset(indir+exp[0][i]+'_Ttz.nc', decode_times=False).temp[0]
+                        Tz_1 = xr.open_dataset(indir+exp[1][i]+'_Ttz.nc', decode_times=False).temp[0]
+                        T_response = Tz_1 - Tz_0
+                        T_response_polarcap = T_response.sel(pfull=1000, method='nearest').sel(lat=slice(60,90)).mean('lat').data
+                        print(exp[1][i], T_response_polarcap)
+                else:
+                    Ts = []
+                    for i in range(len(exp)):
+                        Tz = xr.open_dataset(indir+exp[i]+'_Ttz.nc', decode_times=False).temp[0]
+                        if i == 0:
+                            T_og = Tz
+                        else:
+                            Ts.append(Tz)
+                    
+                    for j in range(len(Ts)):
+                        T_response = Ts[j] - T_og
+                        T_response_polarcap = T_response.sel(pfull=1000, method='nearest').sel(lat=slice(60,90)).mean('lat').data
+                        print(exp[j+1], T_response_polarcap)
+            else:
+                vertical = input("Plot vs. a) log pressure or b) pseudo-altitude?")
+                for i in range(len(exp)):
+                    print(datetime.now(), " - opening files ({0:.0f}/{1:.0f})".format(i+1, len(exp)))
+                    uz = xr.open_dataset(indir+exp[i]+'_utz.nc', decode_times=False).ucomp[0]
+                    Tz = xr.open_dataset(indir+exp[i]+'_Ttz.nc', decode_times=False).temp[0]
+                    lat = uz.coords['lat'].data
+                    p = uz.coords['pfull'].data
+                    #MSF = calc_streamfn(xr.open_dataset(indir+exp[0]+'_vtz.nc', decode_times=False).vcomp[0], p, lat)  # Meridional Stream Function
+                    #MSF_xr = xr.DataArray(MSF, coords=[p,lat], dims=['pfull','lat'])  # Make into an xarray DataArray
+                    #MSF_xr.attrs['units']=r'kgs$^{-1}$'
 
-                #if i == 0:
-                #    print("skipping control")
-                #elif i != 0:
-                #Read in data to plot polar heat contours
-                file = '/disco/share/rm811/isca_data/' + exp[i] + '/run0025/atmos_daily_interp.nc'
-                ds = xr.open_dataset(file)
-                perturb = 0 #ds.local_heating.sel(lon=180, method='nearest').mean(dim='time')  
-                if plot_type =='a':
-                    plot_combo(uz, Tz, lvls, perturb, lat, p, exp[i], vertical)
-                elif plot_type == 'b':
-                        u = [uz, xr.open_dataset(indir+exp[0]+'_utz.nc', decode_times=False).ucomp[0]]
-                        T = [Tz, xr.open_dataset(indir+exp[0]+'_Ttz.nc', decode_times=False).temp[0]]
-                        plot_diff([T, u], ['K', r'ms$^{-1}$'], [np.arange(160, 330, 10), np.arange(-200, 210, 10)],\
-                             perturb, lat, p, exp[i], vertical)
+                    #if i == 0:
+                    #    print("skipping control")
+                    #elif i != 0:
+                    #Read in data to plot polar heat contours
+                    file = '/disco/share/rm811/isca_data/' + exp[i] + '/run0025/atmos_daily_interp.nc'
+                    ds = xr.open_dataset(file)
+                    perturb = 0 #ds.local_heating.sel(lon=180, method='nearest').mean(dim='time')  
+                    if plot_type =='a':
+                        plot_combo(uz, Tz, lvls, perturb, lat, p, exp[i], vertical)
+                    elif plot_type == 'b':
+                            u = [uz, xr.open_dataset(indir+exp[0]+'_utz.nc', decode_times=False).ucomp[0]]
+                            T = [Tz, xr.open_dataset(indir+exp[0]+'_Ttz.nc', decode_times=False).temp[0]]
+                            plot_diff([T, u], ['K', r'ms$^{-1}$'], [np.arange(160, 330, 10), np.arange(-200, 210, 10)],\
+                                perturb, lat, p, exp[i], vertical)
+                        
    
     elif plot_type == 'c':
         basis = 'PK_e0v4z13'
