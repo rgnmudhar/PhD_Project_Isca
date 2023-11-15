@@ -94,18 +94,18 @@ def SPVvexp1(n, mean, mode, sd, err, p, x, xlabel, name):
         for i in range(n):
             ax.errorbar(x, mean[i], yerr=err[i], fmt=markers[i], linewidth=1.25, capsize=5, color='#B30000', linestyle=lines[i])
             ax.set_xticks(x)
-            ax2.plot(x, sd[i], marker=markers[i], linewidth=1.25, color='#4D0099', linestyle=lines[i], label='S.D.')
+            #ax2.plot(x, sd[i], marker=markers[i], linewidth=1.25, color='#4D0099', linestyle=lines[i], label='S.D.')
             legend_elements = [Line2D([0], [0], marker=markers[0], color='k', label='no polar heat', markerfacecolor='k', markersize=10, linestyle=lines[0]),\
                     Line2D([0], [0], marker=markers[1], color='k', label='polar heat', markerfacecolor='k', markersize=10, linestyle=lines[1])]
             ax.legend(loc='upper left', handles=legend_elements, fontsize='x-large', fancybox=False, ncol=2)
     else:
         ax.errorbar(x[1:], mean[1:], yerr=err[1:], fmt=markers[1], linewidth=1.25, capsize=5, color='#B30000', linestyle=lines[0], label='mean')
         ax.set_xticks(x[1:])
-        ax.plot(x[1:], mode[1:], marker=markers[1], linewidth=1.25, color='#B30000', linestyle=lines[2], label='mode')
+        #ax.plot(x[1:], mode[1:], marker=markers[1], linewidth=1.25, color='#B30000', linestyle=lines[2], label='mode')
         legend_elements = [Line2D([0], [0], marker=markers[1], color='#B30000', label='Mean', markerfacecolor='#B30000', markersize=5, linestyle=lines[0]),\
                     Line2D([0], [0], marker=markers[1], color='#B30000', label='Mode', markerfacecolor='#B30000', markersize=5, linestyle=lines[2])]
         ax.legend(loc='upper center', handles=legend_elements, fontsize='x-large', bbox_to_anchor=(0.5, 1), fancybox=False, shadow=False, ncol=2)
-        ax2.plot(x[1:], sd[1:], marker=markers[1], linewidth=1.25, color='#4D0099', linestyle=lines[1], label='S.D.')
+        #ax2.plot(x[1:], sd[1:], marker=markers[1], linewidth=1.25, color='#4D0099', linestyle=lines[1], label='S.D.')
         #ax2.axhline(sd[0], color='#4D0099', linewidth=0.5)
         #ax2.text(5.6, sd[0]-0.6, 'Control', color='#4D0099', fontsize='x-large') 
     ax.set_xlabel(xlabel, fontsize='xx-large')
@@ -143,6 +143,67 @@ def SPVvexp2(skew, kurt, p, labels, xlabel, name):
     plt.savefig(name+'_{:.0f}stats2.pdf'.format(p), bbox_inches = 'tight')
     return plt.close()
 
+def SPVvexp3(mean1, err1, mean2, err2, x1, xlabel1, x2, xlabel2, name):
+    """
+    Plots the mean of SPV against experiment for depth and heat experiments
+    """
+    print(datetime.now(), " - plotting average vs experiment")
+    markers = ['d', 'o']
+    lines = ['--', '-', '-.']
+    fig, ax = plt.subplots(figsize=(10,6))
+    ax2 = ax.twiny()
+    ax.plot(x1[1:], mean1[1:], marker=markers[0], linewidth=1.5, color='#549ecd', linestyle=lines[0])
+    ax.set_xticks(x1[1:], color='#549ecd')
+    ax2.plot([0.5, 1, 2, 4, 8], mean2[1:], marker=markers[1], linewidth=1.5, color='#4D0099', linestyle=lines[1])
+    ax2.set_xticks([0.5, 1, 2, 4, 8], color='#4D0099')
+    ax.axhline(mean1[0], color='#666666', linewidth=1.25, linestyle=':')
+    ax.text(5.3, mean1[0]-1, 'control', color='#666666', fontsize='xx-large')
+    ax.set_xlabel(xlabel1, fontsize='xx-large', color='#549ecd')
+    ax.tick_params(axis='x', colors='#549ecd')
+    ax2.set_xlabel(xlabel2, fontsize='xx-large', color='#4D0099')
+    ax2.tick_params(axis='x', colors='#4D0099')
+    ax.set_ylabel(r'U$_{10,60}$ (m s$^{-1}$)', fontsize='xx-large')
+    ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
+    ax2.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
+    plt.savefig(name+'_SPVmean.pdf', bbox_inches = 'tight')
+    return plt.show()
+
+#def SPVvexp4(mean1_1, mean1_2, mean2_1, mean2_2, param, name):
+def SPVvexp4(mean1_1, mean1_2, param, name):
+    """
+    Plots the mean of SPV and SPV response against experiment for gamma experiments
+    """
+    print(datetime.now(), " - plotting average and response vs experiment")
+    fig, ax = plt.subplots(figsize=(10,6))
+
+    SPV_response1 = []
+    SPV1 = mean1_1
+    for i in range(len(mean1_1)):
+        SPV_response1.append(mean1_2[i] - mean1_1[i])
+    colours1 = blues[1:]
+    for i in range(len(SPV_response1)):
+        ax.scatter(x=SPV1[i], y=SPV_response1[i], marker='o', s=100, c=colours1[i], label=labels[i])
+    ax.plot(np.unique(SPV1), np.poly1d(np.polyfit(SPV1, SPV_response1, 1))(np.unique(SPV1)),\
+        color=colours1[-2], linewidth=1.5, linestyle='-')
+    ax.legend(title=param, title_fontsize='xx-large', fontsize='xx-large', fancybox=False, shadow=False, ncol=2)
+
+    """
+    # For the T_eq experiments
+    SPV_response2 = []
+    SPV2 = mean2_1
+    for i in range(len(mean2_1)):
+        SPV_response2.append(mean2_2[i] - mean2_1[i])
+    colours2 = reds[2]
+    for i in range(len(SPV_response2)):
+        ax.scatter(x=SPV2[i], y=SPV_response2[i], marker='^', s=100, c=colours2, label=labels[i])
+    """
+    plt.axhline(0, color='k', linewidth=0.5)
+    ax.set_xlabel(r'Climatological U$_{10,60}$ (m s$^{-1}$)', fontsize='xx-large')
+    ax.set_ylabel(r'U$_{10,60}$ Response (m s$^{-1}$)', fontsize='xx-large')
+    ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
+    plt.savefig(name+'_SPV+response.pdf', bbox_inches = 'tight')
+    return plt.close()
+
 def GP09(exp):
     """
     As per Gerber & Polvani (2009) plot vtx_gamma vs. U_1060 and EDJ latitude
@@ -177,31 +238,46 @@ def windsvexp(dir, x, xlabel, p, name):
     Then plots this against experiment.
     """
     print(datetime.now(), " - plotting wind maxima vs experiment")
-    markers = ['^', 'o']
+    markers = ['d', 'o']
     lines = ['--', '-']
     fig, ax = plt.subplots(figsize=(10,6))
     ax2 = ax.twinx()
     if len(name) == 2:
+        """
+        # with error bars
         for i in range(len(name)):
             ax.errorbar(x, open_file(dir, name[i], 'maxwinds'+p), yerr=open_file(dir, name[i], 'maxwinds_sd'+p),\
                     fmt=markers[i], linewidth=1.25, capsize=5, color='#B30000', linestyle=lines[i])
             ax2.errorbar(x, open_file(dir, name[i], 'maxlats'+p), yerr=open_file(dir, name[i], 'maxlats_sd'+p),\
                          fmt=markers[i], linewidth=1.25, capsize=5, color='#4D0099', linestyle=lines[i])
+        """
+        for i in range(len(name)):
+            print(name[i])
+            ax.plot(x, open_file(dir, name[i], 'maxwinds'+p), marker=markers[i], linewidth=1.25, color='#B30000', linestyle=lines[i])
+            ax2.plot(x, open_file(dir, name[i], 'maxlats'+p), marker=markers[i], linewidth=1.25, color='#4D0099', linestyle=lines[i])
         ax.set_xticks(x)
         legend_elements = [Line2D([0], [0], marker=markers[0], color='k', label='no polar heat', markerfacecolor='k', markersize=10, linestyle=lines[0]),\
                     Line2D([0], [0], marker=markers[1], color='k', label='polar heat', markerfacecolor='k', markersize=10, linestyle=lines[1])]
         ax.legend(loc='upper center',handles=legend_elements, fontsize='x-large', fancybox=False, ncol=2)
         name = name[i]
     else:
+        """
+        # with error bars
         ax.errorbar(x[1:], open_file(dir, name, 'maxwinds'+p)[1:], yerr=open_file(dir, name, 'maxwinds_sd'+p)[1:],\
                     fmt=markers[1], linewidth=1.25, capsize=5, color='#B30000', linestyle=lines[1])
         ax2.errorbar(x[1:], open_file(dir, name, 'maxlats'+p)[1:], yerr=open_file(dir, name, 'maxlats_sd'+p)[1:], fmt=markers[1],\
-                     linewidth=1.25, capsize=5, color='#4D0099', linestyle=lines[1]) 
+                     linewidth=1.25, capsize=5, color='#4D0099', linestyle=lines[1])
+        """
+        ax.plot(x[1:], open_file(dir, name, 'maxwinds'+p)[1:], marker=markers[1], linewidth=1.25, color='#B30000', linestyle=lines[1])
+        ax2.plot(x[1:], open_file(dir, name, 'maxlats'+p)[1:], marker=markers[1], linewidth=1.25, color='#4D0099', linestyle=lines[1])
         ax.set_xticks(x[1:])
     ax.set_xlabel(xlabel, fontsize='xx-large')
-    ax.set_ylabel(r'Strength of Max. U$_{850}$ (ms$^{-1}$)', color='#B30000', fontsize='xx-large')
+    ax.tick_params(axis='y', colors='#B30000')
+    ax.set_ylim(10, 15)
+    ax.set_ylabel(r'EDJ Strength (m s$^{-1}$)', color='#B30000', fontsize='xx-large')
     ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
-    ax2.set_ylabel(r'Laitude of Max. U$_{850}$ ($\degree$N)', color='#4D0099', fontsize='xx-large')
+    ax2.set_ylabel(r'EDJ Latitude ($\degree$N)', color='#4D0099', fontsize='xx-large')
+    ax2.tick_params(axis='y', colors='#4D0099')
     ax2.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
     plt.savefig(name+'_windsvexp'+p+'.pdf', bbox_inches = 'tight')
     return plt.close()
@@ -222,18 +298,26 @@ def EDJ_loc():
 
     print(datetime.now(), " - finding locations")
     edj_loc_noheat = []
+    neck_winds_noheat = []
     for i in exp_noheat:
         edj_lats = []
+        neck_winds = []
         for j in i:
             edj_lats.append(find_EDJ('/disco/share/rm811/processed/', j)[1])
+            neck_winds.append(calc_winds(xr.open_dataset(indir+j+'_utz.nc', decode_times=False).ucomp[0], 70, 45, 55))
         edj_loc_noheat.append(edj_lats)
+        neck_winds_noheat.append(neck_winds)
 
     edj_loc_heat = []
+    neck_winds_heat = []
     for i in exp_heat:
         edj_lats = []
+        neck_winds = []
         for j in i:
             edj_lats.append(find_EDJ('/disco/share/rm811/processed/', j)[1])
+            neck_winds.append(calc_winds(xr.open_dataset(indir+j+'_utz.nc', decode_times=False).ucomp[0], 70, 45, 55))
         edj_loc_heat.append(edj_lats)
+        neck_winds_heat.append(neck_winds)
     
     print(datetime.now(), " - finding response")
     edj_loc_shift = []
@@ -245,17 +329,22 @@ def EDJ_loc():
     
     print(datetime.now(), " - plotting")
     markers = ['^', 'o']
-    colours = ['#B30000', '#4D0099']
+    colours = ['#B30000', '#0c56a0']
     fig, ax = plt.subplots(figsize=(10,6))
-    ax.scatter(edj_loc_noheat[0], edj_loc_shift[0], marker=markers[0], s=50, color=colours[0], label=r'Modify $T_{eq}$')
-    ax.plot(np.unique(edj_loc_noheat[0]), np.poly1d(np.polyfit(edj_loc_noheat[0], edj_loc_shift[0], 1))(np.unique(edj_loc_noheat[0])), color=colours[0], linewidth=1.25, linestyle='--')
-    ax.scatter(edj_loc_noheat[1], edj_loc_shift[1], marker=markers[1], s=50, color=colours[1], label=r'Modify $\gamma$')
-    ax.plot(np.unique(edj_loc_noheat[1]), np.poly1d(np.polyfit(edj_loc_noheat[1], edj_loc_shift[1], 1))(np.unique(edj_loc_noheat[1])), color=colours[1], linewidth=1.25, linestyle='--')
-    ax.set_xlabel(r'Climatological EDJ Location ($\degree$N)', fontsize='xx-large')
-    ax.set_ylabel(r'EDJ Location Response ($\degree$N)', fontsize='xx-large')
+    ax.scatter(neck_winds_noheat[0], edj_loc_shift[0], marker=markers[0], s=50, color=colours[0], label=r'Modify $T_{eq}$')
+    ax.plot(np.unique(neck_winds_noheat[0]), np.poly1d(np.polyfit(neck_winds_noheat[0], edj_loc_shift[0], 1))(np.unique(neck_winds_noheat[0])), color=colours[0], linewidth=1.25, linestyle='--')
+    ax.scatter(neck_winds_noheat[1], edj_loc_shift[1], marker=markers[1], s=50, color=colours[1], label=r'Modify $\gamma$')
+    ax.plot(np.unique(neck_winds_noheat[1]), np.poly1d(np.polyfit(neck_winds_noheat[1], edj_loc_shift[1], 1))(np.unique(neck_winds_noheat[1])), color=colours[1], linewidth=1.25, linestyle='-')
+    #ax.scatter(edj_loc_noheat[0], edj_loc_shift[0], marker=markers[0], s=50, color=colours[0], label=r'Modify $T_{eq}$')
+    #ax.plot(np.unique(edj_loc_noheat[0]), np.poly1d(np.polyfit(edj_loc_noheat[0], edj_loc_shift[0], 1))(np.unique(edj_loc_noheat[0])), color=colours[0], linewidth=1.25, linestyle='--')
+    #ax.scatter(edj_loc_noheat[1], edj_loc_shift[1], marker=markers[1], s=50, color=colours[1], label=r'Modify $\gamma$')
+    #ax.plot(np.unique(edj_loc_noheat[1]), np.poly1d(np.polyfit(edj_loc_noheat[1], edj_loc_shift[1], 1))(np.unique(edj_loc_noheat[1])), color=colours[1], linewidth=1.25, linestyle='-')
+    #ax.set_xlabel(r'Climatological EDJ Latitude ($\degree$N)', fontsize='xx-large')
+    ax.set_xlabel(r'Climatological neck winds (m s$^{-1}$)', fontsize='xx-large')
+    ax.set_ylabel(r'EDJ Latitude Response ($\degree$N)', fontsize='xx-large')
     ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
     ax.legend(loc='lower left', fontsize='xx-large', fancybox=False, ncol=1)
-    plt.savefig('EDJ_location_response_v1+perturb.pdf', bbox_inches = 'tight')
+    plt.savefig('neck_winds_vs_EDJ_location_response_v1+perturb.pdf', bbox_inches = 'tight')
     return plt.close()
 
 def SSWsvexp(dir, exp, x, xlabel, fig_name):
@@ -335,8 +424,10 @@ def SPV_report_plot(exp, x, xlabel, name):
     n = len(exp)
     obs = 0.48
     obs_err = 0.19
-    markers = ['^', 'o']
+    markers = ['d', 'o']
     lines = ['--', '-']
+    print(x)
+    x = [0, 0.5, 1, 2, 4, 8]
     fig, ax = plt.subplots(figsize=(10,6))
     if n == 2:
         SSWs_full = []
@@ -352,7 +443,7 @@ def SPV_report_plot(exp, x, xlabel, name):
                     Line2D([0], [0], marker=markers[1], color='k', label='polar heat', markerfacecolor='k', markersize=10, linestyle=lines[1])]
         ax.legend(loc='lower right',handles=legend_elements, fontsize='x-large', fancybox=False, ncol=2)
         ax.set_ylim(min(min(SSWs_full[0])-0.05,0), max(SSWs_full[0])+0.2)
-        ax.set_xlim(-0.5,len(exp[0])-0.5)
+        #ax.set_xlim(0.5,len(exp[0])+0.5)
     else:
         # For polar heating experiments at fixed vortex strength
         print(datetime.now(), " - finding SSWs")
@@ -363,22 +454,24 @@ def SPV_report_plot(exp, x, xlabel, name):
             u = xr.open_dataset(indir+e+'_uz.nc', decode_times=False).ucomp.sel(lat=60, method='nearest').sel(pfull=10, method='nearest')
             sd.append(np.std(u))
         print(datetime.now(), " - plotting SSWs and SPV s.d. vs experiment")
-        ax.errorbar(x[1:], SSWs[1:], yerr=errors[1:], fmt=markers[1], linewidth=1.5, capsize=5, color='#B30000', linestyle=lines[1])
+        ax.errorbar(x[1:], SSWs[1:], yerr=errors[1:], fmt=markers[0], linewidth=1.5, capsize=5, color='#B30000', linestyle=lines[0])
         ax2 = ax.twinx()
-        ax2.plot(x[1:], sd[1:], marker=markers[1], linewidth=1.5, color='#4D0099', linestyle=lines[1], label='S.D.')
+        ax2.plot(x[1:], sd[1:], marker=markers[1], linewidth=1.5, color='#0c56a0', linestyle=lines[1], label='S.D.')
         ax.set_xticks(x[1:])
         og = SSWs[0]
         og_err = errors[0]
-        ax.set_xlim(-0.5,6.5)
+        ax.set_xlim(-0,8.5)
+        ax.tick_params(axis='y', colors='#B30000')
+        ax2.tick_params(axis='y', colors='#0c56a0')
         ax.axhline(og, color='#666666', linewidth=1.5, linestyle=':')
-        ax.fill_between(range(-1,8), (og - og_err), (og + og_err), facecolor ='gainsboro', alpha = 0.4)
-        ax.text(5, og+0.01, 'control', color='#666666', fontsize='x-large')
+        ax.fill_between(range(-1,10), (og - og_err), (og + og_err), facecolor ='gainsboro', alpha = 0.4)
+        ax.text(7, og+0.01, 'control', color='#666666', fontsize='xx-large')
         ax.set_ylim(min(min(SSWs)-0.05,0), max(SSWs)+0.2)
         ax2.set_ylim(min(sd)-1, max(sd)+1)
-        ax2.set_ylabel(r'U$_{10,60}$ S.D. (m s$^{-1}$)', color='#4D0099', fontsize='xx-large')
+        ax2.set_ylabel(r'$\sigma _{10,60}$ (m s$^{-1}$)', color='#0c56a0', fontsize='xx-large')
         ax2.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
-    ax.axhline(obs, color='#0c56a0', linewidth=1.5, linestyle=':')
-    ax.text(5, obs+0.01, 'observations', color='#0c56a0', fontsize='x-large')
+    ax.axhline(obs, color='#4D0099', linewidth=1.5, linestyle=':')
+    ax.text(7, obs+0.01, 'reanalysis', color='#4D0099', fontsize='xx-large')
     ax.set_xlabel(xlabel, fontsize='xx-large')
     ax.set_ylabel('SSW Frequency (per 100 days)', fontsize='xx-large', color='#B30000')
     ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
@@ -655,8 +748,8 @@ if __name__ == '__main__':
                     show_jet(u, p[j], lvls[j], exp[i])
         elif alt == "b":
             p = 850 # hPa for EDJ
-            if extension == '_vtx' or '_loc2':
-                windsvexp(outdir, labels, xlabel, str(p), [basis+extension+'_noperturb', basis+extension+'_perturb'])
+            if extension == '_vtx':
+                windsvexp(outdir, labels, xlabel, str(p), [basis+'_noheat', basis+'_heat'])
             else:
                 windsvexp(outdir, labels, xlabel, str(p), 'PK_e0v0z13_noheat')
         elif alt == "c":
@@ -667,7 +760,7 @@ if __name__ == '__main__':
         elif alt == "d":
             EDJ_loc()
     elif level == 'c':
-        alt = input("Plot a) neck, b) 100 hPa SPV or c) 10 hPa SPV winds?")
+        alt = input("Plot a) neck, b) 100 hPa SPV, c) 10 hPa SPV winds, or d) mean SPV strength?")
         if alt == "a":
             #neck winds as per Isla Simpson's SPARC talk @ 45-55N, 70 hPa
             p = 70
@@ -685,28 +778,48 @@ if __name__ == '__main__':
             lats = 60
             lab = 'SPV '
             n = len(exp)
-        """
-        if n == 2:
-            means = []
-            modes = []
-            SDs = []
-            errs = []
-            for i in range(n):
-                me, mo, sd, e = plot_pdf('u', indir, exp[i], '_uz.nc', '', p, lats, labels, lab+r"zonal-mean zonal wind (m s$^{-1}$)", blues, basis+extension)[:4]
-                means.append(me)
-                modes.append(mo)
-                SDs.append(sd)
-                errs.append(e)
-            SPVvexp1(n, means, modes, SDs, errs, p, labels, xlabel, basis+extension)
-        else:
-            me, mo, sd, e, sk, k = plot_pdf('u', indir, exp, '_uz.nc', '', p, lats, labels, lab+r"zonal-mean zonal wind (m s$^{-1}$)", blues, basis+extension)
-            SPVvexp1(n, me, mo, sd, e, p, labels, xlabel, basis+extension)
-            #SPVvexp2(sk, k, p, labels, xlabel, basis+extension)
-        """
+            if n == 2:
+                means = []
+                modes = []
+                SDs = []
+                errs = []
+                for i in range(n):
+                    me, mo, sd, e = plot_pdf('u', indir, exp[i], '_uz.nc', '', p, lats, labels, lab+r"zonal-mean zonal wind (m s$^{-1}$)", blues, basis+extension)[:4]
+                    means.append(me)
+                    modes.append(mo)
+                    SDs.append(sd)
+                    errs.append(e)
+                SPVvexp1(n, means, modes, SDs, errs, p, labels, xlabel, basis+extension)
+            else:
+                me, mo, sd, e, sk, k = plot_pdf('u', indir, exp, '_uz.nc', '', p, lats, labels, lab+r"zonal-mean zonal wind (m s$^{-1}$)", blues, basis+extension)
+                SPVvexp1(n, me, mo, sd, e, p, labels, xlabel, basis+extension)
+                #SPVvexp2(sk, k, p, labels, xlabel, basis+extension)
+        elif alt == "d":
+            if extension == '_vtx':
+                exp1 = exp[0]
+                exp2 = exp[1]
+            else:
+                exp1, labels1, xlabel1 = return_exp('_depth')
+                exp2, labels2, xlabel2 = return_exp('_strength')
+            me1_1, mo, sd, e1, sk, k = plot_pdf('u', indir, exp1, '_uz.nc', '', 10, 60, labels, r"SPV zonal-mean zonal wind (m s$^{-1}$)", blues, basis+extension)
+            me1_2, mo, sd, e2, sk, k = plot_pdf('u', indir, exp2, '_uz.nc', '', 10, 60, labels, r"SPV zonal-mean zonal wind (m s$^{-1}$)", blues, basis+extension)
+            #SPVvexp3(me1_1, e1, me1_2, e2, labels1, xlabel1, labels2, xlabel2, basis+'_strength+depth')
+            SPVvexp4(me1_1, me1_2, xlabel, basis)
+
+            """
+            # For the T_eq experiments
+            extension = '_test'
+            exp = return_exp(extension)[0]
+            exp1 = exp[0]
+            exp2 = exp[1]
+            me2_1, mo, sd, e1, sk, k = plot_pdf('u', indir, exp1, '_uz.nc', '', 10, 60, labels, r"SPV zonal-mean zonal wind (m s$^{-1}$)", blues, basis+extension)
+            me2_2, mo, sd, e2, sk, k = plot_pdf('u', indir, exp2, '_uz.nc', '', 10, 60, labels, r"SPV zonal-mean zonal wind (m s$^{-1}$)", blues, basis+extension)
+            SPVvexp4(me1_1, me1_2, me2_1, me2_2, xlabel, basis)
+            """
     elif level == 'd':
         p = 10 # pressure level at which we want to find the SPV (hPa)
         #User choice for plotting - type
-        plot_type = input('Plot a) SPV over time, b) 10 hPa max. wind/lats, c) SSW frequencies, d) lat-p s.d., e) paper plot, or f) SSW composites?')
+        plot_type = input('Plot a) SPV over time, b) 10 hPa max. wind/lats, c) SSW frequencies, d) lat-p s.d., e) paper plots, or f) SSW composites?')
         if plot_type == 'a':
             exp = [exp[1], exp[-1]]
             labels = [labels[1], labels[-1]]
@@ -715,7 +828,7 @@ if __name__ == '__main__':
             cols = 2
             plot_vtx(outdir, exp, labels, colors, style, cols, exp[0])
         elif plot_type == 'b':
-            if extension == '_vtx' or '_loc2':
+            if extension == '_vtx':
                 windsvexp(outdir, labels, xlabel, str(p), [basis+extension+'_noheat', basis+extension+'_heat'])
             else:
                 windsvexp(outdir, labels, xlabel, str(p), basis+extension)

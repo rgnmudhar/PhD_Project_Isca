@@ -99,7 +99,11 @@ def report_plot1(exp, lvls, variable, unit, labels, name):
             csb.collections[list(lvls[0]).index(0)].set_linewidth(3)
         axes[i].contour(h_lat, h_p, heat, alpha=0.5, colors='g', levels=h_lvls)
         axes[i].scatter(60, 10, marker='x', color='k')
-        axes[i].text(2, 1.75, labels[i], color='k', fontsize='xx-large')
+        if i == n-1:
+            axes[i].scatter(60, 10, marker='x', color='w')
+        else:
+            axes[i].scatter(60, 10, marker='x', color='k')
+        axes[i].text(2, 1.75, letters[i]+labels[i], color='k', fontsize='xx-large')
         axes[i].set_ylim(max(p), 1) #goes to ~1hPa
         axes[i].set_yscale('log')
         axes[i].set_xlabel(r'Latitude ($\degree$N)', fontsize='xx-large')
@@ -143,33 +147,35 @@ def report_plot2(exp, lvls, variable, unit, labels, name):
     h_lvls = np.arange(2.5e-6, 1e-4, 5e-6)
 
     print(datetime.now(), " - plotting")
-    fig, axes = plt.subplots(1, 4, figsize=(4*4,6), layout="constrained")
-    if variable == 'Temperature':
-        csa_ctrl = axes[0].contourf(lat, p, ctrl, levels=lvls[0], cmap='Blues_r')
-    elif variable == 'Zonal Wind':
-        norm = cm.TwoSlopeNorm(vmin=min(lvls[0]), vmax=max(lvls[0]), vcenter=0)
-        csa_ctrl = axes[0].contourf(lat, p, ctrl, levels=lvls[0], norm=norm, cmap='RdBu_r')
-    cb_ctrl  = fig.colorbar(csa_ctrl, ax=axes[0], orientation='horizontal', extend='both')
-    cb_ctrl.set_label(label=variable+unit, size='xx-large')
-    cb_ctrl.ax.tick_params(labelsize='x-large')
+    n = len(exp)-1 
+    fig, axes = plt.subplots(1, n, figsize=(n*4.5,5), layout="constrained")
+    # Uncomment the following to include the control as panel 1
+    #if variable == 'Temperature':
+    #    csa_ctrl = axes[0].contourf(lat, p, ctrl, levels=lvls[0], cmap='Blues_r')
+    #elif variable == 'Zonal Wind':
+    #    norm = cm.TwoSlopeNorm(vmin=min(lvls[0]), vmax=max(lvls[0]), vcenter=0)
+    #    csa_ctrl = axes[0].contourf(lat, p, ctrl, levels=lvls[0], norm=norm, cmap='RdBu_r')
+    #cb_ctrl  = fig.colorbar(csa_ctrl, ax=axes[0], orientation='horizontal', extend='both')
+    #cb_ctrl.set_label(label=variable+unit, size='xx-large')
+    #cb_ctrl.ax.tick_params(labelsize='x-large')
     axes[0].set_ylabel('Pressure (hPa)', fontsize='xx-large')
     
     norm = cm.TwoSlopeNorm(vmin=min(lvls[1]), vmax=max(lvls[1]), vcenter=0)
     for i in range(len(exp)):
         if i > 0:
-            csa = axes[i].contourf(lat, p, X_response[i-1], levels=lvls[1], norm=norm, cmap='RdBu_r')
-            csb = axes[i].contour(lat, p, X[i], colors='k', levels=lvls[2], linewidths=1.5, alpha=0.25)
+            csa = axes[i-1].contourf(lat, p, X_response[i-1], levels=lvls[1], norm=norm, cmap='RdBu_r', extend='both')
+            csb = axes[i-1].contour(lat, p, X[i], colors='k', levels=lvls[2], linewidths=1.5, alpha=0.25)
             if variable == 'Zonal Wind':
                 csb.collections[list(lvls[2]).index(0)].set_linewidth(3)
-            axes[i].contour(h_lat, h_p, heat[i-1], alpha=0.5, colors='g', levels=h_lvls)
+            axes[i-1].contour(h_lat, h_p, heat[i-1], alpha=0.5, colors='g', levels=h_lvls)
 
-    cb  = fig.colorbar(csa, ax=axes[1:], shrink=0.3, orientation='horizontal', extend='both')
+    cb  = fig.colorbar(csa, orientation='vertical', extend='both', pad=0.1)
     cb.set_label(label='Response'+unit, size='xx-large')
     cb.ax.tick_params(labelsize='x-large')
 
     for i in range(len(axes)):
         axes[i].scatter(60, 10, marker='x', color='k')
-        axes[i].text(2, 1.75, labels[i], color='k', fontsize='xx-large')
+        axes[i].text(2, 1.75, letters[i]+labels[i+1], color='k', fontsize='xx-large')
         axes[i].set_ylim(max(p), 1) #goes to ~1hPa
         axes[i].set_yscale('log')
         axes[i].set_xlabel(r'Latitude ($\degree$N)', fontsize='xx-large')
@@ -362,6 +368,7 @@ if __name__ == '__main__':
         upper_p = 1 # hPa
         lvls = [np.arange(160, 330, 10), np.arange(-200, 205, 5)]
         blues = ['k', '#dbe9f6', '#bbd6eb', '#88bedc', '#549ecd',  '#2a7aba', '#0c56a0', '#08306b']
+        letters = ['a) ', 'b) ', 'c) ', 'd) ', 'e) ', 'f) ', 'g) ']
 
         if plot_type =='d':
             lat_min = 0
@@ -421,12 +428,12 @@ if __name__ == '__main__':
                 print("Not set up to plot these experiments yet!")
 
         elif plot_type == 'g':
-            if var_type == 'f':
+            if var_type == 'e':
                 # For polar vortex experiments:
                 T_lvls = [np.arange(160, 330, 10), np.arange(-20, 30, 2.5)]
-                u_lvls = [np.arange(-70, 100, 10), np.arange(-40, 30, 5)]
-                #exp = [[exp[0][1], exp[0][3], exp[0][-1]], [exp[1][1], exp[1][3], exp[1][-1]]]
-                #labels = [labels[1], labels[3], labels[-1]]
+                u_lvls = [np.arange(-70, 100, 10), np.arange(-35, 40, 5)]
+                exp = [[exp[0][1], exp[0][3], exp[0][-1]], [exp[1][1], exp[1][3], exp[1][-1]]]
+                labels = [labels[1], labels[3], labels[-1]]
                 report_plot1(exp, T_lvls, 'Temperature', ' (K)', labels, basis+extension+'_T')
                 report_plot1(exp, u_lvls, 'Zonal Wind', r' (m s$^{-1}$)', labels, basis+extension+'_u')
             else:
@@ -434,7 +441,7 @@ if __name__ == '__main__':
                 exp = [exp[0], exp[1], exp[4], exp[-1]]
                 labels = [labels[0], labels[1], labels[4], labels[-1]]
                 T_lvls = [np.arange(160, 330, 10), np.arange(-10, 25, 2.5), np.arange(160, 340, 20)]
-                u_lvls = [np.arange(-70, 100, 10), np.arange(-22.5, 17.5, 2.5), np.arange(-70, 100, 10)] #prev min u_lvls_response = -20
+                u_lvls = [np.arange(-70, 100, 10), np.arange(-20, 22.5, 2.5), np.arange(-70, 100, 10)] #prev min u_lvls_response = -20
                 report_plot2(exp, T_lvls, 'Temperature', ' (K)', labels, basis+extension+'_T')
                 report_plot2(exp, u_lvls, 'Zonal Wind', r' (m s$^{-1}$)', labels, basis+extension+'_u')
 
@@ -488,7 +495,6 @@ if __name__ == '__main__':
                             plot_diff([T, u], ['K', r'ms$^{-1}$'], [np.arange(160, 330, 10), np.arange(-200, 210, 10)],\
                                 perturb, lat, p, exp[i], vertical)
                         
-   
     elif plot_type == 'c':
         basis = 'PK_e0v4z13'
         heat_type = input('Plot a) zonally symmetric pole-centred or b) off-pole heat?')
