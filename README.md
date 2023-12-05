@@ -1,3 +1,3 @@
-# PhD Project
+# PhD Project Isca
 
-Far-flung influences on mid-latitude climate and weather extremes; the stratospheric pathway.
+PhD Description: Far-flung influences on mid-latitude climate and weather extremes; the stratospheric pathway.
