@@ -31,7 +31,7 @@ def return_exp(extension):
                    r'$p_{top}=600$ hPa', r'$p_{top}=500$ hPa', r'$p_{top}=400$ hPa', r'$p_{top}=300$ hPa']
         labels = ['control', r'$p_{top}=900$', r'$p_{top}=800$', r'$p_{top}=700$',\
                    r'$p_{top}=600$', r'$p_{top}=500$', r'$p_{top}=400$', r'$p_{top}=300$']
-        labels = ['control', '900', '800', '700', '600', '500', '400', '300']
+        #labels = ['control', '900', '800', '700', '600', '500', '400', '300']
         xlabel = r'Depth of Heating ($p_{top}$, hPa)'
     elif extension == '_width':
         perturb = '_q6m2y45_s'
@@ -56,7 +56,7 @@ def return_exp(extension):
                    r'$A=4$ K day$^{-1}$', r'$A=8$ K day$^{-1}$']
         labels = ['control', r'$A=0.5$', r'$A=1$', r'$A=2$',\
                    r'$A=4$', r'$A=8$']
-        labels = ['control', '0.5', '1', '2', '4', '8']
+        #labels = ['control', '0.5', '1', '2', '4', '8']
         xlabel = r'Strength of Heating ($A$, K day$^{-1}$)'
     elif extension == '_loc1':   
         perturb = '_q6m2y45_s'
@@ -104,8 +104,8 @@ def return_exp(extension):
                   r'$\gamma = 4$', r'$\gamma = 5$', r'$\gamma = 6$']
         labels = ['1', '2', '3', '4', '5', '6']
         xlabel = r'$\gamma$ (K km$^{-1}$)'
-        exp = [exp1, exp2]
-    elif extension == '_test':
+        exp = exp1 #[exp1, exp2]
+    elif extension == '_jetfix':
         heat = '_w15a4p600f800g50'
         perturb = '_q6m2y45l800u200' 
         exp1 = ['PK_e0v1z13_a0b0p2'+perturb,\
@@ -120,7 +120,13 @@ def return_exp(extension):
             'PK_e0v1z13_a5b20p1'+heat+perturb]
         labels = ['J30', 'J30-40', 'J40', 'J40-50', 'J50']
         xlabel = 'Experiment'
-        exp = [exp1, exp2]        
+        exp = [exp1, exp2]       
+    elif extension == '_test':
+        basis = 'PK_e0v4z13'
+        exp = [basis+'_q6m2y45l800u200' ,\
+               basis+'_q6m2y45l800u300' ]
+        labels = labels = [r'$p_t = 200$ hPa', r'$p_t = 300$ hPa', r'$p_t = 400$ hPa']
+        xlabel = r'$p_t$ (hPa)' 
     return exp, labels, xlabel
 
 def add_phalf(exp_name, file_name):
@@ -256,6 +262,30 @@ def fillnas(dir, exp):
         ds = xr.open_dataset(file, decode_times=False)
         ds_new = ds.fillna(0)
         ds_new.to_netcdf(file, format="NETCDF3_CLASSIC")
+
+def min_lapse(T, z):
+    # Finds where lapse rate reaches < 2 K/km (in hPa)
+    dtdz = []
+    for i in range(len(T)-1):
+        dtdz.append( -(T[i+1] - T[i]) / (z[i+1] - z[i]) )
+    for j in range(len(dtdz)):
+        if dtdz[j] < 2:
+            idx = (np.abs(z - (z[j]+2)).argmin())
+            if dtdz[idx] < 2:
+                h_tropo = z[j]
+                break
+    return inv_altitude(h_tropo) # convert back to pressure
+
+def tropopause(dir, exp):
+    # Finds tropopause
+    T = xr.open_dataset(dir+exp+'_Ttz.nc', decode_times=False).temp[0]
+    T_sort = T.transpose().reindex(pfull=list(reversed(T.pfull)))
+    p = T.pfull
+    z = list(reversed(altitude(p).data))
+    tropo = []
+    for i in range(len(T_sort)):
+        tropo.append(min_lapse(T_sort[i], z))
+    return p, T.lat.data, tropo
 
 def pdf(x, plot=False):
     x = np.sort(x)
