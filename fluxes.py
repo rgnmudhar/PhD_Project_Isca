@@ -539,13 +539,14 @@ def plot_EP_2(u, div_ctrl, ep1_ctrl, ep2_ctrl, div_response, ep1_response, ep2_r
     plt.savefig(name+'_EP.pdf', bbox_inches = 'tight', pad_inches=0.25)
     return plt.close()
 
-def control_plot(u, div_ctrl, ep1_ctrl, ep2_ctrl, heat, name):
+def control_plot(exp, u, div_ctrl, ep1_ctrl, ep2_ctrl, heat, name):
      # Plots control
     lvls = np.arange(-12,13,1)
     p = u.pfull
     lat = u.lat
     h_lvls = np.arange(5e-6, 7e-5, 1e-5)
 
+        
     print(datetime.now(), " - plotting control")
     n = 1
     fig, ax = plt.subplots(1, n, figsize=(n*6,5), layout="constrained")
@@ -558,6 +559,11 @@ def control_plot(u, div_ctrl, ep1_ctrl, ep2_ctrl, heat, name):
     PlotEPfluxArrows(lat, p, ep1_ctrl, ep2_ctrl, fig, ax, yscale='log')
     ax.hlines(y=70, xmin=45, xmax=55, linewidth=2.5, color='r')
     #ax.contour(h_lat, h_p, heat, alpha=0.5, colors='g', levels=h_lvls)
+
+    print(datetime.now(), " - finding tropopause")
+    trop = tropopause(indir, exp)[-1]
+    ax.plot(lat, trop, linewidth=2.5, color='w')
+
     ax.set_ylabel('Pressure (hPa)', fontsize='xx-large')    
     ax.set_ylim(max(p), 1) #goes to ~1hPa
     ax.set_yscale('log')
@@ -776,7 +782,7 @@ if __name__ == '__main__':
                             heat_ctrl = h.sel(lon=180, method='nearest').variables[h_name]
                             h_p = h.pfull
                             h_lat = h.lat                            
-                            control_plot(utz, div_ctrl, ep1_ctrl, ep2_ctrl, heat_ctrl, basis)
+                            control_plot(exp[i], utz, div_ctrl, ep1_ctrl, ep2_ctrl, heat_ctrl, basis)
                     elif i > 0:
                         print(datetime.now(), " - taking differences")
                         div_response.append(div - div_ctrl)

@@ -241,9 +241,7 @@ if __name__ == '__main__':
 
     func = input('Do you want to a) postprocess, b) remove uninterpolated files, c) find TKE, d) back-calculate w, e) retrospectively extract variables, or f) delete spin-up data?')
 
-    perturb = '_q6m2y45l800u200'
-    heat = '_w15a4p600f800g50_q6m2y45l800u200'
-    exp = ['PK_e0v1z13_a0b10p2'+perturb, 'PK_e0v1z13_a0b10p2'+heat, 'PK_e0v1z13_a5b12p1'+perturb, 'PK_e0v1z13_a5b12p1'+heat]
+    exp = ['PK_e0v4z13_q6m2y45l800u200_T85', 'PK_e0v4z13_w15a4p600f800g50_q6m2y45l800u200_T85']
     
     if func == 'b':
         remove_uninterp(indir, exp)    
