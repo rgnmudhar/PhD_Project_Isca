@@ -289,62 +289,37 @@ def EDJ_loc():
     heat = '_w15a4p600f800g50'
     perturb = '_q6m2y45l800u200'
     combo = heat+perturb
-    # Without a polar vortex
-    exp_noheat = [['PK_e0v1z13_a0b0p2'+perturb,'PK_e0v1z13_a0b10p2'+perturb, 'PK_e0v1z13_a5b4p1'+perturb, 'PK_e0v1z13_a5b12p1'+perturb, 'PK_e0v1z13_a5b20p1'+perturb],\
-                   ['PK_e0v1z13'+perturb, 'PK_e0v2z13'+perturb,'PK_e0v3z13'+perturb, 'PK_e0v4z13'+perturb,'PK_e0v5z13'+perturb, 'PK_e0v6z13'+perturb]]
-    exp_heat = [['PK_e0v1z13_a0b0p2'+heat+perturb, 'PK_e0v1z13_a0b10p2'+heat+perturb, 'PK_e0v1z13_a5b4p1'+heat+perturb, 'PK_e0v1z13_a5b12p1'+heat+perturb, 'PK_e0v1z13_a5b20p1'+heat+perturb],\
-                ['PK_e0v1z13'+combo, 'PK_e0v2z13'+combo,'PK_e0v3z13'+combo, 'PK_e0v4z13'+combo,'PK_e0v5z13'+combo, 'PK_e0v6z13'+combo]]
-    n = len(exp_heat)
+    p = '850'
+    # First the PK experiments
+    maxlats_PK_noheat = open_file(outdir, 'PK_e0vXz13_noheat', 'maxlats'+p)
+    maxlats_PK_heat = open_file(outdir, 'PK_e0vXz13_heat', 'maxlats'+p)
+    maxlats_PK_response = []
+    for i in range(len(maxlats_PK_heat)):
+        maxlats_PK_response.append(maxlats_PK_heat[i] - maxlats_PK_noheat[i])
 
-    print(datetime.now(), " - finding locations")
-    edj_loc_noheat = []
-    neck_winds_noheat = []
-    for i in exp_noheat:
-        edj_lats = []
-        neck_winds = []
-        for j in i:
-            edj_lats.append(find_EDJ('/disco/share/rm811/processed/', j)[1])
-            neck_winds.append(calc_winds(xr.open_dataset(indir+j+'_utz.nc', decode_times=False).ucomp[0], 70, 45, 55))
-        edj_loc_noheat.append(edj_lats)
-        neck_winds_noheat.append(neck_winds)
+    # Then the jet fix experiments
+    maxlats_jetfix_noheat = open_file(outdir, 'PK_e0v1z13_jetfix_noheat', 'maxlats'+p)
+    maxlats_jetfix_heat = open_file(outdir, 'PK_e0v1z13_jetfix_heat', 'maxlats'+p)
+    maxlats_jetfix_response = []
+    for i in range(len(maxlats_jetfix_heat)):
+        maxlats_jetfix_response.append(maxlats_jetfix_heat[i] - maxlats_jetfix_noheat[i])
 
-    edj_loc_heat = []
-    neck_winds_heat = []
-    for i in exp_heat:
-        edj_lats = []
-        neck_winds = []
-        for j in i:
-            edj_lats.append(find_EDJ('/disco/share/rm811/processed/', j)[1])
-            neck_winds.append(calc_winds(xr.open_dataset(indir+j+'_utz.nc', decode_times=False).ucomp[0], 70, 45, 55))
-        edj_loc_heat.append(edj_lats)
-        neck_winds_heat.append(neck_winds)
-    
-    print(datetime.now(), " - finding response")
-    edj_loc_shift = []
-    for i in range(n):
-        shifts = []
-        for j in range(len(edj_loc_heat[i])):
-            shifts.append(edj_loc_heat[i][j] - edj_loc_noheat[i][j])
-        edj_loc_shift.append(shifts)
-    
+    edj_loc_noheat = [maxlats_jetfix_noheat, maxlats_PK_noheat]
+    edj_loc_response = [maxlats_jetfix_response, maxlats_PK_response]
+
     print(datetime.now(), " - plotting")
     markers = ['^', 'o']
     colours = ['#B30000', '#0c56a0']
     fig, ax = plt.subplots(figsize=(10,6))
-    ax.scatter(neck_winds_noheat[0], edj_loc_shift[0], marker=markers[0], s=50, color=colours[0], label=r'Modify $T_{eq}$')
-    ax.plot(np.unique(neck_winds_noheat[0]), np.poly1d(np.polyfit(neck_winds_noheat[0], edj_loc_shift[0], 1))(np.unique(neck_winds_noheat[0])), color=colours[0], linewidth=1.25, linestyle='--')
-    ax.scatter(neck_winds_noheat[1], edj_loc_shift[1], marker=markers[1], s=50, color=colours[1], label=r'Modify $\gamma$')
-    ax.plot(np.unique(neck_winds_noheat[1]), np.poly1d(np.polyfit(neck_winds_noheat[1], edj_loc_shift[1], 1))(np.unique(neck_winds_noheat[1])), color=colours[1], linewidth=1.25, linestyle='-')
-    #ax.scatter(edj_loc_noheat[0], edj_loc_shift[0], marker=markers[0], s=50, color=colours[0], label=r'Modify $T_{eq}$')
-    #ax.plot(np.unique(edj_loc_noheat[0]), np.poly1d(np.polyfit(edj_loc_noheat[0], edj_loc_shift[0], 1))(np.unique(edj_loc_noheat[0])), color=colours[0], linewidth=1.25, linestyle='--')
-    #ax.scatter(edj_loc_noheat[1], edj_loc_shift[1], marker=markers[1], s=50, color=colours[1], label=r'Modify $\gamma$')
-    #ax.plot(np.unique(edj_loc_noheat[1]), np.poly1d(np.polyfit(edj_loc_noheat[1], edj_loc_shift[1], 1))(np.unique(edj_loc_noheat[1])), color=colours[1], linewidth=1.25, linestyle='-')
-    #ax.set_xlabel(r'Climatological EDJ Latitude ($\degree$N)', fontsize='xx-large')
-    ax.set_xlabel(r'Climatological neck winds (m s$^{-1}$)', fontsize='xx-large')
-    ax.set_ylabel(r'EDJ Latitude Response ($\degree$N)', fontsize='xx-large')
+    ax.scatter(edj_loc_noheat[0], edj_loc_response[0], marker=markers[0], s=50, color=colours[0], label=r'Modify $T_{eq}$')
+    ax.plot(np.unique(edj_loc_noheat[0]), np.poly1d(np.polyfit(edj_loc_noheat[0], edj_loc_response[0], 1))(np.unique(edj_loc_noheat[0])), color=colours[0], linewidth=1.25, linestyle='--')
+    ax.scatter(edj_loc_noheat[1], edj_loc_response[1], marker=markers[1], s=50, color=colours[1], label=r'Modify $\gamma$')
+    ax.plot(np.unique(edj_loc_noheat[1]), np.poly1d(np.polyfit(edj_loc_noheat[1], edj_loc_response[1], 1))(np.unique(edj_loc_noheat[1])), color=colours[1], linewidth=1.25, linestyle='-')
+    ax.set_xlabel(r'Climatological Latitude of Max. $U_{850}$ ($\degree$N)', fontsize='xx-large')
+    ax.set_ylabel(r'Response ($\degree$N)', fontsize='xx-large')
     ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
     ax.legend(loc='lower left', fontsize='xx-large', fancybox=False, ncol=1)
-    plt.savefig('neck_winds_vs_EDJ_location_response_v1+perturb.pdf', bbox_inches = 'tight')
+    plt.savefig('EDJ_location_vs_response_PK+jetfix.pdf', bbox_inches = 'tight')
     return plt.close()
 
 def SSWsvexp(dir, exp, x, xlabel, fig_name):
@@ -751,7 +726,7 @@ if __name__ == '__main__':
             if extension == '_vtx':
                 windsvexp(outdir, labels, xlabel, str(p), [basis+'_noheat', basis+'_heat'])
             else:
-                windsvexp(outdir, labels, xlabel, str(p), 'PK_e0v0z13_noheat')
+                windsvexp(outdir, labels, xlabel, str(p), basis+extension)
         elif alt == "c":
             perturb = '_q6m2y45l800u200' 
             exp = ['PK_e0v1z13', 'PK_e0v2z13', 'PK_e0v3z13', 'PK_e0v4z13', 'PK_e0v5z13', 'PK_e0v6z13']

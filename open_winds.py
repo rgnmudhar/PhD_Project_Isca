@@ -251,7 +251,7 @@ if __name__ == '__main__':
     indir = '/disco/share/rm811/processed/'
     outdir = '../Files/'
     basis = 'PK_e0v4z13'
-    var_type = input("Run a) depth, b) width, c) location, d) strength, e) vortex experiments, or f) test?")
+    var_type = input("Run a) depth, b) width, c) location, d) strength, e) vortex , f) jet fix experiments, or g) test?")
     if var_type == 'a':
         extension = '_depth'
     elif var_type == 'b':
@@ -264,9 +264,11 @@ if __name__ == '__main__':
         basis = 'PK_e0vXz13'
         extension = '_vtx'
     elif var_type == 'f':
+        extension = '_jetfix'
+    elif var_type == 'g':
         extension = '_test'
     exp =  return_exp(extension)[0]
-    name = 'PK_e0v1z13_jetfix_'
+    name = 'PK_e0v1z13_jetfix_heat'
     #name = basis+'_perturb'
 
     #Ro = []
@@ -275,8 +277,8 @@ if __name__ == '__main__':
     #print(Ro)
 
     #extension = '_offpole'
-    find_SPV(indir, outdir, exp)
-    #p = 850
-    #winds_errs(indir, outdir, exp, p, name)
-    p = 10
+    #find_SPV(indir, outdir, exp)
+    p = 850
     winds_errs(indir, outdir, exp, p, name)
+    #p = 10
+    #winds_errs(indir, outdir, exp, p, name)
