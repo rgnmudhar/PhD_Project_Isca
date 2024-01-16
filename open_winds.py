@@ -80,6 +80,7 @@ def find_EDJ(indir, exp):
     """
     Finds EDJ strength and location over time.
     Based on Fig 1. in Waugh et al. (2018), EDJ is defined as max. winds at 850 hPa.
+    This method uses simply np.max() and not the polyfit method
     """
     print(datetime.now(), " - finding EDJ for ", exp)
     u = xr.open_dataset(indir+exp+'_uz.nc', decode_times=False).ucomp.sel(pfull=850, method='nearest').sel(lat=slice(0,90))

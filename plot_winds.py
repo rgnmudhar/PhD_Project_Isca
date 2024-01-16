@@ -286,9 +286,6 @@ def EDJ_loc():
     """
     Track impact of polar heating on EDJ location with and without an SPV
     """
-    heat = '_w15a4p600f800g50'
-    perturb = '_q6m2y45l800u200'
-    combo = heat+perturb
     p = '850'
     # First the PK experiments
     maxlats_PK_noheat = open_file(outdir, 'PK_e0vXz13_noheat', 'maxlats'+p)
@@ -321,6 +318,21 @@ def EDJ_loc():
     ax.legend(loc='lower left', fontsize='xx-large', fancybox=False, ncol=1)
     plt.savefig('EDJ_location_vs_response_PK+jetfix.pdf', bbox_inches = 'tight')
     return plt.close()
+
+def EDJ_loc_var(exp):
+    """
+    Steps through the control dataset to find EDJ latitude over time.
+    Saves as a file.
+    Then finds the s.d.
+    """
+    print(datetime.now(), " - finding EDJ location for ", exp)
+    p = 850
+    ds = xr.open_dataset(indir+exp+'_uz.nc', decode_times=False)
+    lat = ds.coords['lat'].data
+    u = ds.ucomp
+    lats, maxwinds = jet_timeseries(u, lat, p)
+
+    return np.mean(lats), np.std(lats), np.mean(maxwinds), np.std(maxwinds)
 
 def SSWsvexp(dir, exp, x, xlabel, fig_name):
     """
@@ -711,7 +723,7 @@ if __name__ == '__main__':
         cols = len(exp)
         plot_Xwinds(outdir, indir, exp, labels, colors, style, cols, exp[0], p)
     elif level == 'b':
-        alt = input("Plot a) top-down jet view, b) EDJ strength & lat vs experiment, c) recreate Gerber & Polvani 2009, or d) check EDJ response to polar heating? ")
+        alt = input("Plot a) top-down jet view, b) EDJ strength & lat vs experiment, c) recreate Gerber & Polvani 2009, d) check EDJ response to polar heating, or e) check EDJ variability? ")
         if alt == "a":
             p = [850, 500] #hPa
             lvls = [np.arange(-25, 27.5, 2.5), np.arange(50, 55, 5)]
@@ -734,6 +746,13 @@ if __name__ == '__main__':
             GP09(exp)
         elif alt == "d":
             EDJ_loc()
+        elif alt == 'e':
+            exp = 'PK_e0v4z13_q6m2y45l800u200' # just run for the control
+            lat_mean, lat_sd, wind_mean, wind_sd = EDJ_loc_var(exp)
+            print('EDJ latitude mean = {:.3f} m/s'.format(lat_mean))
+            print('EDJ latitude s.d. = {:.3f} m/s'.format(lat_sd))
+            print('EDJ mean = {:.3f} m/s'.format(wind_mean))
+            print('EDJ s.d. = {:.3f} m/s'.format(wind_sd))
     elif level == 'c':
         alt = input("Plot a) neck, b) 100 hPa SPV, c) 10 hPa SPV winds, or d) mean SPV strength?")
         if alt == "a":
