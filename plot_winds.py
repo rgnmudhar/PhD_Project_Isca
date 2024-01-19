@@ -409,8 +409,8 @@ def SPV_report_plot(exp, x, xlabel, name):
     Plots SSW frequency and SPV s.d. against experiment.
     """
     n = len(exp)
-    obs = 0.48
-    obs_err = 0.19
+    obs = 0.30
+    obs_err = 0.11
     markers = ['d', 'o']
     lines = ['--', '-']
     print(x)
@@ -453,16 +453,17 @@ def SPV_report_plot(exp, x, xlabel, name):
         ax.axhline(og, color='#666666', linewidth=1.5, linestyle=':')
         ax.fill_between(range(-1,10), (og - og_err), (og + og_err), facecolor ='gainsboro', alpha = 0.4)
         ax.text(7, og+0.01, 'control', color='#666666', fontsize='xx-large')
-        ax.set_ylim(min(min(SSWs)-0.05,0), max(SSWs)+0.2)
+        ax.set_ylim(min(min(SSWs)-0.05,0), max(SSWs)+0.15)
         ax2.set_ylim(min(sd)-1, max(sd)+1)
         ax2.set_ylabel(r'$\sigma _{10,60}$ (m s$^{-1}$)', color='#0c56a0', fontsize='xx-large')
         ax2.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
     ax.axhline(obs, color='#4D0099', linewidth=1.5, linestyle=':')
-    ax.text(7, obs+0.01, 'reanalysis', color='#4D0099', fontsize='xx-large')
+    ax.text(7, obs-0.03, 'reanalysis', color='#4D0099', fontsize='xx-large')
     ax.set_xlabel(xlabel, fontsize='xx-large')
     ax.set_ylabel('SSW Frequency (per 100 days)', fontsize='xx-large', color='#B30000')
     ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
     plt.savefig(name+'_SSWs.pdf', bbox_inches = 'tight')
+    plt.show
     return plt.close()
 
 def standardise(full, og, pressure, time):
@@ -747,12 +748,13 @@ if __name__ == '__main__':
         elif alt == "d":
             EDJ_loc()
         elif alt == 'e':
-            exp = 'PK_e0v4z13_q6m2y45l800u200' # just run for the control
-            lat_mean, lat_sd, wind_mean, wind_sd = EDJ_loc_var(exp)
-            print('EDJ latitude mean = {:.3f} m/s'.format(lat_mean))
-            print('EDJ latitude s.d. = {:.3f} m/s'.format(lat_sd))
-            print('EDJ mean = {:.3f} m/s'.format(wind_mean))
-            print('EDJ s.d. = {:.3f} m/s'.format(wind_sd))
+            #exp = 'PK_e0v4z13_q6m2y45l800u200' # just run for the control
+            for e in exp:
+                lat_mean, lat_sd, wind_mean, wind_sd = EDJ_loc_var(e)
+                print('EDJ latitude mean = {:.3f} m/s'.format(lat_mean))
+                print('EDJ latitude s.d. = {:.3f} m/s'.format(lat_sd))
+                print('EDJ mean = {:.3f} m/s'.format(wind_mean))
+                print('EDJ s.d. = {:.3f} m/s'.format(wind_sd))
     elif level == 'c':
         alt = input("Plot a) neck, b) 100 hPa SPV, c) 10 hPa SPV winds, or d) mean SPV strength?")
         if alt == "a":
