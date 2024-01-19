@@ -13,7 +13,8 @@ from datetime import datetime
 
 def return_exp(extension):
     basis = 'PK_e0v4z13'
-    perturb = '_q6m2y45l800u200'
+    perturb = '_q6m2y45l800u200' 
+    heat = '_w15a4p600f800g50'
     if extension == '_ctrl':
         exp = [basis+perturb]
         labels = ['ctrl']
@@ -31,7 +32,7 @@ def return_exp(extension):
                    r'$p_{top}=600$ hPa', r'$p_{top}=500$ hPa', r'$p_{top}=400$ hPa', r'$p_{top}=300$ hPa']
         labels = ['control', r'$p_{top}=900$', r'$p_{top}=800$', r'$p_{top}=700$',\
                    r'$p_{top}=600$', r'$p_{top}=500$', r'$p_{top}=400$', r'$p_{top}=300$']
-        #labels = ['control', '900', '800', '700', '600', '500', '400', '300']
+        labels = ['control', '900', '800', '700', '600', '500', '400', '300']
         xlabel = r'Depth of Heating ($p_{top}$, hPa)'
     elif extension == '_width':
         perturb = '_q6m2y45_s'
@@ -56,7 +57,7 @@ def return_exp(extension):
                    r'$A=4$ K day$^{-1}$', r'$A=8$ K day$^{-1}$']
         labels = ['control', r'$A=0.5$', r'$A=1$', r'$A=2$',\
                    r'$A=4$', r'$A=8$']
-        #labels = ['control', '0.5', '1', '2', '4', '8']
+        labels = ['control', '0.5', '1', '2', '4', '8']
         xlabel = r'Strength of Heating ($A$, K day$^{-1}$)'
     elif extension == '_loc1':   
         perturb = '_q6m2y45_s'
@@ -106,8 +107,6 @@ def return_exp(extension):
         xlabel = r'$\gamma$ (K km$^{-1}$)'
         exp = exp1 #[exp1, exp2]
     elif extension == '_jetfix':
-        heat = '_w15a4p600f800g50'
-        perturb = '_q6m2y45l800u200' 
         exp1 = ['PK_e0v1z13_a0b0p2'+perturb,\
             'PK_e0v1z13_a0b10p2'+perturb,\
             'PK_e0v1z13_a5b4p1'+perturb,\
@@ -123,9 +122,14 @@ def return_exp(extension):
         exp = [exp1, exp2]       
     elif extension == '_test':
         basis = 'PK_e0v4z13'
-        exp = [basis+'_q6m2y45l800u200' ,\
-               basis+'_q6m2y45l800u300' ]
-        labels = labels = [r'$p_t = 200$ hPa', r'$p_t = 300$ hPa', r'$p_t = 400$ hPa']
+        exp = [basis+perturb,\
+               basis+'_q6m2y45l800u300_s']
+               #basis+heat+perturb]
+            #[basis+perturb+'_T85' ,\
+            #basis+heat+perturb+'_T85'] #,\
+        #labels = ['T42 control', 'T42 + polar heat'] #'T85 control', 'T85 + polar heat']
+        #xlabel = 'Experiment' 
+        labels = [r'$p_t = 200$ hPa', r'$p_t = 300$ hPa'] #, r'$p_t = 400$ hPa']
         xlabel = r'$p_t$ (hPa)' 
     return exp, labels, xlabel
 
