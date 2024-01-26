@@ -120,6 +120,7 @@ def plot_single(uz, utz, p_min, lat_min, exp_name):
     Plots equivalent to Fig 4a-c from Sheshadri & Plumb.
     """
     # First generate all necessary information for EOF analysis
+    print(datetime.now(), " - find EOFs")
     solver = eof_solver(uz, p_min, lat_min)
     eofs = leading_eofs(solver)
     pcs = leading_pcs(solver)
@@ -135,6 +136,7 @@ def plot_single(uz, utz, p_min, lat_min, exp_name):
     eof1 = eofs.sel(mode=0)
     eof2 = eofs.sel(mode=1)
     
+    print(datetime.now(), " - plotting")
     # Now plot on a single figure
     fig = plt.figure(figsize=(19,6))
     ulvls = np.arange(-200, 200, 5)

@@ -269,7 +269,7 @@ if __name__ == '__main__':
     elif var_type == 'g':
         extension = '_test'
     exp =  return_exp(extension)[0]
-    name = 'PK_e0v1z13_jetfix_heat'
+    name = 'PK_e0v4z13_hres'
     #name = basis+'_perturb'
 
     #Ro = []
@@ -278,8 +278,10 @@ if __name__ == '__main__':
     #print(Ro)
 
     #extension = '_offpole'
-    #find_SPV(indir, outdir, exp)
+    find_SPV(indir, outdir, exp)
+    p = 10
+    winds_errs(indir, outdir, exp, p, name)
     p = 850
     winds_errs(indir, outdir, exp, p, name)
-    #p = 10
-    #winds_errs(indir, outdir, exp, p, name)
+    p = 10
+    winds_errs(indir, outdir, exp, p, name)

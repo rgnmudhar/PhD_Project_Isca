@@ -602,7 +602,7 @@ if __name__ == '__main__':
 
     if flux == 'a':
         n = len(exp)
-        if n == 2:
+        if n == 10:
             for j in range(n):
                 for i in range(len(exp[j])):
                     print(datetime.now(), " - opening files ({0:.0f}/{1:.0f})".format(i+1, len(exp[j])))
@@ -717,11 +717,11 @@ if __name__ == '__main__':
     elif flux =='e':
         variable = input('Plot a) n2 or b) EP Flux?')
         if variable == 'a':
-            if extension == '_vtx':
+            if extension == '_test': #'_vtx':
                 i = 1
-                exp = [exp[i][1], exp[i][3], exp[i][-1]]
-                labels = [labels[1], labels[3], labels[-1]]
-                plot_n2_1(exp, k, basis+extension+'_heat')
+                exp = exp #[exp[i][1], exp[i][3], exp[i][-1]]
+                labels = labels #[labels[1], labels[3], labels[-1]]
+                plot_n2_1(exp, k, basis+extension) #+'_heat')
             else:
                 exp = [exp[1], exp[4], exp[-1]]
                 labels = [labels[1], labels[4], labels[-1]]
