@@ -2,7 +2,6 @@
     This script checks the column integrated heat input of prescribed heating perturbation and finds the proportion above the tropopause.
 """
 
-from hmac import digest_size
 import xarray as xr
 import numpy as np
 from scipy import integrate
@@ -10,9 +9,9 @@ import matplotlib.pyplot as plt
 from shared_functions import *
 from datetime import datetime
 
-def open_heat_static(filename):
+def open_heat_static(folder, filename):
     # select a slice of the wave-2 heating perturbation centred on 180 degreesE, ±45 degrees
-    file = '../Inputs/' + filename + '.nc'
+    file = folder + filename + '.nc'
     ds = xr.open_dataset(file)
     lat = ds.lat
     lon = ds.lon.sel(lon=slice(180-45, 180+45))
@@ -49,21 +48,21 @@ if __name__ == '__main__':
     elif var_type == 'f':
         extension = '_test'
     exp, labels, xlabel = return_exp(extension)
+    heat_folder = '/home/links/rm811/Isca/input/asymmetry/' #'../Inputs/'
     
-    """
-    p_heat, lat_heat, lon_heat, heat = open_heat_static('q6m2y45l800u400')
-    coslat = np.cos(np.deg2rad(lat_heat)).data
-
     for e in exp:
-
-        trop = tropopause(indir, e)[-1]
-
+        print('Finding heat input for: ', e)
+        p_heat, lat_heat, lon_heat, heat = open_heat_static(heat_folder, e[11:])
+        coslat = np.cos(np.deg2rad(lat_heat)).data
+    
         #Now integrate...
         int_lon = integral(heat, lon_heat, 2) #in longitude
         int_p = integral(int_lon, p_heat, 0) #in pressure
         int_full = integrate_lat(int_p)
-        
+        print(e, ' total heat input: ', int_full)
+
         #And for that which is only above the tropopause
+        trop = tropopause(indir, e)[-1]
         int_p_tropo = []
         for m in range(len(lat_heat)):
             sub = int_lon[:,m]
@@ -72,7 +71,6 @@ if __name__ == '__main__':
             int_p_tropo.append(integral(sub_above_trop, p_heat, 0))
         int_tropo = integrate_lat(int_p_tropo)
         percent_above_tropo = (int_tropo / int_full) * 100
-
         print(e, ': ', percent_above_tropo, ' %')
 
     """
@@ -110,3 +108,5 @@ if __name__ == '__main__':
     plt.savefig('tropopause_vs_heatperturb.pdf', bbox_inches = 'tight')
     plt.show()
     plt.close()
+
+    """

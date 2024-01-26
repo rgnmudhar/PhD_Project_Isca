@@ -61,10 +61,12 @@ def zero_wind(exp, labels, name):
     return plt.close()
 
 def report_plot1(exp, lvls, variable, unit, labels, name):
-    # Plots difference between no polar heat and with polar heat
+    # Plots difference between no polar heat and with polar heat - could be for vortex or resolution experiments
     print(datetime.now(), " - opening files")
     X = []
     X_response = []
+    lats = []
+    pres = []
     n = len(exp[0])
     for i in range(n):
         if variable == 'Temperature':
@@ -77,9 +79,9 @@ def report_plot1(exp, lvls, variable, unit, labels, name):
             Xtz1 = xr.open_dataset(indir+exp[1][i]+'_utz.nc', decode_times=False).ucomp[0]
             X_response.append(Xtz1 - Xtz0)
             X.append(Xtz1)
-
-    p = Xtz0.pfull
-    lat = Xtz0.lat
+        lats.append(Xtz0.lat)
+        pres.append(Xtz0.pfull)
+        
 
     h_name = 'w15a4p600f800g50' #exp[1][0][11:27]
     h = xr.open_dataset('../Inputs/' + h_name + '.nc')
@@ -93,8 +95,8 @@ def report_plot1(exp, lvls, variable, unit, labels, name):
     norm = cm.TwoSlopeNorm(vmin=min(lvls[1]), vmax=max(lvls[1]), vcenter=0)
     axes[0].set_ylabel('Pressure (hPa)', fontsize='xx-large')
     for i in range(n):
-        csa = axes[i].contourf(lat, p, X_response[i], levels=lvls[1], norm=norm, cmap='RdBu_r', extend='both')
-        csb = axes[i].contour(lat, p, X[i], colors='k', levels=lvls[0], linewidths=1.5, alpha=0.25)
+        csa = axes[i].contourf(lats[i], pres[i], X_response[i], levels=lvls[1], norm=norm, cmap='RdBu_r', extend='both')
+        csb = axes[i].contour(lats[i], pres[i], X[i], colors='k', levels=lvls[0], linewidths=1.5, alpha=0.25)
         if variable == 'Zonal Wind':
             csb.collections[list(lvls[0]).index(0)].set_linewidth(3)
         axes[i].contour(h_lat, h_p, heat, alpha=0.5, colors='g', levels=h_lvls)
@@ -104,10 +106,10 @@ def report_plot1(exp, lvls, variable, unit, labels, name):
         else:
             axes[i].scatter(60, 10, marker='x', color='k')
         axes[i].text(2, 1.75, letters[i]+labels[i], color='k', fontsize='xx-large')
-        axes[i].set_ylim(max(p), 1) #goes to ~1hPa
+        axes[i].set_ylim(max(pres[i]), 1) #goes to ~1hPa
         axes[i].set_yscale('log')
         axes[i].set_xlabel(r'Latitude ($\degree$N)', fontsize='xx-large')
-        axes[i].set_xlim(0, max(lat))
+        axes[i].set_xlim(0, max(lats[i]))
         axes[i].set_xticks([0, 20, 40, 60, 80], ['0', '20', '40', '60', '80'])
         axes[i].tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
         if i > 0:
@@ -368,7 +370,8 @@ if __name__ == '__main__':
         elif plot_type =='e':
             # Below is experiment before zonal asymmetry was added for reference
             exp.append('PK_e0v4z13')
-            labels.append('no asymmetry')
+            labels.append(labels[0]+' no asymmetry')
+            blues = blues[3:]
 
             fig, ax = plt.subplots(figsize=(6,6))
             for i in range(len(exp)):
@@ -378,19 +381,20 @@ if __name__ == '__main__':
                     c = 'r'
                 else:
                     c = blues[i]
-                ax.plot(lats, trop, linewidth=1.25, color=c, label=labels[i])
+                ax.plot(lats, trop, linewidth=1.25, color=c, linestyle='--', label=labels[i])
             ax.set_ylabel('Pressure (hPa)', fontsize='xx-large')
             ax.set_xlabel(r'Latitude ($\degree$N)', fontsize='xx-large')
             ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
             plt.legend(loc='upper center' , bbox_to_anchor=(0.5, -0.15), fancybox=False, ncol=2, fontsize='x-large', facecolor='white')
 
-            file = '/disco/share/rm811/isca_data/' + exp[0] + '/run0025/atmos_daily_interp.nc'
-            h = 6/86400
-            inc2 = 1e-5
-            h_range2 = np.arange(inc2/2, h+inc2, inc2)
-            ds = xr.open_dataset(file)
-            heat = ds.local_heating.sel(lon=180, method='nearest').mean('time')
-            ax.contour(lats, heat.pfull, heat, colors='#4D0099', levels=h_range2, linewidths=1.5, alpha=0.25)
+            for i in range(len(exp)-1):
+                file = '/disco/share/rm811/isca_data/' + exp[i] + '/run0025/atmos_daily_interp.nc'
+                h = 6/86400
+                inc2 = 1e-5
+                h_range2 = np.arange(inc2/2, h+inc2, inc2)
+                ds = xr.open_dataset(file)
+                heat = ds.local_heating.sel(lon=180, method='nearest').mean('time')
+                ax.contour(lats, heat.pfull, heat, colors=blues[i], levels=h_range2, linewidths=1.5, alpha=0.25, label=labels[i]+' heat')
 
             #plt.xlim(0,90)
             plt.xticks([-80, -60, -40, -20, 0, 20, 40, 60, 80], ['-80', '-60', '-40', '-20', '0', '20', '40', '60', '80'])
@@ -466,7 +470,7 @@ if __name__ == '__main__':
                     #Read in data to plot polar heat contours
                     file = '/disco/share/rm811/isca_data/' + exp[i] + '/run0025/atmos_daily_interp.nc'
                     ds = xr.open_dataset(file)
-                    perturb = 0 #ds.local_heating.sel(lon=180, method='nearest').mean(dim='time')  
+                    perturb = ds.local_heating.sel(lon=180, method='nearest').mean(dim='time')  
                     if plot_type =='a':
                         plot_combo(uz, Tz, lvls, perturb, lat, p, exp[i], vertical)
                     elif plot_type == 'b':
