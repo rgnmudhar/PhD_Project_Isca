@@ -122,15 +122,14 @@ def return_exp(extension):
         exp = [exp1, exp2]       
     elif extension == '_test':
         basis = 'PK_e0v4z13'
-        exp = [basis+perturb,\
-               basis+'_q6m2y45l800u300_s']
-               #basis+heat+perturb]
-            #[basis+perturb+'_T85' ,\
-            #basis+heat+perturb+'_T85'] #,\
-        #labels = ['T42 control', 'T42 + polar heat'] #'T85 control', 'T85 + polar heat']
-        #xlabel = 'Experiment' 
-        labels = [r'$p_t = 200$ hPa', r'$p_t = 300$ hPa'] #, r'$p_t = 400$ hPa']
-        xlabel = r'$p_t$ (hPa)' 
+        #exp = [[basis+perturb, basis+perturb+'_T85'] ,\
+        #       [basis+heat+perturb, basis+heat+perturb+'_T85']]
+        #labels = ['T42', 'T85']
+        #xlabel = 'Resolution' 
+        exp = [basis+'_q6m2y45l800u300_s', basis+'_w15a1p600f800g50_q6m2y45u300_s',\
+               basis+'_w15a4p600f800g50_q6m2y45u300_s', basis+'_w15a4p800f800g50_q6m2y45u300_s']
+        labels = ['control', r'$A = 1$ K day$^{-1}$', r'$A = 4$ K day$^{-1}$, $p_{top} = 600$ hPa', r'$p_{top} = 800$ hPa']
+        xlabel = 'experiment'
     return exp, labels, xlabel
 
 def add_phalf(exp_name, file_name):
@@ -218,6 +217,39 @@ def inv_altitude(z): #KEEP
     
     return p
 
+def check_levels():
+    """
+    Plots levels vs. pressure for different vertical resolution runs.
+    """
+    indir = '/disco/share/rm811/isca_data/'
+    exp_L40 = 'PK_e0v4z13_q6m2y45l800u200'
+    exp_L60 = 'PK_e0v4z13_q6m2y45l800u200_L60'
+    file_L40 = glob(indir+exp_L40+'/run0025/*interp.nc')[0]
+    file_L60 = glob(indir+exp_L60+'/run0025/*interp.nc')[0]
+    ds_L40 = xr.open_dataset(file_L40, decode_times=False)
+    ds_L60 = xr.open_dataset(file_L60, decode_times=False)
+    p_L40 = ds_L40.pfull
+    p_L60 = ds_L60.pfull
+    z_L40 = altitude(p_L40)
+    z_L60 = altitude(p_L60)
+    N_strat_L40 = len(p_L40.where(p_L40<=200,drop=True))
+    N_strat_L60 = len(p_L60.where(p_L60<=200,drop=True))
+    print('Levels in stratosphere for L40 = {0:.0f}, and L60 = {1:.0f}'.format(N_strat_L40, N_strat_L60))
+
+    fig, ax = plt.subplots(1, 1, figsize=(5,7))
+    ax.scatter(np.arange(0,len(p_L60),1), p_L60, label='L60', color='#B30000')
+    ax.scatter(np.arange(0,len(p_L40),1), p_L40, label='L40', color='#4D0099')
+    ax.axhline(200, linestyle='--', linewidth=1.25, color='k')
+    ax.set_yscale('log')
+    ax.set_ylim(1000,0.01)
+    ax.set_ylabel('Pressure (hPa)', fontsize='xx-large')
+    ax.set_xlabel('Level', fontsize='xx-large')
+    ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
+    plt.legend(fancybox=False, ncol=1, fontsize='x-large')
+    plt.savefig('L40_vs_L60.pdf', bbox_inches = 'tight')
+    return plt.close()
+
+
 def difference(a1, a2, coord1, coord2, dim1, dim2, unit): #KEEP
     """
     Take the difference between 2 datasets and create an xarray DataArray.
@@ -266,12 +298,12 @@ def fillnas(dir, exp):
         ds = xr.open_dataset(file, decode_times=False)
         ds_new = ds.fillna(0)
         ds_new.to_netcdf(file, format="NETCDF3_CLASSIC")
-
+   
 def min_lapse(T, z):
     # Finds where lapse rate reaches < 2 K/km (in hPa)
     dtdz = []
-    for i in range(len(T)-1):
-        dtdz.append( -(T[i+1] - T[i]) / (z[i+1] - z[i]) )
+    for i in range(len(T)):
+        dtdz.append(np.diff(T[i]))
     for j in range(len(dtdz)):
         if dtdz[j] < 2:
             idx = (np.abs(z - (z[j]+2)).argmin())
