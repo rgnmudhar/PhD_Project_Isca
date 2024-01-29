@@ -17,10 +17,12 @@ def calc_jet_lat_quad(u, lat, p):
     """
     Function for finding location and strength of maximum given zonal wind u(lat) field.
     Based on Will Seviour code.
-    """
-    # Restrict to 3 points around maximum
+    """  
     u_new = u.sel(pfull=p, method='nearest')
-    u_max = np.where(u_new == np.ma.max(u_new))[0][0]
+    # restrict to NH:
+    u_NH = u_new.sel(lat=slice(0,90))
+    u_max = np.where(u_new == np.ma.max(u_NH))[0][0]
+    # Restrict to 3 points around maximum
     u_near = u_new[u_max-1:u_max+2]
     lats_near = lat[u_max-1:u_max+2]
     # Quadratic fit, with smaller lat spacing
@@ -40,15 +42,11 @@ def jet_timeseries(u, lat, p):
     print(datetime.now(), " - finding jet maxima over time")
     jet_maxima = []
     jet_lats = []
-    # restrict to NH:
-    u = u[:,:,int(len(lat)/2):len(lat)]
-    lat = lat[int(len(lat)/2):len(lat)] 
     for i in range(len(u)):
         # find and store jet maxima and latitudes for each month
         jet_lat, jet_max = calc_jet_lat_quad(u[i], lat, p)
         jet_maxima.append(jet_max)
         jet_lats.append(jet_lat)
-
     return jet_lats, jet_maxima
 
 def winds_errs(indir, outdir, exp, p, name):
@@ -269,7 +267,7 @@ if __name__ == '__main__':
     elif var_type == 'g':
         extension = '_test'
     exp =  return_exp(extension)[0]
-    name = 'PK_e0v4z13_hres'
+    name = 'PK_e0v4z13_vres'
     #name = basis+'_perturb'
 
     #Ro = []
@@ -282,6 +280,4 @@ if __name__ == '__main__':
     p = 10
     winds_errs(indir, outdir, exp, p, name)
     p = 850
-    winds_errs(indir, outdir, exp, p, name)
-    p = 10
     winds_errs(indir, outdir, exp, p, name)
