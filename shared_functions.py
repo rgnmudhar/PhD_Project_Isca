@@ -234,21 +234,28 @@ def check_levels():
     z_L60 = altitude(p_L60)
     N_strat_L40 = len(p_L40.where(p_L40<=200,drop=True))
     N_strat_L60 = len(p_L60.where(p_L60<=200,drop=True))
-    print('Levels in stratosphere for L40 = {0:.0f}, and L60 = {1:.0f}'.format(N_strat_L40, N_strat_L60))
+    print('Levels between TOA to 200 hPa for L40 = {0:.0f}, and L60 = {1:.0f}'.format(N_strat_L40, N_strat_L60))
 
-    fig, ax = plt.subplots(1, 1, figsize=(5,7))
-    ax.scatter(np.arange(0,len(p_L60),1), p_L60, label='L60', color='#B30000')
-    ax.scatter(np.arange(0,len(p_L40),1), p_L40, label='L40', color='#4D0099')
-    ax.axhline(200, linestyle='--', linewidth=1.25, color='k')
-    ax.set_yscale('log')
-    ax.set_ylim(1000,0.01)
-    ax.set_ylabel('Pressure (hPa)', fontsize='xx-large')
-    ax.set_xlabel('Level', fontsize='xx-large')
-    ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
-    plt.legend(fancybox=False, ncol=1, fontsize='x-large')
-    plt.savefig('L40_vs_L60.pdf', bbox_inches = 'tight')
+    fig, axs = plt.subplots(1,2, figsize=(5,7), sharey=True)
+    for lev in p_L40:
+        axs.flat[0].axhline(lev, c='#B30000', lw=1, zorder=-1)
+    for lev in p_L60:
+        axs.flat[1].axhline(lev, c='#4D0099', lw=1, zorder=-1)
+    for ax in axs:
+        ax.set_ylim(1000,1e-2)
+        ax.set_yscale('log')
+        ax.set_xticks([])
+        ax.spines['top'].set_visible(False)
+        ax.spines['bottom'].set_visible(False)
+        ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')    
+    axs.flat[0].spines['right'].set_visible(False)
+    axs.flat[1].spines['left'].set_visible(False)
+    axs.flat[0].set_ylabel('Pressure (hPa)', fontsize='xx-large')
+    axs.flat[0].set_xlabel('40 Levels', fontsize='xx-large', color='#B30000')
+    axs.flat[1].set_xlabel('60 Levels', fontsize='xx-large', color='#4D0099')
+    axs.flat[1].yaxis.tick_right()
+    plt.savefig('L40_vs_L60 v2.pdf', bbox_inches = 'tight')
     return plt.close()
-
 
 def difference(a1, a2, coord1, coord2, dim1, dim2, unit): #KEEP
     """
