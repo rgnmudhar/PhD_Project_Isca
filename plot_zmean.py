@@ -1,7 +1,6 @@
 """
     This script plots (time and zonal) averages of various output variables averaged over X years'-worth of data from Isca
     Also plots differences between 2 datasets - important that they are of the same resolution (e.g. both T21 or both T42)
-    TEST
 """
 
 import xarray as xr
@@ -61,7 +60,7 @@ def zero_wind(exp, labels, name):
     return plt.close()
 
 def report_plot1(exp, lvls, variable, unit, labels, name):
-    # Plots difference between no polar heat and with polar heat - could be for vortex or resolution experiments
+    # Plots difference between no polar heat and with polar heat - for vortex experiments
     print(datetime.now(), " - opening files")
     X = []
     X_response = []
@@ -81,8 +80,7 @@ def report_plot1(exp, lvls, variable, unit, labels, name):
             X.append(Xtz1)
         lats.append(Xtz0.lat)
         pres.append(Xtz0.pfull)
-        
-
+    
     h_name = 'w15a4p600f800g50' #exp[1][0][11:27]
     h = xr.open_dataset('../Inputs/' + h_name + '.nc')
     heat = h.mean('lon').variables[h_name]
@@ -104,7 +102,7 @@ def report_plot1(exp, lvls, variable, unit, labels, name):
         if i == n-1:
             axes[i].scatter(60, 10, marker='x', color='w')
         else:
-            axes[i].scatter(60, 10, marker='x', color='k')
+            axes[i].scatter(60, 10, marker='x', color='w')
         axes[i].text(2, 1.75, letters[i]+labels[i], color='k', fontsize='xx-large')
         axes[i].set_ylim(max(pres[i]), 1) #goes to ~1hPa
         axes[i].set_yscale('log')
@@ -123,7 +121,7 @@ def report_plot1(exp, lvls, variable, unit, labels, name):
     return plt.close()
 
 def report_plot2(exp, lvls, variable, unit, labels, name):
-    # Plots control, then 3 experiments of choice
+    # Plots control, then n experiments of choice
     print(datetime.now(), " - opening files")
     X = []
     X_response = []
@@ -412,12 +410,12 @@ if __name__ == '__main__':
                 print("Not set up to plot these experiments yet!")
 
         elif plot_type == 'g':
-            if var_type == 'e':
+            if var_type == 'f':
                 # For polar vortex experiments:
                 T_lvls = [np.arange(160, 330, 10), np.arange(-20, 30, 2.5)]
                 u_lvls = [np.arange(-70, 100, 10), np.arange(-35, 40, 5)]
-                exp = [[exp[0][1], exp[0][3], exp[0][-1]], [exp[1][1], exp[1][3], exp[1][-1]]]
-                labels = [labels[1], labels[3], labels[-1]]
+                #exp = [[exp[0][0], exp[0][1], exp[0][2]], [exp[1][0], exp[1][1], exp[1][2]]]
+                #labels = [labels[0], labels[1], labels[2]]
                 report_plot1(exp, T_lvls, 'Temperature', ' (K)', labels, basis+extension+'_T')
                 report_plot1(exp, u_lvls, 'Zonal Wind', r' (m s$^{-1}$)', labels, basis+extension+'_u')
             else:

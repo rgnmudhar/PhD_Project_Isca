@@ -121,15 +121,35 @@ def return_exp(extension):
         xlabel = 'Experiment'
         exp = [exp1, exp2]       
     elif extension == '_test':
+        test_type = input('a) vertical resolution, b) horizontal resolution, or c) alternative heat perturb? ')
         basis = 'PK_e0v4z13'
-        #exp = [[basis+perturb, basis+perturb+'_T85'] ,\
-        #       [basis+heat+perturb, basis+heat+perturb+'_T85']]
-        #labels = ['T42', 'T85']
-        #xlabel = 'Resolution' 
-        exp = [basis+'_q6m2y45l800u300_s', basis+'_w15a1p600f800g50_q6m2y45u300_s',\
-               basis+'_w15a4p600f800g50_q6m2y45u300_s', basis+'_w15a4p800f800g50_q6m2y45u300_s']
-        labels = ['control', r'$A = 1$ K day$^{-1}$', r'$A = 4$ K day$^{-1}$, $p_{top} = 600$ hPa', r'$p_{top} = 800$ hPa']
-        xlabel = 'experiment'
+        perturb = '_q6m2y45l800u200'
+        if test_type == 'a':
+            exp1 = [basis+perturb, basis+'_w15a4p600f800g50'+perturb, basis+'_w15a4p300f800g50'+perturb]
+            exp2 = [basis+perturb+'_L60', basis+'_w15a4p600f800g50'+perturb+'_L60', basis+'_w15a4p300f800g50'+perturb+'_L60']
+            labels = ['L40', 'L60']
+            labels = ['control', r'$p_{top}=600$', r'$p_{top}=300$']
+            xlabel = 'Vertical Resolution'
+        elif test_type == 'b':
+            exp1 = [basis+perturb, basis+'_w15a4p600f800g50'+perturb, basis+'_w15a4p300f800g50'+perturb]
+            exp2 = [basis+perturb+'_T85', basis+'_w15a4p600f800g50'+perturb+'_T85', basis+'_w15a4p300f800g50'+perturb+'_T85']
+            labels = ['T42', 'T85']
+            labels = ['control', r'$p_{top}=600$', r'$p_{top}=300$']
+            xlabel = 'Horizontal Resolution'
+        elif test_type == 'c':
+            #exp1 = [basis+perturb, basis+'_w15a1p600f800g50'+perturb,\
+            #        basis+'_w15a4p600f800g50'+perturb, basis+'_w15a4p300f800g50'+perturb]
+            #exp2 = [basis+'_q6m2y45l800u300_s', basis+'_w15a1p600f800g50_q6m2y45u300_s',\
+            #        basis+'_w15a4p600f800g50_q6m2y45u300_s', basis+'_w15a4p300f800g50_q6m2y45u300_s']
+            #labels = [r'$p_t = 200$ hPa', r'$p_t = 300$ hPa']
+            #labels = ['control', r'$A = 1$', r'$A = 4$, $p_{top} = 600$', r'$p_{top} = 300$']
+            ##exp2 = [basis+perturb, basis+'_q6m2y45l800u300', basis+'_q6m2y45l800u300_s']
+            ##labels = [r'$p_t = 200$ hPa', r'$p_t = 300$ hPa', r'$p_t = 300$ hPa (scaled)']
+            exp1 = ['PK_e0v5z13'+perturb, basis+'_q6m2y45l800u300_s']
+            exp2 = ['PK_e0v5z13'+'_w15a4p600f800g50'+perturb, basis+'_w15a4p600f800g50_q6m2y45u300_s']
+            labels = [r'$\gamma = 5$ K day$^{-1}$', r'$p_t = 300$ hPa']
+            xlabel = 'Experiment'
+        exp = [exp1, exp2]
     return exp, labels, xlabel
 
 def add_phalf(exp_name, file_name):
@@ -305,19 +325,36 @@ def fillnas(dir, exp):
         ds = xr.open_dataset(file, decode_times=False)
         ds_new = ds.fillna(0)
         ds_new.to_netcdf(file, format="NETCDF3_CLASSIC")
-   
-def min_lapse(T, z):
-    # Finds where lapse rate reaches < 2 K/km (in hPa)
-    dtdz = []
-    for i in range(len(T)):
-        dtdz.append(np.diff(T[i]))
-    for j in range(len(dtdz)):
-        if dtdz[j] < 2:
-            idx = (np.abs(z - (z[j]+2)).argmin())
-            if dtdz[idx] < 2:
-                h_tropo = z[j]
-                break
-    return inv_altitude(h_tropo) # convert back to pressure
+
+def zero_crossing(x, y):
+    """
+    From: https://www.ncl.ucar.edu/Document/Functions/Built-in/trop_wmo.shtml - WMO (1992): International meteorological vocabulary:
+    The first tropopause is defined as the lowest level at which
+    the lapse rate decreases to 2 deg K per kilometer or less,
+    provided also the average lapse rate between this level and
+    all higher levels within 2 kilometers does not exceed 2 deg K.
+    """
+    zero_level_idxs = []
+    for i in range(len(x)):
+        if i > 0:
+            if x[i] > 0 and x[i] < x[i-1] and x[i+1] < 0:
+                idx_checkdtdz = np.where(y==sorted(y, key=lambda l: abs((y[i]+2) - l))[0])[0][0] # are lapse rates at higher levels < 2 K/km?
+                for x_sub_sub in x[i:idx_checkdtdz]: # rolling window
+                    if x_sub_sub < 2:
+                        zero_level_idxs.append(i)
+    zero_level_idx = zero_level_idxs[0]                    
+    target_x = 0
+    if x[zero_level_idx] < 0:
+        m = (y[zero_level_idx - 1] - y[zero_level_idx]) / (x[zero_level_idx - 1] - x[zero_level_idx])
+        target_y = (target_x - x[zero_level_idx]) * m + y[zero_level_idx]
+    else:
+        m = (y[zero_level_idx] - y[zero_level_idx+1]) / (x[zero_level_idx] - x[zero_level_idx+1])
+        target_y = (target_x - x[zero_level_idx]) * m + y[zero_level_idx]
+    #plt.plot(x, y)
+    #plt.scatter(target_x, target_y, c='r')
+    #plt.axvline(0, c='k')
+    #plt.show()
+    return target_y
 
 def tropopause(dir, exp):
     # Finds tropopause
@@ -325,10 +362,20 @@ def tropopause(dir, exp):
     T_sort = T.transpose().reindex(pfull=list(reversed(T.pfull)))
     p = T.pfull
     z = list(reversed(altitude(p).data))
-    tropo = []
+    dtdz = []
     for i in range(len(T_sort)):
-        tropo.append(min_lapse(T_sort[i], z))
-    return p, T.lat.data, tropo
+        dtdz.append(np.diff(T_sort[i])/np.diff(z))
+
+    z_new = z[1:]
+    tropo = []
+    for j in range(len(dtdz)):
+        # Find where lapse rate reaches < 2 K/km (in hPa)
+        dtdz_new = dtdz[j]
+        condition = np.abs(dtdz_new) - 2
+        target = zero_crossing(condition, z_new)
+        target_p = inv_altitude(target)  # convert back to pressure
+        tropo.append(target_p)
+    return p, T.lat, tropo
 
 def pdf(x, plot=False):
     x = np.sort(x)
