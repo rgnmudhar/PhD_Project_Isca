@@ -267,7 +267,7 @@ if __name__ == '__main__':
     elif var_type == 'g':
         extension = '_test'
     exp =  return_exp(extension)[0]
-    name = 'PK_e0v4z13_vres'
+    name = 'PK_e0v4z13_T85'
     #name = basis+'_perturb'
 
     #Ro = []

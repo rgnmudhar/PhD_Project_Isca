@@ -127,14 +127,16 @@ def return_exp(extension):
         if test_type == 'a':
             exp1 = [basis+perturb, basis+'_w15a4p600f800g50'+perturb, basis+'_w15a4p300f800g50'+perturb]
             exp2 = [basis+perturb+'_L60', basis+'_w15a4p600f800g50'+perturb+'_L60', basis+'_w15a4p300f800g50'+perturb+'_L60']
-            labels = ['L40', 'L60']
             labels = ['control', r'$p_{top}=600$', r'$p_{top}=300$']
+            exp2 = [basis+perturb, basis+perturb+'_L60']
+            labels = ['a) L40 control', 'd) L60 control']
             xlabel = 'Vertical Resolution'
         elif test_type == 'b':
             exp1 = [basis+perturb, basis+'_w15a4p600f800g50'+perturb, basis+'_w15a4p300f800g50'+perturb]
             exp2 = [basis+perturb+'_T85', basis+'_w15a4p600f800g50'+perturb+'_T85', basis+'_w15a4p300f800g50'+perturb+'_T85']
-            labels = ['T42', 'T85']
             labels = ['control', r'$p_{top}=600$', r'$p_{top}=300$']
+            exp2 = [basis+perturb, basis+perturb+'_T85']
+            labels = ['a) T42 control', 'd) T85 control']
             xlabel = 'Horizontal Resolution'
         elif test_type == 'c':
             #exp1 = [basis+perturb, basis+'_w15a1p600f800g50'+perturb,\
@@ -149,7 +151,7 @@ def return_exp(extension):
             exp2 = ['PK_e0v5z13'+'_w15a4p600f800g50'+perturb, basis+'_w15a4p600f800g50_q6m2y45u300_s']
             labels = [r'$\gamma = 5$ K day$^{-1}$', r'$p_t = 300$ hPa']
             xlabel = 'Experiment'
-        exp = [exp1, exp2]
+        exp = exp2 #[exp1, exp2]
     return exp, labels, xlabel
 
 def add_phalf(exp_name, file_name):

@@ -48,12 +48,13 @@ if __name__ == '__main__':
         p, lat, trop = tropopause(indir, basis)
 
         h = 6/86400
-        inc1 = 0.5e-5
+        inc1 = 1e-5
         h_range1 = np.arange(inc1/2, h+inc1, inc1)
 
-        plt.figure(figsize=(7.5,7))
-        cs = plt.contourf(lat_heat, p_heat, heat1, cmap='Reds', levels=h_range1, extend='both')
-        plt.contour(lat_heat, p_heat, heat2, cmap='Reds', levels=h_range1, linewidths=1.5)
+        fig, ax = plt.subplots(figsize=(7.5,7))
+        cs = plt.contourf(lat_heat, p_heat, heat1, cmap='Purples', levels=h_range1, extend='both')
+        plt.contour(lat_heat, p_heat, heat1, colors='gainsboro', levels=h_range1, linewidths=0.5)
+        plt.contour(lat_heat, p_heat, heat2, cmap='Purples', levels=h_range1, linewidths=3)
         plt.plot(lat, trop, linewidth=1.25, color='k', linestyle='--')
         cb = plt.colorbar(cs, location='right', extend='both')
         cb.set_label(label=r'Heating (K s$^{-1}$)', size='xx-large')
@@ -63,10 +64,12 @@ if __name__ == '__main__':
         plt.xlabel(r'Latitude ($\degree$N)', fontsize='xx-large')
         plt.ylim(max(p), 100)
         plt.yscale('log')
-        plt.yticks([900, 800, 700, 600, 500, 400, 300, 200, 100], ['900', '800', '700', '600', '500', '400', '300', '200', '100'])
+        ax.set_yticks([1000, 800, 600, 400, 300, 200, 100])
+        ax.set_yticklabels(['1000', '800', '600', '400', '300', '200', '100'])
         plt.ylabel('Pressure (hPa)', fontsize='xx-large')
         plt.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
         plt.savefig('heating_vs_tropopause.pdf', bbox_inches = 'tight')
+        plt.show()
     else:
         exp_heat = 'q6m2y45l800u200'
         print('Finding heat input for: ', exp_heat)

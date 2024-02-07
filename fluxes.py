@@ -717,17 +717,17 @@ if __name__ == '__main__':
     elif flux =='e':
         variable = input('Plot a) n2 or b) EP Flux?')
         if variable == 'a':
-            if extension == '_test': #'_vtx':
+            if extension == '_test':
                 i = 1
                 exp = exp #[exp[i][1], exp[i][3], exp[i][-1]]
                 labels = labels #[labels[1], labels[3], labels[-1]]
                 plot_n2_1(exp, k, basis+extension) #+'_heat')
             else:
-                exp = [exp[1], exp[4], exp[-1]]
-                labels = [labels[1], labels[4], labels[-1]]
+                #exp = [exp[1], exp[4], exp[-1]]
+                #labels = [labels[1], labels[4], labels[-1]]
                 plot_n2_2(exp, k, basis+extension)
         elif variable == 'b':
-            if extension == '_test':
+            if extension == '_vtx':
                 h_name = 'w15a4p600f800g50' #exp[1][0][11:27]
                 h = xr.open_dataset('../Inputs/' + h_name + '.nc')
                 heat = h.mean('lon').variables[h_name]
@@ -756,8 +756,8 @@ if __name__ == '__main__':
                     ep2_response.append(ep2_1 - ep2_0)
                 plot_EP_1(utz, div_response, ep1_response, ep2_response, labels, heat, basis+extension, n)     
             else:
-                exp = [exp[0], exp[2], exp[3], exp[4]]
-                labels = [labels[0], labels[2], labels[3], labels[4]]
+                #exp = [exp[0], exp[2], exp[3], exp[4]]
+                #labels = [labels[0], labels[2], labels[3], labels[4]]
                 div_response = []
                 ep1_response = []
                 ep2_response = []
