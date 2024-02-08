@@ -259,17 +259,18 @@ if __name__ == '__main__':
         # For creating a plot that shows SPV speed and AM timescale for various experiments
         exp = ['PK_e0v1z13', 'PK_e0v2z13', 'PK_e0v3z13', 'PK_e0v4z13',\
         'PK_e0v1z18', 'PK_e0v2z18', 'PK_e0v3z18', 'PK_e0v4z18',\
-        'PK_e0v4z18_h3000m2l25u65']
-        symbols =  ['o', 's', '*']
+        'PK_e0v4z13_q6m2y45l800u200']
+        symbols =  ['o', 's', '*', 'D']
         colors = ['k', '#00B300', '#0099CC', '#B30000']
-        labels = [r'$p_{oz} \sim 200$ hPa', r'$p_{oz} \sim 100$ hPa', '+ asymmetry', r'$\gamma = 1$ K km$^{-1}$', r'$\gamma = 2$ K km$^{-1}$',r'$\gamma = 3$ K km$^{-1}$', r'$\gamma = 4$ K km$^{-1}$']
-        legend_elements = [Line2D([0], [0], marker=symbols[0], color='w', label=labels[0], markerfacecolor='k', markersize=10),\
-                    Line2D([0], [0], marker=symbols[1], color='w', label=labels[1], markerfacecolor='k', markersize=10),\
-                    Line2D([0], [0], marker=symbols[2], color='w', label=labels[2], markerfacecolor='#4D0099', markersize=15),\
-                    Line2D([0], [0], color=colors[0], lw=5, label=labels[3]),\
-                    Line2D([0], [0], color=colors[1], lw=5, label=labels[4]),\
-                    Line2D([0], [0], color=colors[2], lw=5, label=labels[5]),\
-                    Line2D([0], [0], color=colors[3], lw=5, label=labels[6])]
+        labels = [r'$\gamma = 1$', r'$\gamma = 2$',r'$\gamma = 3$', r'$\gamma = 4$', r'$p_{T} \sim 200$', r'$p_{T} \sim 100$', 'control', 'ERA5']
+        legend_elements = [Line2D([0], [0], marker=symbols[0], color='w', label=labels[4], markerfacecolor='k', markersize=12.5),\
+                    Line2D([0], [0], marker=symbols[1], color='w', label=labels[5], markerfacecolor='k', markersize=12.5),\
+                    Line2D([0], [0], marker=symbols[2], color='w', label=labels[6], markerfacecolor='#4D0099', markersize=20),\
+                    Line2D([0], [0], marker=symbols[3], color='w', label=labels[7], markerfacecolor='#CC0080', markersize=12.5),\
+                    Line2D([0], [0], color=colors[0], lw=7.5, label=labels[0]),\
+                    Line2D([0], [0], color=colors[1], lw=7.5, label=labels[1]),\
+                    Line2D([0], [0], color=colors[2], lw=7.5, label=labels[2]),\
+                    Line2D([0], [0], color=colors[3], lw=7.5, label=labels[3])]
     
         print(datetime.now(), " - finding SPV and tau values")
         tau = []
@@ -282,19 +283,22 @@ if __name__ == '__main__':
             vtx.append(np.mean(SPV))
         
         print(datetime.now(), " - plotting")
-        fig, ax = plt.subplots(figsize=(6,6))
-        a = ax.axhline(25, linestyle='--', linewidth=1, color='k')
-        b = ax.axhline(50, linestyle='--', linewidth=1, color='k')
-        ax.axvline(10, linestyle='--', linewidth=1, color='k')
-        ax.axvline(30, linestyle='--', linewidth=1, color='k')
-        ax.scatter(tau[:4], vtx[:4], s=50, c=colors, marker=symbols[0])
-        ax.scatter(tau[4:8], vtx[4:8], s=50, c=colors, marker=symbols[1])
-        ax.scatter(tau[-1], vtx[-1], s=75, c='#4D0099', marker=symbols[2])
-        ax.set_xlabel(r'EOF1 $\tau$ (days)', fontsize='x-large')
-        ax.set_ylabel(r'10 hPa, 60 N Zonal Wind Mean (ms$^{-1}$)', fontsize='x-large')
-        ax.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
-        ax.legend(handles=legend_elements, fontsize='large')
-        sq = plt.Rectangle((10,25), 20, 25, fc='#00B300', alpha=0.2)
+        fig, ax = plt.subplots(figsize=(6.5,7))
+        #a = ax.axhline(25, linestyle='--', linewidth=1, color='k')
+        b = ax.axhline(30, linestyle='--', linewidth=1, color='#CC0080')
+        ax.axvline(16, linestyle='--', linewidth=1, color='#CC0080')
+        #ax.axvline(30, linestyle='--', linewidth=1, color='k')
+        ax.scatter(tau[:4], vtx[:4], s=100, c=colors, marker=symbols[0])
+        ax.scatter(tau[4:8], vtx[4:8], s=100, c=colors, marker=symbols[1])
+        ax.scatter(tau[-1], vtx[-1], s=150, c='#4D0099', marker=symbols[2])
+        ax.scatter(16, 30, s=100, c='#CC0080', marker=symbols[3])
+        ax.set_xlim(1,200)
+        ax.set_xlabel(r'EOF1 $\tau$ (days)', fontsize='xx-large')
+        ax.set_ylim(30-16,100)
+        ax.set_ylabel(r'$U_{10,60}$ (m s$^{-1}$)', fontsize='xx-large')
+        ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
+        ax.legend(handles=legend_elements, fontsize='x-large', ncol=2)
+        sq = plt.Rectangle((0,30-16), 200, 16*2, fc='#CC0080', alpha=0.1)
         plt.gca().add_patch(sq)
-        plt.savefig('vtx_vs_tau_v4h3000z18.pdf', bbox_inches = 'tight')
-        plt.close()
+        plt.savefig('vtx_vs_tau_v4q6.pdf', bbox_inches = 'tight')
+        plt.show()
