@@ -32,7 +32,7 @@ def return_exp(extension):
                    r'$p_{top}=600$ hPa', r'$p_{top}=500$ hPa', r'$p_{top}=400$ hPa', r'$p_{top}=300$ hPa']
         labels = ['control', r'$p_{top}=900$', r'$p_{top}=800$', r'$p_{top}=700$',\
                    r'$p_{top}=600$', r'$p_{top}=500$', r'$p_{top}=400$', r'$p_{top}=300$']
-        labels = ['control', '900', '800', '700', '600', '500', '400', '300']
+        #labels = ['control', '900', '800', '700', '600', '500', '400', '300']
         xlabel = r'Depth of Heating ($p_{top}$, hPa)'
     elif extension == '_width':
         perturb = '_q6m2y45_s'
@@ -57,7 +57,7 @@ def return_exp(extension):
                    r'$A=4$ K day$^{-1}$', r'$A=8$ K day$^{-1}$']
         labels = ['control', r'$A=0.5$', r'$A=1$', r'$A=2$',\
                    r'$A=4$', r'$A=8$']
-        labels = ['control', '0.5', '1', '2', '4', '8']
+        #labels = ['control', '0.5', '1', '2', '4', '8']
         xlabel = r'Strength of Heating ($A$, K day$^{-1}$)'
     elif extension == '_loc1':   
         perturb = '_q6m2y45_s'
@@ -103,9 +103,9 @@ def return_exp(extension):
                   r'$\gamma = 4$ K km$^{-1}$', r'$\gamma = 5$ K km$^{-1}$', r'$\gamma = 6$ K km$^{-1}$']
         labels = [r'$\gamma = 1$', r'$\gamma = 2$', r'$\gamma = 3$',\
                   r'$\gamma = 4$', r'$\gamma = 5$', r'$\gamma = 6$']
-        labels = ['1', '2', '3', '4', '5', '6']
+        #labels = ['1', '2', '3', '4', '5', '6']
         xlabel = r'$\gamma$ (K km$^{-1}$)'
-        exp = exp1 #[exp1, exp2]
+        exp = [exp1, exp2]
     elif extension == '_jetfix':
         exp1 = ['PK_e0v1z13_a0b0p2'+perturb,\
             'PK_e0v1z13_a0b10p2'+perturb,\
@@ -121,9 +121,13 @@ def return_exp(extension):
         xlabel = 'Experiment'
         exp = [exp1, exp2]       
     elif extension == '_test':
-        test_type = input('a) vertical resolution, b) horizontal resolution, or c) alternative heat perturb? ')
         basis = 'PK_e0v4z13'
         perturb = '_q6m2y45l800u200'
+        exp = [basis, basis+perturb]
+        labels = ['P-K only', 'control']
+        xlabel = 'Experiment'
+        """
+        test_type = input('a) vertical resolution, b) horizontal resolution, or c) alternative heat perturb? ')
         if test_type == 'a':
             exp1 = [basis+perturb, basis+'_w15a4p600f800g50'+perturb, basis+'_w15a4p300f800g50'+perturb]
             exp2 = [basis+perturb+'_L60', basis+'_w15a4p600f800g50'+perturb+'_L60', basis+'_w15a4p300f800g50'+perturb+'_L60']
@@ -151,7 +155,8 @@ def return_exp(extension):
             exp2 = ['PK_e0v5z13'+'_w15a4p600f800g50'+perturb, basis+'_w15a4p600f800g50_q6m2y45u300_s']
             labels = [r'$\gamma = 5$ K day$^{-1}$', r'$p_t = 300$ hPa']
             xlabel = 'Experiment'
-        exp = exp2 #[exp1, exp2]
+        exp = [exp1, exp2]
+        """
     return exp, labels, xlabel
 
 def add_phalf(exp_name, file_name):

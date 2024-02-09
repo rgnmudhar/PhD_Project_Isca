@@ -596,9 +596,9 @@ if __name__ == '__main__':
     exp, labels, xlabel = return_exp(extension)
     colors = ['k', '#B30000', '#FF9900', '#FFCC00', '#00B300', '#0099CC', '#4D0099', '#CC0080']
     blues = ['k', '#dbe9f6', '#bbd6eb', '#88bedc', '#549ecd',  '#2a7aba', '#0c56a0', '#08306b']
-    letters = ['a) ', 'b) ', 'c) ', 'd) ', 'e) ', 'f) ', 'g) ']
+    letters = ['d) ', 'e) ', 'f) ', 'g) ', 'a) ', 'b) ', 'c) ']
     ulvls = np.arange(-70, 100, 10)
-    k = int(input('Which wave no.? (i.e. 0 for all, 1, 2, etc.)'))
+    #k = int(input('Which wave no.? (i.e. 0 for all, 1, 2, etc.)'))
 
     if flux == 'a':
         n = len(exp)
@@ -717,14 +717,16 @@ if __name__ == '__main__':
     elif flux =='e':
         variable = input('Plot a) n2 or b) EP Flux?')
         if variable == 'a':
-            if extension == '_test':
-                i = 1
-                exp = exp #[exp[i][1], exp[i][3], exp[i][-1]]
-                labels = labels #[labels[1], labels[3], labels[-1]]
-                plot_n2_1(exp, k, basis+extension) #+'_heat')
+            if extension == '_vtx':
+                i = 0
+                k = 2
+                letters = ['c) ', 'f) ']
+                exp = [exp[0][3], exp[1][3]] #[exp[i][1], exp[i][3], exp[i][-1]]
+                labels = [r'control, $k = 2$', r'polar heating, $k = 2$'] #[labels[1], labels[3], labels[-1]]
+                plot_n2_1(exp, k, exp[0]) #basis+extension) #+'_heat')
             else:
-                #exp = [exp[1], exp[4], exp[-1]]
-                #labels = [labels[1], labels[4], labels[-1]]
+                exp = [exp[1], exp[4], exp[-1]]
+                labels = [labels[1], labels[4], labels[-1]]
                 plot_n2_2(exp, k, basis+extension)
         elif variable == 'b':
             if extension == '_vtx':
