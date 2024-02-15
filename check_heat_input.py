@@ -33,6 +33,26 @@ def integrate_lat(input, coslat):
     int_final = int_final/np.sum(coslat)
     return int_final
 
+def tropopause_slice(T):
+    # Finds tropopause given temperature in (p,lat)
+    T_sort = T.transpose().reindex(pfull=list(reversed(T.pfull)))
+    p = T.pfull
+    z = list(reversed(altitude(p).data))
+    dtdz = []
+    for i in range(len(T_sort)):
+        dtdz.append(np.diff(T_sort[i])/np.diff(z))
+
+    z_new = z[1:]
+    tropo = []
+    for j in range(len(dtdz)):
+        # Find where lapse rate reaches < 2 K/km (in hPa)
+        dtdz_new = dtdz[j]
+        condition = np.abs(dtdz_new) - 2
+        target = zero_crossing(condition, z_new)
+        target_p = inv_altitude(target)  # convert back to pressure
+        tropo.append(target_p)
+    return tropo
+
 if __name__ == '__main__': 
     #Set-up folders for data to be read in
     indir = '/disco/share/rm811/processed/'
@@ -71,25 +91,38 @@ if __name__ == '__main__':
         plt.savefig('heating_vs_tropopause.pdf', bbox_inches = 'tight')
         plt.show()
     else:
-        exp_heat = 'q6m2y45l800u200'
-        print('Finding heat input for: ', exp_heat)
+        exp_heat = 'q6m2y45l800u300_s'
+        print(datetime.now(), ' - opening heat input ', exp_heat)
         p_heat, lat_heat, lon_heat, heat = open_heat_static(heat_folder, exp_heat, 'slice')
         coslat = np.cos(np.deg2rad(lat_heat)).data
-        
+
         #Now integrate...
         int_lon = integral(heat, lon_heat, 2) #in longitude
         int_p = integral(int_lon, p_heat, 0) #in pressure
         int_full = integrate_lat(int_p, coslat)
         print(exp_heat, ' total heat input: ', int_full)
+        energy_total = int_full
 
-        #And for that which is only above the tropopause
-        trop = tropopause(indir, basis)[-1]
-        int_p_tropo = []
-        for m in range(len(lat_heat)):
-            sub = int_lon[:,m]
-            trop_lvl = trop[m]
-            sub_above_trop = np.where(p_heat<=trop_lvl, sub, 0)
-            int_p_tropo.append(integral(sub_above_trop, p_heat, 0))
-        int_tropo = integrate_lat(int_p_tropo, coslat)
-        percent_above_tropo = (int_tropo / int_full) * 100
+        print(datetime.now(), ' - opening time-mean temperature for ', basis)
+        T = xr.open_dataset(indir+basis+'_T.nc', decode_times=False).temp.mean('time')
+        T_slice = T.sel(lon=slice(180-45, 180+45)).transpose('lon', 'pfull', 'lat')
+         
+        print(datetime.now(), ' - finding the tropopause')
+        tropopause_slices = []
+        for j in range(len(T_slice)):
+            tropo = tropopause_slice(T_slice[j])
+            tropopause_slices.append(tropo)
+        tropopause_slice = xr.DataArray(tropopause_slices, dims=('lon', 'lat'), coords=(lon_heat, lat_heat))
+
+        print(datetime.now(), ' - finding the energy input above the tropopause')
+        energy_above_tropo = []
+        heat = heat.transpose('pfull', 'lon', 'lat')
+        heat_above_tropo = xr.DataArray(np.where(p_heat<=tropopause_slice, heat, 0), dims=('pfull', 'lon', 'lat'), coords=(p_heat, lon_heat, lat_heat)).transpose('pfull', 'lat', 'lon')
+        int_lon = integral(heat_above_tropo, lon_heat, 2) #in longitude
+        int_p = integral(int_lon, p_heat, 0) #in pressure
+        int_full = integrate_lat(int_p, coslat)
+        print(exp_heat, ' heat input above the tropopause: ', int_full)
+        energy_above_tropo = int_full
+
+        percent_above_tropo = (energy_above_tropo / energy_total) * 100
         print(exp_heat, ' percent above {} tropopause: '.format(basis), percent_above_tropo, ' %')
