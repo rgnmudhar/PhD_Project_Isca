@@ -539,7 +539,7 @@ def plot_EP_2(u, div_ctrl, ep1_ctrl, ep2_ctrl, div_response, ep1_response, ep2_r
     plt.savefig(name+'_EP.pdf', bbox_inches = 'tight', pad_inches=0.25)
     return plt.close()
 
-def control_plot(exp, u, div_ctrl, ep1_ctrl, ep2_ctrl, heat, name):
+def control_plot(exp, label, u, div_ctrl, ep1_ctrl, ep2_ctrl, heat, name):
      # Plots control
     lvls = np.arange(-12,13,1)
     p = u.pfull
@@ -557,13 +557,14 @@ def control_plot(exp, u, div_ctrl, ep1_ctrl, ep2_ctrl, heat, name):
     csb_ctrl = ax.contour(lat, p, u, colors='k', levels=ulvls, linewidths=1.5, alpha=0.25)
     csb_ctrl.collections[list(ulvls).index(0)].set_linewidth(3)
     PlotEPfluxArrows(lat, p, ep1_ctrl, ep2_ctrl, fig, ax, yscale='log')
-    ax.hlines(y=70, xmin=45, xmax=55, linewidth=2.5, color='r')
+    #ax.hlines(y=70, xmin=45, xmax=55, linewidth=2.5, color='r')
     #ax.contour(h_lat, h_p, heat, alpha=0.5, colors='g', levels=h_lvls)
 
-    print(datetime.now(), " - finding tropopause")
-    trop = tropopause(indir, exp)[-1]
-    ax.plot(lat, trop, linewidth=2.5, color='w')
+    #print(datetime.now(), " - finding tropopause")
+    #trop = tropopause(indir, basis)[-1]
+    #ax.plot(lat, trop, linewidth=2, color='k', linestyle='--')
 
+    ax.text(2, 3, label, color='k', fontsize='xx-large')
     ax.set_ylabel('Pressure (hPa)', fontsize='xx-large')    
     ax.set_ylim(max(p), 1) #goes to ~1hPa
     ax.set_yscale('log')
@@ -596,9 +597,9 @@ if __name__ == '__main__':
     exp, labels, xlabel = return_exp(extension)
     colors = ['k', '#B30000', '#FF9900', '#FFCC00', '#00B300', '#0099CC', '#4D0099', '#CC0080']
     blues = ['k', '#dbe9f6', '#bbd6eb', '#88bedc', '#549ecd',  '#2a7aba', '#0c56a0', '#08306b']
-    letters = ['d) ', 'e) ', 'f) ', 'g) ', 'a) ', 'b) ', 'c) ']
+    letters = ['e) ', 'f) ', 'g) ', 'a) ', 'b) ', 'c) ', 'd) ']
     ulvls = np.arange(-70, 100, 10)
-    #k = int(input('Which wave no.? (i.e. 0 for all, 1, 2, etc.)'))
+    k = int(input('Which wave no.? (i.e. 0 for all, 1, 2, etc.)'))
 
     if flux == 'a':
         n = len(exp)
@@ -777,25 +778,25 @@ if __name__ == '__main__':
                         div_ctrl = div
                         ep1_ctrl = ep1
                         ep2_ctrl = ep2
-                        plot = input("Plot only control? y/n ")
+                        plot = 'y' #input("Plot only control? y/n ")
                         if plot == 'y':
-                            h_name = exp[i][11:27]
+                            h_name = exp[i][11:26]
                             h = xr.open_dataset('../Inputs/' + h_name + '.nc')
                             heat_ctrl = h.sel(lon=180, method='nearest').variables[h_name]
                             h_p = h.pfull
                             h_lat = h.lat                            
-                            control_plot(exp[i], utz, div_ctrl, ep1_ctrl, ep2_ctrl, heat_ctrl, basis)
-                    elif i > 0:
-                        print(datetime.now(), " - taking differences")
-                        div_response.append(div - div_ctrl)
-                        ep1_response.append(ep1 - ep1_ctrl)
-                        ep2_response.append(ep2 - ep2_ctrl)
-                        h_name = exp[i][11:27]
-                        h = xr.open_dataset('../Inputs/' + h_name + '.nc')
-                        heat.append(h.mean('lon').variables[h_name])
-                h_p = h.pfull
-                h_lat = h.lat
-                plot_EP_2(uz, div_ctrl, ep1_ctrl, ep2_ctrl, div_response, ep1_response, ep2_response, heat, basis+extension)
+                            control_plot(exp[i], labels[i], utz, div_ctrl, ep1_ctrl, ep2_ctrl, heat_ctrl, exp[i])
+                    #elif i > 0:
+                    #    print(datetime.now(), " - taking differences")
+                    #    div_response.append(div - div_ctrl)
+                    #    ep1_response.append(ep1 - ep1_ctrl)
+                    #    ep2_response.append(ep2 - ep2_ctrl)
+                    #    h_name = exp[i][11:27]
+                    #    h = xr.open_dataset('../Inputs/' + h_name + '.nc')
+                    #    heat.append(h.mean('lon').variables[h_name])
+                #h_p = h.pfull
+                #h_lat = h.lat
+                #plot_EP_2(uz, div_ctrl, ep1_ctrl, ep2_ctrl, div_response, ep1_response, ep2_response, heat, basis+extension)
 
 
 """

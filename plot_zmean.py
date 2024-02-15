@@ -174,7 +174,7 @@ def report_plot2(exp, lvls, variable, unit, labels, name):
     cb.ax.tick_params(labelsize='x-large')
 
     for i in range(len(axes)):
-        #axes[i].scatter(60, 10, marker='x', color='k')
+        axes[i].scatter(60, 10, marker='x', color='w')
         axes[i].text(2, 1.75, letters[i]+labels[i+1], color='k', fontsize='xx-large')
         axes[i].set_ylim(max(p), 1) #goes to ~1hPa
         axes[i].set_yscale('log')
@@ -198,7 +198,7 @@ def plot_combo(u, T, lvls, perturb, lat, p, exp_name, vertical, label):
         csa = ax.contourf(lat, p, u, levels=lvls[1], cmap='PRGn', extend='both') # to plot only zonal wind
         csb = ax.contour(lat, p, u, colors='gainsboro', levels=lvls[1], linewidths=1, alpha=0.75) # to plot only zonal wind
         #plt.contour(lat, p, perturb, colors='g', linewidths=1, alpha=0.4, levels=11)
-        plt.ylabel('Pressure (hPa)', fontsize='x-large')
+        plt.ylabel('Pressure (hPa)', fontsize='xx-large')
         plt.ylim(max(p), upper_p) #goes to ~1hPa
         plt.yscale('log')
 
@@ -221,8 +221,8 @@ def plot_combo(u, T, lvls, perturb, lat, p, exp_name, vertical, label):
     #cb.set_label(label='Temperature (K)', size='x-large')
     cb.set_label(label=r'Zonal Wind (m s$^{-1}$)', size='xx-large') # to plot only zonal wind
     cb.ax.tick_params(labelsize='x-large')
-    ax.text(2, 1.75, label, color='k', fontsize='xx-large')
-    ax.scatter(60, 10, marker='x', color='k')
+    ax.text(2, 3, label, color='k', fontsize='xx-large')
+    ax.scatter(60, 10, marker='x', color='w')
     plt.xlabel(r'Latitude ($\degree$N)', fontsize='xx-large')
     plt.xlim(0, max(lat))
     plt.xticks([0, 20, 40, 60, 80], ['0', '20', '40', '60', '80'])
@@ -350,7 +350,7 @@ if __name__ == '__main__':
         upper_p = 1 # hPa
         lvls = [np.arange(160, 330, 10), np.arange(-90, 100, 10)]
         blues = ['k', '#dbe9f6', '#bbd6eb', '#88bedc', '#549ecd',  '#2a7aba', '#0c56a0', '#08306b']
-        letters = ['a) ', 'b) ', 'c) ', 'd) ', 'e) ', 'f) ', 'g) ']
+        letters = ['e) ', 'f) ', 'g) ', 'a) ', 'b) ', 'c) ', 'd) ']
 
         if plot_type =='d':
             lat_min = 0
@@ -426,8 +426,8 @@ if __name__ == '__main__':
                 report_plot1(exp, u_lvls, 'Zonal Wind', r' (m s$^{-1}$)', labels, basis+extension+'_u')
             else:
                 # For polar heat experiments:
-                exp = [exp[0], exp[2], exp[3], exp[4], exp[5]]
-                labels = [labels[0], labels[2], labels[3], labels[4], labels[5]]
+                #exp = [exp[0], exp[2], exp[3], exp[4], exp[5]]
+                #labels = [labels[0], labels[2], labels[3], labels[4], labels[5]]
                 T_lvls = [np.arange(160, 330, 10), np.arange(-10, 25, 2.5), np.arange(160, 340, 20)]
                 u_lvls = [np.arange(-70, 100, 10), np.arange(-20, 22.5, 2.5), np.arange(-70, 100, 10)] #prev min u_lvls_response = -20
                 report_plot2(exp, T_lvls, 'Temperature', ' (K)', labels, basis+extension+'_T')
