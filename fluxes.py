@@ -6,6 +6,7 @@ import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
 import matplotlib.colors as cm
+import matplotlib
 from aostools import climate
 from shared_functions import *
 from datetime import datetime
@@ -115,6 +116,113 @@ def PlotEPfluxArrows(x,y,ep1,ep2,fig,ax,xlim=None,ylim=None,xscale='linear',ysca
 		return Fphi*dx,Fp*dy,ax
 	else:
 		return Fphi*dx,Fp*dy
+
+def ComputeMatsunoTermF(Tz,lat,pres):
+    '''Compute term F in the Matsuno (1970) form of the refractive index.
+		Computed following Simpson et al JAS (2009) DOI 10.1175/2008JAS2758.1.
+		This quantity has three terms,
+		F = C * (W + X + Y + Z), where
+				C = - f^2/N^2
+                X = 1/4*H^2
+                Y = -1/N * (3p/H^2 * \partial_p N + p^2/H^2 * \partial_p^2 N)
+                Z = 2p^2/N^2*H^2 * (\partial_pN)^2
+
+		INPUTS:
+			Tz        - zonal mean temperature [K], dim pres x lat OR N x pres x lat
+			lat       - name of latitude [degrees]
+			pres      - name of pressure [hPa]
+		OUTPUTS:
+			F
+	'''
+    from aostools.constants import Rd,cp,a0,Omega
+    H = 7.e3 # [m]
+    H2 = H * H
+
+    sinlat = np.sin(np.deg2rad(Tz[lat]))
+    f = 2*Omega*sinlat
+    f2 = f*f
+
+    N2 = climate.ComputeN2Xr(Tz,pres,H,Rd,cp)
+    N = np.sqrt(N2)
+    
+    C = -f2/N2
+
+    X = 1 / (4 * H2)
+    
+    p = Tz[pres]
+    dNdp = N.differentiate(pres,edge_order=2)
+    d2Ndp2 = dNdp.differentiate(pres,edge_order=2)
+
+    Y = (-1/N) * ((3*p/H2)*dNdp + (p**2/H2)*d2Ndp2)
+
+    Z = ((2*p**2) / (H2 * N2)) * (dNdp)**2
+
+    return C * (X + Y + Z)
+
+def ComputeN2Xr_CONST(Tz):
+    '''
+    Find a constant N2 following Weinberger et al. (2021).
+    Average over 100-10 hPa, 40-80N
+    '''
+    N2_vary = climate.ComputeN2Xr(Tz, 'pfull')
+    N2_const = N2_vary.sel(pfull=slice(10,100)).mean('pfull')
+    N2_const = N2_const.sel(lat=slice(40,80)).mean('lat')
+    # make a new array
+    N2_const_full = np.full_like(N2_vary, N2_const)
+    N2_const_full = xr.DataArray(N2_const_full, coords=[N2_vary.pfull, N2_vary.lat], dims=['pfull', 'lat'])
+    return N2_const_full
+
+def ComputeRefractiveIndexXr_NEW(uz,Tz,k,lat='lat',pres='level',ulim=None):
+	'''
+        Adapted from M. Jucker's aostools which found refractive index as in Simpson et al (2009) doi 10.1175/2008JAS2758.1 and also Matsuno (1970) doi 10.1175/1520-0469(1970)027<0871:VPOSPW>2.0.CO;2
+		Here, we follow form 3 (M70n_Nphi,z) from Weinberger et al. (2021) doi 10.1175/JAS-D-20-0267.1, which is a change to term F in the below.
+
+        Stationary waves are assumed, ie c=0.
+
+		Setting k=0 means the only term depending on wave number is left out. This could be more efficient if n2(k) for different values of k is of interest.
+
+		meridonal PV gradient is
+		q_\phi = A - B + C, where
+				A = 2*Omega*cos\phi
+				B = \partial_\phi[\partial_\phi(ucos\phi)/acos\phi]
+				C = af^2/Rd*\partial_p(p\theta\partial_pu/(T\partial_p\theta))
+		Total refractive index is
+		n2 = a^2*[D - E - F], where
+				D = q_\phi/(au)
+				E = (k/acos\phi)^2
+				F = \sqrt(1/\rho0)*f^2/N(\phi,z) * \partial_z^2\sqrt(\rho0/)N(\phi,z)^2)
+
+		Inputs are:
+			uz    - zonal mean zonal wind, xarray.DataArray
+			Tz    - zonal mean temperature, xarray.DataArray
+			k     - zonal wave number. [.]
+			lat   - name of latitude [degrees]
+			pres  - name of pressure [hPa]
+			ulim  - only compute n2 where |u| > ulim to avoid divisions by zero.
+		Outputs are:
+			n2  - refractive index, dimension pres x lat [.]
+	'''
+	# some constants
+	from aostools.constants import Rd,cp,a0
+
+	## term D is UNCHANGED
+	dqdy = climate.ComputeMeridionalPVGradXr(uz,Tz,lat,pres,Rd,cp,a0)
+	if ulim is not None:
+		utmp = uz.where(np.abs(uz)>ulim)
+	else:
+		utmp = uz
+	D = dqdy/(a0*utmp)
+
+	#
+	## term E is UNCHANGED
+	coslat = np.cos(np.deg2rad(uz[lat]))
+	E = ( k/(a0*coslat) )**2
+
+	#
+	## term F has been CHANGED
+	F = ComputeMatsunoTermF(Tz,lat,pres)
+
+	return a0*a0*(D-E-F)
 
 def open_data1(dir, exp):
     u = xr.open_dataset(dir+exp+'_u.nc', decode_times=False).ucomp
@@ -347,7 +455,8 @@ def check_vs_MERRA(exp):
 
 def refractive_index(u, T, k):
     print(datetime.now(), " - finding n2")
-    n2 = climate.ComputeRefractiveIndexXr(u,T,k,'lat','pfull')
+    #n2 = climate.ComputeRefractiveIndexXr(u,T,k,'lat','pfull',N2const=ComputeN2Xr_CONST(T))
+    n2 = ComputeRefractiveIndexXr_NEW(u,T,k,'lat','pfull')
     return n2
 
 def plot_n2_1(exp, k, name):
@@ -374,12 +483,13 @@ def plot_n2_1(exp, k, name):
     #h_lvls = np.arange(2.5e-6, 1e-4, 5e-6)
 
     print(datetime.now(), " - plotting")
-    colors = ['#bbd6eb', '#88bedc', '#549ecd',  '#2a7aba', '#0c56a0', '#08306b']
-    nlvls = np.arange(0, 120, 20)
-    cmap = cm.ListedColormap(colors)
+    nlvls = np.arange(-200, 225, 25)
+    N = len(nlvls)
+    colors = find_colors('RdYlBu', N) # ('Blues', N)
+    #colors = ['#bbd6eb', '#88bedc', '#549ecd',  '#2a7aba', '#0c56a0', '#08306b']
+    cmap = matplotlib.colors.ListedColormap(colors)
     cmap.set_under('#eeeeee')
     cmap.set_over('w')
-    norm = cm.Normalize(vmin=0,vmax=100)
 
     fig, axes = plt.subplots(1, n, figsize=(n*4.5,5), layout="constrained")
     axes[0].set_ylabel('Pressure (hPa)', fontsize='xx-large')
@@ -398,9 +508,10 @@ def plot_n2_1(exp, k, name):
         if i > 0:
             axes[i].tick_params(axis='y',label1On=False)
     cb  = fig.colorbar(csa, orientation='vertical', extend='both', pad=0.1)
-    cb.set_label(label=r'Refractive Index Squared, $n^{2}$', size='x-large')
+    cb.set_label(label=r'Refractive Index Squared, $n_{k=1}^{2}$', size='x-large')
     cb.ax.tick_params(labelsize='x-large')        
     plt.savefig(name+'_n2_k{0:.0f}.pdf'.format(k), bbox_inches = 'tight')
+    plt.show()
     return plt.close()
 
 def plot_n2_2(exp, k, name):
@@ -422,15 +533,16 @@ def plot_n2_2(exp, k, name):
 
     p = utz.pfull
     lat = utz.lat
-    colors = ['#bbd6eb', '#88bedc', '#549ecd',  '#2a7aba', '#0c56a0', '#08306b']
-    nlvls = np.arange(0, 120, 20)
+    nlvls = np.arange(-200, 225, 25)
+    N = len(nlvls)
+    colors = find_colors('RdYlBu', N) # ('Blues', N)
+    #colors = ['#bbd6eb', '#88bedc', '#549ecd',  '#2a7aba', '#0c56a0', '#08306b']
+    cmap = matplotlib.colors.ListedColormap(colors)
+    cmap.set_under('#eeeeee')
+    cmap.set_over('w')
     h_p = h.pfull
     h_lat = h.lat
     h_lvls = np.arange(2.5e-6, 1e-4, 5e-6)
-    cmap = cm.ListedColormap(colors)
-    cmap.set_under('#eeeeee')
-    cmap.set_over('w')
-    norm = cm.Normalize(vmin=0,vmax=100)
 
     print(datetime.now(), " - plotting")
     n = len(exp)
@@ -453,9 +565,10 @@ def plot_n2_2(exp, k, name):
             axes[i].tick_params(axis='y',label1On=False)
 
     cb  = fig.colorbar(csa, orientation='vertical', extend='both', pad=0.1)
-    cb.set_label(label=r'Refractive Index Squared, $n_{k=2}^{2}$', size='x-large')
+    cb.set_label(label=r'Refractive Index Squared, $n_{k=1}^{2}$', size='x-large')
     cb.ax.tick_params(labelsize='x-large')
     plt.savefig(name+'_n2_k{0:.0f}.pdf'.format(k), bbox_inches = 'tight')
+    plt.show()
     return plt.close()
 
 def plot_EP_1(u, div_response, ep1_response, ep2_response, labels, heat, name, n):
@@ -597,7 +710,7 @@ if __name__ == '__main__':
     exp, labels, xlabel = return_exp(extension)
     colors = ['k', '#B30000', '#FF9900', '#FFCC00', '#00B300', '#0099CC', '#4D0099', '#CC0080']
     blues = ['k', '#dbe9f6', '#bbd6eb', '#88bedc', '#549ecd',  '#2a7aba', '#0c56a0', '#08306b']
-    letters = ['e) ', 'f) ', 'g) ', 'a) ', 'b) ', 'c) ', 'd) ']
+    letters = ['d) ', 'e) ', 'f) ', 'g) ', 'a) ', 'b) ', 'c) ']
     ulvls = np.arange(-70, 100, 10)
     k = int(input('Which wave no.? (i.e. 0 for all, 1, 2, etc.)'))
 
@@ -619,32 +732,39 @@ if __name__ == '__main__':
 
     elif flux == 'b':
         p = int(input('At which pressure level? (i.e. 10 or 100 hPa) '))
-        print(datetime.now(), " - plotting PDFs at {:.0f} hPa".format(p))
-        x_min = x_max = 0
-        fig, ax = plt.subplots(figsize=(6,6))
-        for i in range(len(exp)):
-            print(datetime.now(), " - opening files ({0:.0f}/{1:.0f})".format(i+1, len(exp)))
-            u, v, w, t = open_data(indir, exp[i])[1:]
-            print(datetime.now(), " - finding EP flux")
-            ep1, ep2, div1, div2 = climate.ComputeEPfluxDivXr(u, v, t, 'lon', 'lat', 'pfull', 'time', w=w, do_ubar=True, wave=0)
-            x = ep2.sel(pfull=p,method='nearest').sel(lat=slice(45,75)).mean('lat')
-            x_sort, f, m = pdf(x)
-            if max(x) > x_max:
-                x_max = max(x)
-            if min(x) < x_min:
-                x_min = min(x)
-            print(datetime.now(), ' - plotting')
-            ax.plot(x_sort, f, linewidth=1.25, color=blues[i], label=labels[i])
-        ax.axvline(0, color='k', linewidth=0.25)
-        ax.set_xlim(x_min, x_max)
-        ax.set_ylim(bottom=0)
-        ax.set_xlabel(r'45-75$\degree$N,'+str(p)+r'hPa EP$_z$ (hPa m s$^{-2}$)', fontsize='xx-large')
-        ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
-        plt.legend(fancybox=False, ncol=1, fontsize='x-large')
-        plt.savefig(basis+'_{:.0f}pdf.pdf'.format(p), bbox_inches = 'tight')
-        plt.show()
-        plt.close()
-            
+        plot_or_not = input('a) plot PDFs or b) find mean upward EP flux only? ')
+        if plot_or_not == 'a':
+            print(datetime.now(), " - plotting PDFs at {:.0f} hPa".format(p))
+            x_min = x_max = 0
+            fig, ax = plt.subplots(figsize=(6,6))
+            for i in range(len(exp)):
+                print(datetime.now(), " - opening files ({0:.0f}/{1:.0f})".format(i+1, len(exp)))
+                u, v, w, t = open_data(indir, exp[i])[1:]
+                print(datetime.now(), " - finding EP flux")
+                ep1, ep2, div1, div2 = climate.ComputeEPfluxDivXr(u, v, t, 'lon', 'lat', 'pfull', 'time', w=w, do_ubar=True, wave=0)
+                x = ep2.sel(pfull=p,method='nearest').sel(lat=slice(45,75)).mean('lat')
+                x_sort, f, m = pdf(x)
+                if max(x) > x_max:
+                    x_max = max(x)
+                if min(x) < x_min:
+                    x_min = min(x)
+                print(datetime.now(), ' - plotting')
+                ax.plot(x_sort, f, linewidth=1.25, color=blues[i], label=labels[i])
+            ax.axvline(0, color='k', linewidth=0.25)
+            ax.set_xlim(x_min, x_max)
+            ax.set_ylim(bottom=0)
+            ax.set_xlabel(r'45-75$\degree$N,'+str(p)+r'hPa EP$_z$ (hPa m s$^{-2}$)', fontsize='xx-large')
+            ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
+            plt.legend(fancybox=False, ncol=1, fontsize='x-large')
+            plt.savefig(basis+'_{:.0f}pdf.pdf'.format(p), bbox_inches = 'tight')
+            plt.show()
+            plt.close()
+        elif plot_or_not == 'b':
+            for i in range(len(exp)):
+                ep2 = open_data2(exp[i], "ep2").ep2
+                x = ep2.sel(pfull=p,method='nearest').sel(lat=slice(40,60)).mean('lat')
+                print('{0} upward EP flux through 100 hPa averaged across 40-60N: {1:.6f} '.format(exp[i], x), r'(hPa m s$^{-2}$)')
+    
     elif flux == 'c':
         plot_type = input("Plot a) lat-p climatology and variability or b) linear addition?")
         if plot_type == 'a':
@@ -720,11 +840,10 @@ if __name__ == '__main__':
         if variable == 'a':
             if extension == '_vtx':
                 i = 0
-                k = 2
-                letters = ['c) ', 'f) ']
-                exp = [exp[0][3], exp[1][3]] #[exp[i][1], exp[i][3], exp[i][-1]]
-                labels = [r'control, $k = 2$', r'polar heating, $k = 2$'] #[labels[1], labels[3], labels[-1]]
-                plot_n2_1(exp, k, exp[0]) #basis+extension) #+'_heat')
+                k = 1
+                exp = [exp[i][1], exp[i][3], exp[i][-1]]
+                labels = [labels[1], labels[3], labels[-1]]
+                plot_n2_1(exp, k, basis+extension) #+'_heat')
             else:
                 exp = [exp[1], exp[4], exp[-1]]
                 labels = [labels[1], labels[4], labels[-1]]
