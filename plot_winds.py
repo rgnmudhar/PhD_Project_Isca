@@ -409,8 +409,8 @@ def SPV_report_plot(exp, x, xlabel, name):
     Plots SSW frequency and SPV s.d. against experiment.
     """
     n = len(exp)
-    obs = 0.30
-    obs_err = 0.11
+    obs = 0.45
+    obs_err = 0.18
     markers = ['d', 'o']
     lines = ['--', '-']
     print(x)
@@ -452,19 +452,18 @@ def SPV_report_plot(exp, x, xlabel, name):
         ax2.tick_params(axis='y', colors='#0c56a0')
         ax.axhline(og, color='#666666', linewidth=1.5, linestyle=':')
         ax.fill_between(range(-1,10), (og - og_err), (og + og_err), facecolor ='gainsboro', alpha = 0.4)
-        ax.text(7, og+0.01, 'control', color='#666666', fontsize='xx-large')
+        ax.text(6.5, og+0.01, 'control', color='#666666', fontsize='xx-large')
         ax.set_ylim(min(min(SSWs)-0.05,0), max(SSWs)+0.15)
         ax2.set_ylim(min(sd)-1, max(sd)+1)
         ax2.set_ylabel(r'$\sigma _{10,60}$ (m s$^{-1}$)', color='#0c56a0', fontsize='xx-large')
         ax2.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
     ax.axhline(obs, color='#4D0099', linewidth=1.5, linestyle=':')
-    ax.text(7, obs-0.03, 'reanalysis', color='#4D0099', fontsize='xx-large')
+    ax.text(6.5, obs+0.01, 'reanalysis', color='#4D0099', fontsize='xx-large')
     ax.set_xlabel(xlabel, fontsize='xx-large')
     ax.set_ylabel('SSW Frequency (per 100 days)', fontsize='xx-large', color='#B30000')
     ax.tick_params(axis='both', labelsize = 'xx-large', which='both', direction='in')
     plt.savefig(name+'_SSWs.pdf', bbox_inches = 'tight')
-    plt.show
-    return plt.close()
+    return plt.show #plt.close()
 
 def standardise(full, og, pressure, time):
     std = og

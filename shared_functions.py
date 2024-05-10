@@ -7,6 +7,8 @@ from glob import glob
 import xarray as xr
 import numpy as np
 import scipy.stats as sps
+import matplotlib
+from pylab import *
 import matplotlib.pyplot as plt
 from fluxes import *
 from datetime import datetime
@@ -472,3 +474,13 @@ def NH_zonal(lat, p, x, y, xlvls, ylvls, colors, lab, name):
     plt.tick_params(axis='both', labelsize = 'x-large', which='both', direction='in')
     plt.savefig(name, bbox_inches = 'tight')
     return plt.close()
+
+def find_colors(colormap, N):
+    # https://stackoverflow.com/questions/33596491/extract-matplotlib-colormap-in-hex-format
+    cmap = cm.get_cmap(colormap, N) # e.g. ('RdBu', 6)
+    cmap_colours = []
+    for i in range(cmap.N):
+        rgba = cmap(i)
+        # rgb2hex accepts rgb or rgba
+        cmap_colours.append('{0}'.format(matplotlib.colors.rgb2hex(rgba)))
+    return cmap_colours
