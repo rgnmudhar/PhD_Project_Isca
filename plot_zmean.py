@@ -190,7 +190,8 @@ def report_plot2(exp, lvls, variable, unit, labels, name):
 def plot_combo(u, T, lvls, perturb, lat, p, exp_name, vertical, label):
     # Plots time and zonal-mean Zonal Wind Speed and Temperature
     print(datetime.now(), " - plotting")
-    fig, ax = plt.subplots(figsize=(5,5))
+    #fig, ax = plt.subplots(figsize=(5,5))
+    fig, ax = plt.subplots(figsize=(4.5,7))
 
     if vertical == "a":
         #csa = ax.contourf(lat, p, T, levels=lvls[0], cmap='Blues_r', extend='both')
@@ -217,11 +218,12 @@ def plot_combo(u, T, lvls, perturb, lat, p, exp_name, vertical, label):
 
     ax.contourf(csa, colors='none')
     csb.collections[int(len(lvls[1])/2)].set_linewidth(3)
-    cb = plt.colorbar(csa, extend='both')
+    #cb = plt.colorbar(csa, extend='both')
+    cb = plt.colorbar(csa, extend='both', orientation='horizontal')
     #cb.set_label(label='Temperature (K)', size='x-large')
     cb.set_label(label=r'Zonal Wind (m s$^{-1}$)', size='xx-large') # to plot only zonal wind
     cb.ax.tick_params(labelsize='x-large')
-    ax.text(2, 3, label, color='k', fontsize='xx-large')
+    ax.text(2, 1.5, label, color='k', fontsize='xx-large')
     ax.scatter(60, 10, marker='x', color='w')
     plt.xlabel(r'Latitude ($\degree$N)', fontsize='xx-large')
     plt.xlim(0, max(lat))

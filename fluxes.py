@@ -474,13 +474,7 @@ def plot_n2_1(exp, k, name):
 
     p = utz.pfull
     lat = utz.lat
-
-    #h_name = exp[0][11:27]
-    #h = xr.open_dataset('../Inputs/' + h_name + '.nc')
-    #heat = h.mean('lon').variables[h_name]
-    #h_p = h.pfull
-    #h_lat = h.lat
-    #h_lvls = np.arange(2.5e-6, 1e-4, 5e-6)
+        
 
     print(datetime.now(), " - plotting")
     nlvls = np.arange(-200, 225, 25)
@@ -497,8 +491,15 @@ def plot_n2_1(exp, k, name):
         csa = axes[i].contourf(lat, p, n2[i], levels=nlvls, extend='both', cmap=cmap)
         csb = axes[i].contour(lat, p, u[i], colors='k', levels=ulvls, linewidths=1.5, alpha=0.25)
         csb.collections[list(ulvls).index(0)].set_linewidth(3)
-        #axes[i].contour(h_lat, h_p, heat, alpha=0.5, colors='g', levels=h_lvls)
-        axes[i].text(2, 1.75, letters[i]+labels[i], color='k', fontsize='xx-large')
+        if i > 0:
+            h_name = exp[i][11:27]
+            h = xr.open_dataset('../Inputs/' + h_name + '.nc')
+            heat = h.mean('lon').variables[h_name]
+            h_p = h.pfull
+            h_lat = h.lat
+            h_lvls = np.arange(2.5e-6, 1e-4, 5e-6)
+            axes[i].contour(h_lat, h_p, heat, alpha=0.5, colors='g', levels=h_lvls)
+        axes[i].text(2, 1.75, labels[i], color='k', fontsize='xx-large') #letters[i]+labels[i]
         axes[i].set_ylim(max(p), 1) #goes to ~1hPa
         axes[i].set_yscale('log')
         axes[i].set_xlabel(r'Latitude ($\degree$N)', fontsize='xx-large')
@@ -526,10 +527,12 @@ def plot_n2_2(exp, k, name):
         n = refractive_index(utz, Ttz, k)
         u.append(utz)
         n2.append(n)
-        h_name = exp[i][11:27]
-        h = xr.open_dataset('../Inputs/' + h_name + '.nc')
-        heat.append(h.mean('lon').variables[h_name])
-        print(exp[i])
+        if i == 0:
+             heat.append(0)
+        elif i > 0:
+            h_name = exp[i][11:27]
+            h = xr.open_dataset('../Inputs/' + h_name + '.nc')
+            heat.append(h.mean('lon').variables[h_name])
 
     p = utz.pfull
     lat = utz.lat
@@ -546,13 +549,13 @@ def plot_n2_2(exp, k, name):
 
     print(datetime.now(), " - plotting")
     n = len(exp)
-    fig, axes = plt.subplots(1, n, figsize=(n*4.5,5), layout="constrained")
+    #fig, axes = plt.subplots(1, n, figsize=(n*4.5,5), layout="constrained")
+    fig, axes = plt.subplots(1, n, figsize=(n*4.2,6.4), layout="constrained")
     for i in range(n):
         csa = axes[i].contourf(lat, p, n2[i], levels=nlvls, extend='both', cmap=cmap)
         csb = axes[i].contour(lat, p, u[i], colors='k', levels=ulvls, linewidths=1.5, alpha=0.25)
         csb.collections[list(ulvls).index(0)].set_linewidth(3)
-        axes[i].text(2, 1.75, letters[i]+labels[i], color='k', fontsize='xx-large')
-        axes[i].contour(h_lat, h_p, heat[i], alpha=0.5, colors='g', levels=h_lvls)
+        axes[i].text(2, 1.75, labels[i], color='k', fontsize='xx-large') #letters[i]+labels[i]
         axes[i].set_ylim(max(p), 1) #goes to ~1hPa
         axes[i].set_yscale('log')
         axes[i].set_xlabel(r'Latitude ($\degree$N)', fontsize='xx-large')
@@ -562,9 +565,11 @@ def plot_n2_2(exp, k, name):
         if i == 0:
             axes[i].set_ylabel('Pressure (hPa)', fontsize='xx-large')
         if i > 0:
+            axes[i].contour(h_lat, h_p, heat[i], alpha=0.5, colors='g', levels=h_lvls)
             axes[i].tick_params(axis='y',label1On=False)
 
-    cb  = fig.colorbar(csa, orientation='vertical', extend='both', pad=0.1)
+    #cb  = fig.colorbar(csa, orientation='vertical', extend='both', pad=0.1)
+    cb  = fig.colorbar(csa, ax=axes.ravel().tolist()[1:3], orientation='horizontal', extend='both', shrink=0.6)
     cb.set_label(label=r'Refractive Index Squared, $n_{k=1}^{2}$', size='x-large')
     cb.ax.tick_params(labelsize='x-large')
     plt.savefig(name+'_n2_k{0:.0f}.pdf'.format(k), bbox_inches = 'tight')
@@ -662,9 +667,11 @@ def control_plot(exp, label, u, div_ctrl, ep1_ctrl, ep2_ctrl, heat, name):
         
     print(datetime.now(), " - plotting control")
     n = 1
-    fig, ax = plt.subplots(1, n, figsize=(n*6,5), layout="constrained")
+    #fig, ax = plt.subplots(1, n, figsize=(6,5), layout="constrained")
+    fig, ax = plt.subplots(1, n, figsize=(5,6.5), layout="constrained")
     csa_ctrl = ax.contourf(lat, p, div_ctrl, levels=lvls, cmap='PuOr_r', extend='both')
-    cb_ctrl  = fig.colorbar(csa_ctrl, orientation='vertical', extend='both', pad=0.1)
+    #cb_ctrl  = fig.colorbar(csa_ctrl, orientation='vertical', extend='both', pad=0.1)
+    cb_ctrl  = fig.colorbar(csa_ctrl, orientation='horizontal', extend='both')
     cb_ctrl.set_label(label=r'Divergence (m s$^{-1}$ day$^{-1}$)', size='xx-large')
     cb_ctrl.ax.tick_params(labelsize='x-large')
     csb_ctrl = ax.contour(lat, p, u, colors='k', levels=ulvls, linewidths=1.5, alpha=0.25)
@@ -677,7 +684,7 @@ def control_plot(exp, label, u, div_ctrl, ep1_ctrl, ep2_ctrl, heat, name):
     #trop = tropopause(indir, basis)[-1]
     #ax.plot(lat, trop, linewidth=2, color='k', linestyle='--')
 
-    ax.text(2, 3, label, color='k', fontsize='xx-large')
+    ax.text(2, 1.5, label, color='k', fontsize='xx-large')
     ax.set_ylabel('Pressure (hPa)', fontsize='xx-large')    
     ax.set_ylim(max(p), 1) #goes to ~1hPa
     ax.set_yscale('log')
@@ -841,12 +848,12 @@ if __name__ == '__main__':
             if extension == '_vtx':
                 i = 0
                 k = 1
-                exp = [exp[i][1], exp[i][3], exp[i][-1]]
-                labels = [labels[1], labels[3], labels[-1]]
-                plot_n2_1(exp, k, basis+extension) #+'_heat')
+                exp = [exp[0][-1], exp[1][-1]] #[exp[i][1], exp[i][3], exp[i][-1]]
+                labels = [labels[-1], labels[-1]] #[labels[1], labels[3], labels[-1]]
+                plot_n2_1(exp, k, basis+extension+'6') #+'_heat')
             else:
-                exp = [exp[1], exp[4], exp[-1]]
-                labels = [labels[1], labels[4], labels[-1]]
+                exp = [exp[0], exp[1], exp[4], exp[-1]]
+                labels = [labels[0], labels[1], labels[4], labels[-1]]
                 plot_n2_2(exp, k, basis+extension)
         elif variable == 'b':
             if extension == '_vtx':
